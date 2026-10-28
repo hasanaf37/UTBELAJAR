@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Saya — UTBelajar</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Sidebar Kiri -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard.html" class="brand-link">
+          <img src="assets/icons/logo.svg" alt="UTBelajar" class="brand-logo-img">
+        </a>
+        <button class="sidebar-toggle-btn" title="Kecilkan/Perbesar Sidebar" aria-label="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigasi Utama</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span class="nav-text">Beranda</span>
+        </a>
+        <a href="latihan-soal.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="nav-text">Latihan Soal</span>
+        </a>
+        <a href="utbelajar-ai.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
+          <span class="nav-text">UTBelajar AI</span>
+        </a>
+
+        <div class="nav-section-title">Akun &amp; Pengaturan</div>
+        <a href="profile.html" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="nav-text">Profil Saya</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="profile.html" class="user-profile-btn" title="Buka Profil">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Memuat...</div>
+            <div class="user-role">Siswa</div>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Konten Utama Aplikasi -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-toggle" aria-label="Buka Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="page-title">Profil Pengguna</h1>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="profile-container">
+          <!-- Kartu Profil Utama -->
+          <div class="profile-main-card">
+            <div class="profile-cover"></div>
+            <div class="profile-body">
+              <div class="profile-avatar-wrapper">
+                <div id="profile-avatar-display" class="profile-avatar-large">U</div>
+                <button id="btn-open-edit-profile" class="btn btn-secondary btn-sm">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  <span>Edit Profil</span>
+                </button>
+              </div>
+
+              <div class="profile-user-details">
+                <h2 id="profile-fullname" class="profile-fullname">Memuat Nama...</h2>
+                <div id="profile-email" class="profile-email">email@pengguna.com</div>
+
+                <div class="profile-meta-tags">
+                  <span id="profile-prodi-tag" class="badge badge-primary">Program Studi</span>
+                  <span class="badge badge-success">Akun Mandiri Aktif</span>
+                </div>
+              </div>
+
+              <!-- Informasi Detail Akun -->
+              <div class="profile-info-grid">
+                <div class="info-item">
+                  <span class="info-label">Program Studi Minat</span>
+                  <span id="profile-detail-prodi" class="info-value">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Tanggal Terdaftar</span>
+                  <span id="profile-detail-joined" class="info-value">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Keanggotaan</span>
+                  <span class="info-value">Pelajar UTBelajar Mandiri</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Status Keamanan</span>
+                  <span class="info-value" style="color: var(--success);">Terlindungi (Supabase RLS)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ringkasan Statistik Belajar -->
+          <div class="profile-stats-card">
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--primary-navy);">
+              Ringkasan Capaian Belajar
+            </h3>
+            <div class="profile-stats-grid">
+              <div class="profile-stat-box">
+                <div id="pstat-attempts" class="profile-stat-val">0</div>
+                <div class="profile-stat-lbl">Latihan Diselesaikan</div>
+              </div>
+              <div class="profile-stat-box">
+                <div id="pstat-avg-score" class="profile-stat-val" style="color: var(--primary-blue);">0</div>
+                <div class="profile-stat-lbl">Rata-rata Skor</div>
+              </div>
+              <div class="profile-stat-box">
+                <div id="pstat-time" class="profile-stat-val" style="color: var(--success); font-size: 1.4rem;">0 Menit</div>
+                <div class="profile-stat-lbl">Total Waktu Belajar</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aksi Akun & Logout -->
+          <div class="profile-action-card">
+            <div class="action-card-text">
+              <h4>Sesi &amp; Keamanan Akun</h4>
+              <p>Keluar dari sesi saat ini di perangkat ini secara aman.</p>
+            </div>
+            <button class="btn btn-danger btn-sm btn-open-logout-modal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Keluar dari Akun</span>
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer Aplikasi -->
+      <footer class="app-footer">
+        <div class="footer-inner">
+          <div class="footer-links">
+            <a href="dashboard.html">Beranda</a>
+            <a href="latihan-soal.html">Latihan Soal</a>
+            <a href="utbelajar-ai.html">UTBelajar AI</a>
+            <a href="profile.html">Profil Saya</a>
+          </div>
+          <p class="footer-disclaimer">
+            UTBelajar merupakan platform belajar independen dan bukan situs resmi Universitas Terbuka.
+          </p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Modal Edit Profil -->
+  <div id="modal-edit-profile" class="modal-backdrop">
+    <div class="modal-dialog">
+      <h3 class="modal-title">Edit Profil Pengguna</h3>
+      <p class="modal-body" style="margin-bottom: 1rem;">
+        Perbarui nama tampilan dan preferensi program studi Anda.
+      </p>
+
+      <form id="edit-profile-form">
+        <div class="form-group">
+          <label for="edit-fullname-input" class="form-label">Nama Lengkap</label>
+          <input type="text" id="edit-fullname-input" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-prodi-select" class="form-label">Program Studi</label>
+          <select id="edit-prodi-select" class="form-control">
+            <option value="">Memuat...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-avatar-input" class="form-label">URL Foto Profil (Opsional)</label>
+          <input type="url" id="edit-avatar-input" class="form-control" placeholder="https://example.com/avatar.jpg">
+        </div>
+
+        <div class="modal-footer" style="margin-top: 1.5rem;">
+          <button type="button" id="btn-close-edit-modal" class="btn btn-secondary btn-sm">Batal</button>
+          <button type="submit" id="btn-save-profile" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Logout -->
+  <div id="modal-logout-confirm" class="modal-backdrop">
+    <div class="modal-dialog">
+      <h3 class="modal-title">Konfirmasi Keluar</h3>
+      <p class="modal-body">
+        Apakah Anda yakin ingin keluar dari akun UTBelajar Anda? Anda dapat masuk kembali kapan saja dengan email dan password Anda.
+      </p>
+      <div class="modal-footer">
+        <button id="btn-cancel-logout" class="btn btn-secondary btn-sm">Batal</button>
+        <button id="btn-confirm-logout" class="btn btn-danger btn-sm">Ya, Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module" src="js/navigation.js"></script>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>

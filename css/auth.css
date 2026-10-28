@@ -1,0 +1,355 @@
+/* ==============================================================================
+   UTBELAJAR - AUTHENTICATION STYLES (SPLIT-CARD SHOWCASE CERAH & SEGAR)
+   ============================================================================== */
+
+.auth-showcase-bg {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  position: relative;
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(238, 243, 255, 0.28) 50%, rgba(191, 219, 254, 0.32) 100%),
+    url('../assets/images/study-bg.jpg') center center / cover no-repeat fixed;
+  overflow-x: hidden;
+}
+
+.auth-showcase-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(4px) brightness(1.12) saturate(1.22);
+  -webkit-backdrop-filter: blur(4px) brightness(1.12) saturate(1.22);
+  pointer-events: none;
+}
+
+/* Kartu Utama Split 2 Kolom Simpel & Proporsional */
+.auth-showcase-card {
+  width: 100%;
+  max-width: 920px;
+  min-height: 520px;
+  background: #FFFFFF;
+  border-radius: 26px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 24px 60px -10px rgba(30, 58, 138, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 10;
+  animation: showcaseFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes showcaseFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Panel Kiri: Gambar Buku & Alat Tulis Cerah + Teks Motivasi di Atasnya */
+.auth-showcase-visual {
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: url('../assets/images/study-bg.jpg') center center / cover no-repeat;
+  filter: brightness(1.08) saturate(1.18);
+  color: #FFFFFF;
+}
+
+/* Gradasi Bening di Atas-Tengah & Biru Cerah Lembut di Bawah Agar Gambar Terlihat Sangat Cerah */
+.auth-showcase-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(37, 99, 235, 0.12) 0%,
+    rgba(255, 255, 255, 0.0) 42%,
+    rgba(37, 99, 235, 0.62) 72%,
+    rgba(29, 78, 216, 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+.visual-top-brand {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: #1E3A8A;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 0.45rem 0.95rem 0.45rem 0.55rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  width: fit-content;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+
+.visual-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #FFFFFF;
+}
+
+.visual-brand-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1E3A8A;
+}
+
+.visual-bottom-copy {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  text-shadow: 0 2px 10px rgba(15, 23, 42, 0.25);
+}
+
+.visual-Headline {
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin-bottom: 0.9rem;
+}
+
+.visual-subtext {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 1.15rem;
+  max-width: 390px;
+}
+
+.visual-kickoff {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FEF08A;
+}
+
+/* Panel Kanan: Area Form Putih Bersih & Cerah */
+.auth-showcase-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 3rem;
+  background: #FFFFFF;
+}
+
+.auth-showcase-form-inner {
+  width: 100%;
+  max-width: 360px;
+}
+
+.showcase-form-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #1E3A8A;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.showcase-form-subtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin-bottom: 1.85rem;
+  line-height: 1.5;
+}
+
+.auth-showcase-form-inner .form-group {
+  margin-bottom: 1.15rem;
+}
+
+.auth-showcase-form-inner .form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+.auth-showcase-form-inner .form-control {
+  padding: 0.72rem 0.95rem;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #0F172A;
+  background: #F8FAFC;
+  transition: all 0.18s ease;
+}
+
+.auth-showcase-form-inner .form-control:focus {
+  background: #FFFFFF;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+}
+
+.auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.5rem 0 1.4rem;
+  font-size: 0.8rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  color: #475569;
+  font-size: 0.8rem;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #2563EB;
+  cursor: pointer;
+}
+
+.forgot-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563EB;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Tombol Utama Biru Cerah */
+.btn-showcase-submit {
+  width: 100%;
+  padding: 0.82rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 6px 18px -3px rgba(37, 99, 235, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-showcase-submit:hover {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.auth-footer-prompt {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.825rem;
+  color: #64748B;
+}
+
+.auth-footer-prompt a {
+  font-weight: 700;
+  color: #2563EB;
+  text-decoration: none;
+}
+
+.auth-footer-prompt a:hover {
+  text-decoration: underline;
+}
+
+.auth-showcase-disclaimer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F1F5F9;
+  font-size: 0.72rem;
+  color: #94A3B8;
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* Alert Pesan Error / Sukses */
+.auth-alert {
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
+  font-size: 0.825rem;
+  font-weight: 500;
+  margin-bottom: 1.15rem;
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.auth-alert.visible {
+  display: flex;
+}
+
+.auth-alert.error {
+  background: var(--danger-bg);
+  border: 1px solid #FECACA;
+  color: var(--danger);
+}
+
+.auth-alert.success {
+  background: var(--success-bg);
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}
+
+.password-requirements {
+  font-size: 0.73rem;
+  color: #64748B;
+  margin-top: 0.3rem;
+  line-height: 1.35;
+}
+
+/* Responsivitas Tablet & Smartphone */
+@media (max-width: 900px) {
+  .auth-showcase-card {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+    min-height: auto;
+  }
+
+  .auth-showcase-visual {
+    min-height: 260px;
+    padding: 1.75rem;
+  }
+
+  .visual-Headline {
+    font-size: 1.65rem;
+  }
+
+  .auth-showcase-form-panel {
+    padding: 2rem 1.5rem;
+  }
+}

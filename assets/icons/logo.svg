@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <!-- UTBelajar Modern Logo Mark (Letter U + Open Digital Knowledge Wings) -->
+  <defs>
+    <linearGradient id="utbGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4169F5" />
+      <stop offset="100%" stop-color="#815CF8" />
+    </linearGradient>
+    <linearGradient id="utbAccent" x1="10" y1="10" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#C084FC" />
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#4169F5" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Icon Container -->
+  <g transform="translate(6, 6)" filter="url(#softGlow)">
+    <!-- Base Rounded Square -->
+    <rect width="48" height="48" rx="14" fill="url(#utbGrad)" />
+    
+    <!-- Stylized Modern 'U' & Open Pages -->
+    <path d="M16 16V26C16 30.4183 19.5817 34 24 34C28.4183 34 32 30.4183 32 26V16" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M24 22V32" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    <!-- Sparkle/Insight Star -->
+    <circle cx="34" cy="14" r="3" fill="#FDE047" />
+  </g>
+
+  <!-- Typography: UTBelajar -->
+  <g transform="translate(66, 38)">
+    <text font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="24" fill="#172554" letter-spacing="-0.5">
+      UT<tspan fill="#4169F5">Belajar</tspan>
+    </text>
+    <text y="14" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="600" font-size="8.5" fill="#7B8498" letter-spacing="1.2">
+      PLATFORM BELAJAR DIGITAL
+    </text>
+  </g>
+</svg>
