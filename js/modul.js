@@ -1,113 +1,175 @@
 // ==============================================================================
-// UTBELAJAR - SOAL MODUL & DIGITAL BOOK / PDF READER ENGINE
-// Mendukung Baca Buku 2 Halaman, Lihat PDF Tanpa Unduh, & Unduh File PDF Asli
-// Hanya ADMIN yang dapat Menambah, Mengubah, dan Menghapus Data
+// UTBELAJAR - KERANGKA SOAL MODUL BERGAYA WEB BACA KOMIK (SCROLL KE BAWAH)
+// Menampilkan Gambar JPG Hasil Scan CamScanner di Dalam PDF Secara Vertikal
+// Mendukung Baca Tanpa Unduh, Zoom Layar, Unduh PDF Asli, & Upload PDF Baru
 // ==============================================================================
 
 (function () {
+  // 1. DATA MASTER PROGRAM STUDI
   const DEFAULT_PRODIS = [
-    { id: "b1111111-1111-1111-1111-111111111111", code: "SI", name: "Sistem Informasi", description: "Studi rekayasa perangkat lunak, arsitektur data, dan transformasi digital." },
-    { id: "b2222222-2222-2222-2222-222222222222", code: "MNJ", name: "Manajemen", description: "Fokus pada kepemimpinan strategis, manajemen operasional, dan pemasaran." },
-    { id: "b3333333-3333-3333-3333-333333333333", code: "ILKOM", name: "Ilmu Komunikasi", description: "Kajian media massa, public relations, dan komunikasi organisasi digital." },
-    { id: "b4444444-4444-4444-4444-444444444444", code: "AKT", name: "Akuntansi", description: "Penguasaan akuntansi keuangan, audit, sistem informasi akuntansi, dan perpajakan." },
+    {
+      id: "b1111111-1111-1111-1111-111111111111",
+      code: "SI",
+      name: "Sistem Informasi",
+      description: "Studi rekayasa perangkat lunak, sistem informasi bisnis, basis data, dan transformasi digital.",
+    },
+    {
+      id: "b2222222-2222-2222-2222-222222222222",
+      code: "MNJ",
+      name: "Manajemen",
+      description: "Fokus pada kepemimpinan strategis, manajemen operasional, dan pemasaran.",
+    },
+    {
+      id: "b3333333-3333-3333-3333-333333333333",
+      code: "ILKOM",
+      name: "Ilmu Komunikasi",
+      description: "Kajian media massa, public relations, dan komunikasi organisasi digital.",
+    },
+    {
+      id: "b4444444-4444-4444-4444-444444444444",
+      code: "AKT",
+      name: "Akuntansi",
+      description: "Penguasaan akuntansi keuangan, audit, sistem informasi akuntansi, dan perpajakan.",
+    },
   ];
 
+  // 2. DATA MASTER MATA KULIAH (MSIM4207 Menjadi Mata Kuliah Utama untuk File Scan PDF)
   const DEFAULT_COURSES = [
-    { id: "c1111111-1111-1111-1111-111111111111", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4201", name: "Analisis dan Perancangan Sistem", description: "Konsep siklus hidup pengembangan sistem (SDLC), pemodelan UML, dan use case diagram." },
-    { id: "c2222222-2222-2222-2222-222222222222", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4202", name: "Sistem Basis Data", description: "Normalisasi data, Entity-Relationship Diagram (ERD), sintaks SQL, dan transaksi database." },
-    { id: "c4444444-4444-4444-4444-444444444444", study_program_id: "b2222222-2222-2222-2222-222222222222", code: "EKMA4116", name: "Manajemen Strategik", description: "Analisis lingkungan bisnis, keunggulan bersaing, visi-misi korporasi, dan implementasi strategi." },
-    { id: "c5555555-5555-5555-5555-555555555555", study_program_id: "b3333333-3333-3333-3333-333333333333", code: "SKOM4101", name: "Pengantar Ilmu Komunikasi", description: "Model komunikasi linear, transaksional, komunikasi massa, dan etika media digital." },
-    { id: "c6666666-6666-6666-6666-666666666666", study_program_id: "b4444444-4444-4444-4444-444444444444", code: "EKMA4115", name: "Pengantar Akuntansi", description: "Persamaan dasar akuntansi, siklus jurnal umum, buku besar, neraca saldo, dan laporan keuangan." },
+    {
+      id: "c-msim4207-01",
+      study_program_id: "b1111111-1111-1111-1111-111111111111", // Sistem Informasi
+      code: "MSIM4207",
+      name: "Sistem Informasi dalam Bisnis",
+      description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), dan infrastruktur TI dalam organisasi bisnis.",
+    },
+    {
+      id: "c1111111-1111-1111-1111-111111111111",
+      study_program_id: "b1111111-1111-1111-1111-111111111111",
+      code: "MSIM4201",
+      name: "Analisis dan Perancangan Sistem",
+      description: "Konsep siklus hidup pengembangan sistem (SDLC), pemodelan UML, dan use case diagram.",
+    },
+    {
+      id: "c2222222-2222-2222-2222-222222222222",
+      study_program_id: "b1111111-1111-1111-1111-111111111111",
+      code: "MSIM4202",
+      name: "Sistem Basis Data",
+      description: "Normalisasi data, Entity-Relationship Diagram (ERD), sintaks SQL, dan transaksi database.",
+    },
+    {
+      id: "c4444444-4444-4444-4444-444444444444",
+      study_program_id: "b2222222-2222-2222-2222-222222222222",
+      code: "EKMA4116",
+      name: "Manajemen Strategik",
+      description: "Analisis lingkungan bisnis, keunggulan bersaing, visi-misi korporasi, dan implementasi strategi.",
+    },
+    {
+      id: "c5555555-5555-5555-5555-555555555555",
+      study_program_id: "b3333333-3333-3333-3333-333333333333",
+      code: "SKOM4101",
+      name: "Pengantar Ilmu Komunikasi",
+      description: "Model komunikasi linear, transaksional, komunikasi massa, dan etika media digital.",
+    },
+    {
+      id: "c6666666-6666-6666-6666-666666666666",
+      study_program_id: "b4444444-4444-4444-4444-444444444444",
+      code: "EKMA4115",
+      name: "Pengantar Akuntansi",
+      description: "Persamaan dasar akuntansi, siklus jurnal umum, buku besar, neraca saldo, dan laporan keuangan.",
+    },
   ];
 
+  // 3. DATA MASTER MODUL (Memuat File Scan CamScanner Asli: page-1.jpg, page-2.jpg, page-3.jpg)
   const DEFAULT_MODULS = [
     {
-      id: "mod-101",
-      course_id: "c2222222-2222-2222-2222-222222222222",
-      title: "Modul 01: Arsitektur Basis Data Relasional & Normalisasi",
-      edition: "Modul 1-3 • Edisi 2026",
-      pdf_data_url: "",
-      pdf_external_url: "",
-      spreads: [
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 1:\nAtribut yang digunakan untuk menghubungkan tabel anak (child) ke tabel induk (parent) dalam basis data relasional disebut...\nA. Candidate Key\nB. Foreign Key\nC. Super Key\nD. Alternate Key\nKunci Jawaban: B (Foreign Key menjaga integritas referensial antar tabel).\n\nSOAL 2:\nKondisi di mana nilai Primary Key tidak boleh kosong (NULL) disebut aturan...\nA. Entity Integrity\nB. Domain Integrity\nC. Referential Integrity\nD. User-Defined Integrity\nKunci Jawaban: A (Entity Integrity mewajibkan setiap PK bernilai unik dan tidak NULL).",
-          rightTitle: "",
-          rightText:
-            "SOAL 3:\nApabila sebuah tabel masih memiliki atribut bernilai ganda (multi-valued attribute) dalam satu kolom, maka tabel tersebut belum memenuhi...\nA. 1NF (First Normal Form)\nB. 2NF (Second Normal Form)\nC. 3NF (Third Normal Form)\nD. BCNF\nKunci Jawaban: A (Syarat mutlak 1NF adalah nilai atomik/tunggal).\n\nSOAL 4:\nPerintah DDL SQL untuk menambahkan kolom baru pada tabel yang sudah ada adalah...\nA. UPDATE TABLE\nB. INSERT COLUMN\nC. ALTER TABLE ... ADD\nD. MODIFY TABLE\nKunci Jawaban: C (ALTER TABLE digunakan untuk mengubah struktur tabel).",
-        },
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 5:\nSuatu tabel dikatakan memenuhi Bentuk Normal Kedua (2NF) apabila telah memenuhi 1NF dan...\nA. Tidak memiliki atribut komposit\nB. Semua atribut non-kunci bergantung penuh pada Primary Key (tidak ada ketergantungan parsial)\nC. Tidak memiliki Foreign Key\nD. Hanya terdiri dari satu kolom kunci\nKunci Jawaban: B (2NF menghilangkan ketergantungan fungsional parsial).\n\nSOAL 6:\nKetergantungan transitif (Transitive Dependency) antar atribut non-kunci harus dihilangkan pada tahap normalisasi...\nA. 1NF\nB. 2NF\nC. 3NF (Third Normal Form)\nD. Unnormalized Form\nKunci Jawaban: C (3NF mengharuskan tidak adanya ketergantungan transitif).",
-          rightTitle: "",
-          rightText:
-            "SOAL 7:\nPerintah DML SQL yang digunakan untuk mengambil dan menampilkan data dari satu atau beberapa tabel adalah...\nA. SELECT\nB. EXTRACT\nC. FETCH TABLE\nD. SHOW DATA\nKunci Jawaban: A (SELECT merupakan perintah utama query data pada SQL).\n\nSOAL 8:\nKlausa SQL yang digunakan untuk menyaring hasil pengelompokan agregasi (GROUP BY) adalah...\nA. WHERE\nB. ORDER BY\nC. HAVING\nD. DISTINCT\nKunci Jawaban: C (HAVING memfilter grup hasil agregasi, sedangkan WHERE memfilter baris).",
-        },
+      id: "mod-msim4207-01",
+      course_id: "c-msim4207-01",
+      title: "MSIM4207 Modul 01: Sistem Informasi dalam Bisnis (Tes Formatif 1)",
+      edition: "MSIM4207 | Modul 01",
+      pdf_file_url: "assets/modul/MSIM4207-Modul-01.pdf",
+      pdf_data_url: (typeof window !== "undefined" && window.DEFAULT_CAMSCANNER_PDF_DATA_URL) || "",
+      images: [
+        "assets/modul/page-1.jpg",
+        "assets/modul/page-2.jpg",
+        "assets/modul/page-3.jpg",
       ],
-    },
-    {
-      id: "mod-102",
-      course_id: "c1111111-1111-1111-1111-111111111111",
-      title: "Modul 01: Siklus Hidup Pengembangan Sistem (SDLC) & UML",
-      edition: "Modul 1-2 • Edisi 2026",
-      pdf_data_url: "",
-      pdf_external_url: "",
-      spreads: [
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 1:\nDokumen spesifikasi resmi yang merangkum seluruh kebutuhan fungsional dan non-fungsional pengguna pada tahap analisis disebut...\nA. ERD Document\nB. SRS (Software Requirements Specification)\nC. User Manual\nD. Source Code\nKunci Jawaban: B (SRS mendokumentasikan spesifikasi kebutuhan sistem).\n\nSOAL 2:\nDiagram UML yang memvisualisasikan urutan interaksi pesan antar objek berdasarkan urutan waktu adalah...\nA. Sequence Diagram\nB. Class Diagram\nC. Use Case Diagram\nD. Deployment Diagram\nKunci Jawaban: A (Sequence Diagram fokus pada urutan waktu pengiriman pesan).",
-          rightTitle: "",
-          rightText:
-            "SOAL 3:\nRelasi pada Use Case Diagram yang menandakan bahwa suatu use case wajib dijalankan setiap kali use case utama dipanggil adalah...\nA. <<extend>>\nB. <<include>>\nC. <<generalize>>\nD. <<interface>>\nKunci Jawaban: B (Relasi <<include>> bersifat wajib/mandatory).\n\nSOAL 4:\nMetode pengujian yang berfokus pada alur logika internal, percabangan kode, dan statement coverage disebut...\nA. Black-Box Testing\nB. White-Box Testing\nC. User Acceptance Testing\nD. Stress Testing\nKunci Jawaban: B (White-Box menguji struktur kode secara langsung).",
-        },
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 5:\nTahap dalam SDLC yang bertujuan mengevaluasi kelayakan teknis, operasional, dan finansial sebelum proyek dimulai adalah...\nA. Tahap Implementasi\nB. Tahap Perencanaan (Planning & Feasibility Study)\nC. Tahap Pemeliharaan (Maintenance)\nD. Tahap Pengujian\nKunci Jawaban: B (Studi kelayakan dilakukan pada fase Perencanaan/Planning).\n\nSOAL 6:\nDiagram UML yang menggambarkan struktur statis sistem berupa kelas, atribut, operasi/metode, serta hubungan antar objek adalah...\nA. Activity Diagram\nB. Class Diagram\nC. Use Case Diagram\nD. Statechart Diagram\nKunci Jawaban: B (Class Diagram memodelkan struktur statis berorientasi objek).",
-          rightTitle: "",
-          rightText:
-            "SOAL 7:\nModel pengembangan perangkat lunak yang dilakukan secara berurutan mulai dari analisis, desain, pengkodean, hingga pengujian seperti air terjun disebut...\nA. Agile Scrum\nB. Waterfall Model\nC. Extreme Programming\nD. Spiral Model\nKunci Jawaban: B (Waterfall bekerja secara sekuensial/linier).\n\nSOAL 8:\nPengujian yang dilakukan langsung oleh pengguna akhir (end-user) untuk memastikan sistem telah sesuai kebutuhan bisnis sebelum rilis disebut...\nA. Unit Testing\nB. Integration Testing\nC. UAT (User Acceptance Testing)\nD. Regression Testing\nKunci Jawaban: C (UAT adalah pengujian penerimaan pengguna akhir).",
-        },
-      ],
-    },
-    {
-      id: "mod-103",
-      course_id: "c4444444-4444-4444-4444-444444444444",
-      title: "Modul 01: Formulasi Strategi Korporasi & Analisis SWOT",
-      edition: "Modul 1-2 • Edisi 2026",
-      pdf_data_url: "",
-      pdf_external_url: "",
-      spreads: [
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 1:\nLima Kekuatan Porter (Porter's Five Forces) digunakan oleh perusahaan untuk menganalisis...\nA. Efisiensi gaji karyawan internal\nB. Daya tarik dan tingkat persaingan industri eksternal\nC. Pencatatan jurnal akuntansi harian\nD. Struktur jaringan komputer kantor\nKunci Jawaban: B (Model Porter mengevaluasi kekuatan persaingan industri).\n\nSOAL 2:\nStrategi bisnis yang berfokus menciptakan produk unik agar memiliki nilai tambah di mata konsumen disebut strategi...\nA. Cost Leadership\nB. Diferensiasi (Differentiation)\nC. Likuidasi\nD. Divestasi\nKunci Jawaban: B (Diferensiasi menekankan keunikan nilai produk).",
-          rightTitle: "",
-          rightText:
-            "SOAL 3:\nManakah yang BUKAN merupakan salah satu dari empat perspektif utama dalam Balanced Scorecard (BSC)?\nA. Perspektif Keuangan (Financial)\nB. Perspektif Pelanggan (Customer)\nC. Perspektif Politik Makro\nD. Perspektif Pembelajaran & Pertumbuhan\nKunci Jawaban: C (BSC terdiri dari Keuangan, Pelanggan, Proses Bisnis Internal, dan Pembelajaran/Pertumbuhan).\n\nSOAL 4:\nTahap akhir dalam proses manajemen strategik untuk memastikan sasaran perusahaan tercapai sesuai rencana adalah...\nA. Perumusan Visi\nB. Evaluasi dan Pengendalian Strategi\nC. Rekrutmen Staf\nD. Promosi Penjualan\nKunci Jawaban: B (Evaluasi strategi memantau pencapaian target).",
-        },
-        {
-          leftTitle: "",
-          leftText:
-            "SOAL 5:\nDalam matriks SWOT, strategi yang menggunakan kekuatan internal (Strengths) untuk memanfaatkan peluang eksternal (Opportunities) disebut...\nA. Strategi WO\nB. Strategi SO (Agresif/Pertumbuhan)\nC. Strategi ST\nD. Strategi WT\nKunci Jawaban: B (Strategi SO memaksimalkan kekuatan untuk merebut peluang).\n\nSOAL 6:\nStrategi korporasi ketika sebuah perusahaan mengakuisisi pemasok bahan bakunya sendiri untuk mengamankan rantai pasok disebut...\nA. Integrasi ke Belakang (Backward Integration)\nB. Integrasi ke Depan (Forward Integration)\nC. Integrasi Horizontal\nD. Diversifikasi Konglomerat\nKunci Jawaban: A (Backward Integration mengendalikan hulu/pemasok).",
-          rightTitle: "",
-          rightText:
-            "SOAL 7:\nStrategi bisnis yang berupaya mencapai biaya produksi dan operasional paling rendah di dalam industrinya disebut...\nA. Focus Differentiation\nB. Cost Leadership (Keunggulan Biaya)\nC. Retrenchment\nD. Joint Venture\nKunci Jawaban: B (Cost Leadership menekankan efisiensi biaya terendah).\n\nSOAL 8:\nAnalisis lingkungan makro eksternal yang mencakup faktor Politik, Ekonomi, Sosial, Teknologi, Lingkungan, dan Hukum dikenal dengan singkatan...\nA. SWOT\nB. PESTEL\nC. BCG Matrix\nD. VRIO\nKunci Jawaban: B (PESTEL menganalisis faktor makro eksternal organisasi).",
-        },
-      ],
+      page_count: 3,
     },
   ];
 
+  // ============================================================================
+  // INDEXEDDB STORAGE (Untuk Menyimpan File PDF Scan / Gambar Berukuran Besar)
+  // ============================================================================
+  const IDB_NAME = "utb_modul_storage";
+  const IDB_STORE = "pdf_files";
+
+  function getDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        resolve(null);
+        return;
+      }
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    });
+  }
+
+  async function saveFileToIdb(key, fileOrBlob) {
+    try {
+      const db = await getDb();
+      if (!db) return false;
+      return new Promise((resolve) => {
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(fileOrBlob, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function getFileFromIdb(key) {
+    try {
+      const db = await getDb();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const req = tx.objectStore(IDB_STORE).get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function deleteFileFromIdb(key) {
+    try {
+      const db = await getDb();
+      if (!db) return;
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).delete(key);
+    } catch (_) {}
+  }
+
+  // ============================================================================
+  // STATE DAN GETTER DATA
+  // ============================================================================
   let currentUser = null;
   let isAdmin = false;
   let selectedProdi = null;
   let selectedCourse = null;
   let activeModul = null;
-  let activeSpreadIndex = 0;
   let activeBlobUrl = null;
+  let currentComicZoom = 1.0;
 
   function getProdis() {
     try {
@@ -126,7 +188,14 @@
       const raw = localStorage.getItem("utb_catalog_courses");
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Pastikan mata kuliah MSIM4207 selalu ada di daftar teratas
+          if (!parsed.some((c) => c.code === "MSIM4207" || c.id === "c-msim4207-01")) {
+            parsed.unshift(DEFAULT_COURSES[0]);
+            localStorage.setItem("utb_catalog_courses", JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       }
     } catch (_) {}
     localStorage.setItem("utb_catalog_courses", JSON.stringify(DEFAULT_COURSES));
@@ -139,21 +208,22 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Pastikan modul default hanya berisi langsung soal pilihan ganda tanpa deskripsi bab
-          let updated = false;
-          parsed.forEach((m) => {
-            const def = DEFAULT_MODULS.find((d) => d.id === m.id);
-            if (def) {
-              const hasOldBabDesc =
-                !Array.isArray(m.spreads) ||
-                m.spreads.some((sp) => (sp.leftTitle && sp.leftTitle.includes("BAB")) || !String(sp.leftText || "").trim().startsWith("SOAL"));
-              if (hasOldBabDesc) {
-                m.spreads = def.spreads;
-                updated = true;
-              }
-            }
-          });
-          if (updated) localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          // Pastikan modul MSIM4207 selalu tersedia dengan file scan CamScanner asli
+          const msimIdx = parsed.findIndex(
+            (m) => m.id === "mod-msim4207-01" || (m.title && m.title.includes("MSIM4207"))
+          );
+          if (msimIdx === -1) {
+            parsed.unshift(DEFAULT_MODULS[0]);
+            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          } else {
+            parsed[msimIdx] = {
+              ...DEFAULT_MODULS[0],
+              ...parsed[msimIdx],
+              images: DEFAULT_MODULS[0].images,
+              pdf_file_url: DEFAULT_MODULS[0].pdf_file_url,
+            };
+            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          }
           return parsed;
         }
       }
@@ -162,9 +232,18 @@
     return [...DEFAULT_MODULS];
   }
 
+  // ============================================================================
+  // INISIALISASI HALAMAN
+  // ============================================================================
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
+
+    if (typeof window.dbGetCatalogProdis === "function") {
+      try {
+        await window.dbGetCatalogProdis();
+      } catch (_) {}
+    }
 
     isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     const adminPanel = document.getElementById("admin-modul-manager");
@@ -173,7 +252,6 @@
       if (adminPanel) adminPanel.style.display = "block";
       initAdminModulController();
     } else {
-      // Pastikan user selain Admin tidak bisa melihat atau mengakses form tambah/edit/hapus
       if (adminPanel) adminPanel.remove();
     }
 
@@ -182,6 +260,9 @@
     renderProdiStep();
   });
 
+  // ============================================================================
+  // STEPPER TAHAPAN (1. Prodi -> 2. Mata Kuliah -> 3. Baca Soal Modul)
+  // ============================================================================
   function setStep(stepNum) {
     document.querySelectorAll("[data-mstep]").forEach((el) => {
       const n = Number(el.dataset.mstep);
@@ -195,8 +276,11 @@
     if (s1) s1.style.display = stepNum === 1 ? "block" : "none";
     if (s2) s2.style.display = stepNum === 2 ? "block" : "none";
     if (s3) s3.style.display = stepNum === 3 ? "block" : "none";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // TAHAP 1: PILIH PROGRAM STUDI
   function renderProdiStep() {
     const grid = document.getElementById("modul-prodi-grid");
     if (!grid) return;
@@ -219,7 +303,7 @@
               <p class="selection-desc">${window.escapeHtml(p.description || "Program studi digital.")}</p>
             </div>
             <div class="selection-meta">
-              <span>${cCount || 1} Mata Kuliah Tersedia</span>
+              <span>${cCount} Mata Kuliah Tersedia</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
@@ -229,7 +313,7 @@
 
     grid.querySelectorAll(".selection-card").forEach((card) => {
       card.addEventListener("click", () => {
-        const found = prodis.find((item) => item.id === card.dataset.prodiId);
+        const found = prodis.find((p) => p.id === card.dataset.prodiId);
         if (found) {
           selectedProdi = found;
           renderCourseStep(found);
@@ -238,34 +322,46 @@
     });
   }
 
+  // TAHAP 2: PILIH MATA KULIAH
   function renderCourseStep(prodi) {
     setStep(2);
     const heading = document.getElementById("modul-course-heading");
-    if (heading) heading.textContent = `Mata Kuliah — ${prodi.name} (${prodi.code})`;
+    if (heading) heading.textContent = `Pilih Mata Kuliah — ${prodi.name} (${prodi.code})`;
 
     const grid = document.getElementById("modul-course-grid");
     if (!grid) return;
 
     const allCourses = getCourses();
-    let courses = allCourses.filter((c) => c.study_program_id === prodi.id);
-    if (courses.length === 0) courses = allCourses;
+    const courses = allCourses.filter((c) => c.study_program_id === prodi.id);
     const moduls = getModuls();
+
+    if (courses.length === 0) {
+      grid.innerHTML = `
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <p style="color: var(--text-secondary); margin-bottom: 1rem;">Belum ada mata kuliah yang terdaftar untuk program studi ini.</p>
+        </div>
+      `;
+      return;
+    }
 
     grid.innerHTML = courses
       .map((c) => {
         const mCount = moduls.filter((m) => m.course_id === c.id).length;
+        const isMsim = c.code === "MSIM4207";
         return `
-          <div class="selection-card" data-course-id="${c.id}">
+          <div class="selection-card" data-course-id="${c.id}" style="${isMsim ? 'border: 2px solid var(--primary-blue); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);' : ''}">
             <div>
               <div class="selection-card-header">
-                <span class="badge badge-primary">${window.escapeHtml(c.code)}</span>
-                <span class="badge badge-success">${mCount || 1} Buku PDF</span>
+                <div class="selection-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <span class="badge ${isMsim ? 'badge-primary' : 'badge-primary'}">${window.escapeHtml(c.code)}</span>
               </div>
               <h3 class="selection-title">${window.escapeHtml(c.name)}</h3>
-              <p class="selection-desc">${window.escapeHtml(c.description || "Modul dan soal evaluasi mata kuliah.")}</p>
+              <p class="selection-desc">${window.escapeHtml(c.description || "Mata kuliah program sarjana.")}</p>
             </div>
             <div class="selection-meta">
-              <span>Buka Buku &amp; PDF Soal Modul</span>
+              <span style="${isMsim ? 'color: var(--primary-blue); font-weight: 700;' : ''}">${mCount > 0 ? `${mCount} Modul Scan PDF Siap Baca` : "Tersedia Modul"}</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
@@ -275,7 +371,7 @@
 
     grid.querySelectorAll(".selection-card").forEach((card) => {
       card.addEventListener("click", () => {
-        const found = courses.find((item) => item.id === card.dataset.courseId);
+        const found = courses.find((c) => c.id === card.dataset.courseId);
         if (found) {
           selectedCourse = found;
           openCourseReader(found);
@@ -284,6 +380,7 @@
     });
   }
 
+  // TAHAP 3: BUKA PEMBACA WEB KOMIK SOAL MODUL
   function openCourseReader(course) {
     setStep(3);
     const titleEl = document.getElementById("modul-reader-course-title");
@@ -291,23 +388,17 @@
 
     const allModuls = getModuls();
     let courseModuls = allModuls.filter((m) => m.course_id === course.id);
+
+    // Fallback jika belum ada modul pada mata kuliah ini
     if (courseModuls.length === 0) {
       courseModuls = [
         {
-          id: "mod-auto-" + course.id,
+          id: "mod-empty-" + course.id,
           course_id: course.id,
-          title: `Modul Utama: ${course.name}`,
-          edition: "Edisi 2026",
-          pdf_data_url: "",
-          pdf_external_url: "",
-          spreads: [
-            {
-              leftTitle: `Ringkasan Materi ${course.name}`,
-              leftText: `${course.description || "Materi inti perkuliahan mandiri."}\n\nPelajari konsep dasar, definisi struktural, dan kerangka analisis pada modul ini sebelum mengerjakan soal evaluasi di halaman sebelah kanan.`,
-              rightTitle: `Soal Evaluasi Modul — ${course.code}`,
-              rightText: `SOAL 1:\nFokus kajian utama dalam mata kuliah ${course.name} (${course.code}) mencakup...\nA. Pemahaman konsep teoretis dan studi kasus terapan\nB. Pengabaian standar prosedur akademik\nC. Penghapusan dokumentasi sistem\nD. Penyederhanaan tanpa evaluasi\nKunci Jawaban: A`,
-            },
-          ],
+          title: `Modul 01: ${course.name}`,
+          edition: `${course.code} | Modul 01`,
+          images: [],
+          page_count: 0,
         },
       ];
     }
@@ -337,458 +428,229 @@
     loadActiveModul(courseModuls[0]);
   }
 
-  function loadActiveModul(modul) {
+  // ============================================================================
+  // LOAD MODUL DAN RENDER HALAMAN SEPERTI WEB BACA KOMIK SCROLL KE BAWAH
+  // ============================================================================
+  async function loadActiveModul(modul) {
     activeModul = modul;
-    activeSpreadIndex = 0;
+    currentComicZoom = 1.0;
 
     const badgeEl = document.getElementById("reader-badge-edition");
     const titleEl = document.getElementById("reader-active-title");
-    if (badgeEl) badgeEl.textContent = modul.edition || "MODUL PDF";
+    const counterEl = document.getElementById("comic-panel-counter");
+    const zoomText = document.getElementById("comic-zoom-label");
+
+    if (badgeEl) badgeEl.textContent = modul.edition || "MODUL 01";
     if (titleEl) titleEl.textContent = modul.title;
+    if (zoomText) zoomText.textContent = "100%";
 
-    renderBookSpread();
-    preparePdfSource(modul);
+    await renderComicVerticalPages(modul);
+    updateComicScrollProgress();
   }
 
-  function formatBookParagraphs(rawText) {
-    if (!rawText) return "<p>-</p>";
-    return String(rawText)
-      .split(/\n\n+/)
-      .map((block) => {
-        const trimmed = block.trim();
-        // Abaikan baris deskripsi bab lama jika ada
-        if (/^BAB\s+\d+/i.test(trimmed)) return "";
-        const escaped = window.escapeHtml(trimmed).replace(/\n/g, "<br>");
-        return `<div class="book-question-card">${escaped}</div>`;
-      })
-      .join("");
-  }
+  async function renderComicVerticalPages(modul) {
+    const streamEl = document.getElementById("comic-vertical-stream");
+    const counterEl = document.getElementById("comic-panel-counter");
+    if (!streamEl || !modul) return;
 
-  let isBookFlipping = false;
-
-  function renderBookSpread() {
-    if (!activeModul) return;
-    const spreads =
-      Array.isArray(activeModul.spreads) && activeModul.spreads.length > 0
-        ? activeModul.spreads
-        : [
-            {
-              leftTitle: activeModul.title,
-              leftText: "Materi modul pembelajaran mandiri.",
-              rightTitle: "Soal Evaluasi Modul",
-              rightText: "Daftar soal evaluasi modul.",
-            },
-          ];
-
-    if (activeSpreadIndex >= spreads.length) activeSpreadIndex = spreads.length - 1;
-    if (activeSpreadIndex < 0) activeSpreadIndex = 0;
-
-    const current = spreads[activeSpreadIndex];
-    const leftPageNum = activeSpreadIndex * 2 + 1;
-    const rightPageNum = activeSpreadIndex * 2 + 2;
-
-    const leftCodeEl = document.getElementById("book-left-header-code");
-    const rightEdEl = document.getElementById("book-right-header-edition");
-    const leftBodyEl = document.getElementById("book-left-body");
-    const rightBodyEl = document.getElementById("book-right-body");
-    const leftNumEl = document.getElementById("book-left-page-num");
-    const rightNumEl = document.getElementById("book-right-page-num");
-    const indicatorEl = document.getElementById("book-spread-indicator");
-    const prevBtn = document.getElementById("btn-book-prev-spread");
-    const nextBtn = document.getElementById("btn-book-next-spread");
-    const leftPageCard = document.getElementById("book-page-left");
-    const rightPageCard = document.getElementById("book-page-right");
-
-    if (leftCodeEl) leftCodeEl.textContent = selectedCourse ? `${selectedCourse.code} • ${selectedCourse.name}` : "MODUL KULIAH";
-    if (rightEdEl) rightEdEl.textContent = activeModul.edition || "EDISI 2026";
-
-    if (leftBodyEl) {
-      leftBodyEl.innerHTML = formatBookParagraphs(current.leftText);
-    }
-
-    if (rightBodyEl) {
-      rightBodyEl.innerHTML = formatBookParagraphs(current.rightText);
-    }
-
-    if (leftNumEl) leftNumEl.textContent = `Halaman ${leftPageNum}`;
-    if (rightNumEl) rightNumEl.textContent = `Halaman ${rightPageNum}`;
-    if (indicatorEl) {
-      indicatorEl.textContent = `Lembar ${activeSpreadIndex + 1} dari ${spreads.length} (Halaman ${leftPageNum}–${rightPageNum})`;
-    }
-
-    const canPrev = activeSpreadIndex > 0;
-    const canNext = activeSpreadIndex < spreads.length - 1;
-    if (prevBtn) prevBtn.disabled = !canPrev;
-    if (nextBtn) nextBtn.disabled = !canNext;
-
-    if (leftPageCard) {
-      leftPageCard.classList.toggle("can-turn", canPrev);
-      const hintLeft = leftPageCard.querySelector(".page-turn-hint-left");
-      if (hintLeft) hintLeft.textContent = canPrev ? "◀ Klik / Geser Kanan (Sebelumnya)" : "Awal Buku";
-    }
-    if (rightPageCard) {
-      rightPageCard.classList.toggle("can-turn", canNext);
-      const hintRight = rightPageCard.querySelector(".page-turn-hint-right");
-      if (hintRight) hintRight.textContent = canNext ? "Klik / Geser Kiri (Berikutnya) ▶" : "Akhir Buku";
-    }
-  }
-
-  function turnBookPage(direction) {
-    if (!activeModul || isBookFlipping) return;
-    const spreads = Array.isArray(activeModul.spreads) ? activeModul.spreads : [];
-    const spreadEl = document.getElementById("open-book-spread");
-
-    if (direction === "next") {
-      if (activeSpreadIndex >= spreads.length - 1) {
-        window.showToast("Anda sudah berada di halaman terakhir modul ini.", "info");
-        return;
-      }
-      isBookFlipping = true;
-      if (spreadEl) {
-        spreadEl.classList.remove("turning-prev", "turning-next");
-        void spreadEl.offsetWidth;
-        spreadEl.classList.add("turning-next");
-      }
-      setTimeout(() => {
-        activeSpreadIndex++;
-        renderBookSpread();
-      }, 210);
-      setTimeout(() => {
-        if (spreadEl) spreadEl.classList.remove("turning-next");
-        isBookFlipping = false;
-      }, 570);
-    } else if (direction === "prev") {
-      if (activeSpreadIndex <= 0) {
-        window.showToast("Anda sudah berada di halaman pertama modul ini.", "info");
-        return;
-      }
-      isBookFlipping = true;
-      if (spreadEl) {
-        spreadEl.classList.remove("turning-prev", "turning-next");
-        void spreadEl.offsetWidth;
-        spreadEl.classList.add("turning-prev");
-      }
-      setTimeout(() => {
-        activeSpreadIndex--;
-        renderBookSpread();
-      }, 210);
-      setTimeout(() => {
-        if (spreadEl) spreadEl.classList.remove("turning-prev");
-        isBookFlipping = false;
-      }, 570);
-    }
-  }
-
-  let currentPdfZoom = 1.0;
-  let activePdfDoc = null;
-
-  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-  }
-
-  // Generator Dokumen PDF Multi-Halaman 100% Valid (%PDF-1.4)
-  function buildRealPdfBlob(modul, course) {
-    const cleanPdfText = (str) =>
-      String(str || "")
-        .replace(/[^\x20-\x7E\n]/g, " ")
-        .replace(/\\/g, "\\\\")
-        .replace(/\(/g, "\\(")
-        .replace(/\)/g, "\\)");
-
-    const wrapLines = (text, maxChars) => {
-      const lines = [];
-      String(text || "")
-        .split(/\r?\n/)
-        .forEach((para) => {
-          if (!para.trim()) {
-            lines.push("");
-            return;
-          }
-          const words = para.trim().split(/\s+/);
-          let currentLine = "";
-          words.forEach((w) => {
-            if ((currentLine + " " + w).trim().length > maxChars) {
-              if (currentLine) lines.push(currentLine);
-              currentLine = w;
-            } else {
-              currentLine = (currentLine + " " + w).trim();
-            }
-          });
-          if (currentLine) lines.push(currentLine);
-        });
-      return lines;
-    };
-
-    const allLines = [];
-    allLines.push(`UTBELAJAR - BUKU & SOAL MODUL DIGITAL`);
-    allLines.push(`Mata Kuliah : ${course ? course.code + " - " + course.name : "Mata Kuliah"}`);
-    allLines.push(`Judul Modul : ${modul.title}`);
-    allLines.push(`Edisi       : ${modul.edition || "Edisi 2026"}`);
-    allLines.push(`==============================================================================`);
-    allLines.push(``);
-
-    const spreads = Array.isArray(modul.spreads) ? modul.spreads : [];
-    spreads.forEach((sp, idx) => {
-      allLines.push(`[HALAMAN ${idx * 2 + 1} - SOAL PILIHAN GANDA]`);
-      wrapLines(sp.leftText, 76).forEach((l) => allLines.push(l));
-      allLines.push(``);
-      allLines.push(`[HALAMAN ${idx * 2 + 2} - SOAL PILIHAN GANDA]`);
-      wrapLines(sp.rightText, 76).forEach((l) => allLines.push(l));
-      allLines.push(``);
-      allLines.push(`------------------------------------------------------------------------------`);
-      allLines.push(``);
-    });
-
-    allLines.push(`Copyright HasanAF 2026 - UTBelajar`);
-
-    const linesPerPage = 46;
-    const pageChunks = [];
-    for (let i = 0; i < allLines.length; i += linesPerPage) {
-      pageChunks.push(allLines.slice(i, i + linesPerPage));
-    }
-    if (pageChunks.length === 0) pageChunks.push(["UTBelajar Modul PDF"]);
-
-    const objects = [];
-    // Obj 1: Catalog, Obj 2: Pages, Obj 3: Font
-    objects.push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-    const kidsRefs = pageChunks.map((_, idx) => `${4 + idx * 2} 0 R`).join(" ");
-    objects.push(`2 0 obj\n<< /Type /Pages /Kids [${kidsRefs}] /Count ${pageChunks.length} >>\nendobj\n`);
-    objects.push("3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
-
-    pageChunks.forEach((lines, idx) => {
-      const pageObjNum = 4 + idx * 2;
-      const contentObjNum = pageObjNum + 1;
-      let streamContent = "BT\n/F1 10.5 Tf\n45 792 Td\n15 TL\n";
-      lines.forEach((line) => {
-        streamContent += `(${cleanPdfText(line)}) Tj T*\n`;
-      });
-      streamContent += `\n(--- Halaman ${idx + 1} dari ${pageChunks.length} | UTBelajar ---) Tj\nET`;
-
-      objects.push(
-        `${pageObjNum} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjNum} 0 R >>\nendobj\n`
-      );
-      objects.push(
-        `${contentObjNum} 0 obj\n<< /Length ${streamContent.length} >>\nstream\n${streamContent}\nendstream\nendobj\n`
-      );
-    });
-
-    let pdf = "%PDF-1.4\n";
-    const offsets = [0];
-    objects.forEach((obj) => {
-      offsets.push(pdf.length);
-      pdf += obj;
-    });
-
-    const xrefStart = pdf.length;
-    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-    for (let i = 1; i <= objects.length; i++) {
-      pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
-    }
-    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-
-    return new Blob([pdf], { type: "application/pdf" });
-  }
-
-  function dataUrlToUint8Array(dataUrl) {
-    try {
-      const parts = String(dataUrl).split(",");
-      const base64 = parts.length > 1 ? parts[1] : parts[0];
-      const raw = atob(base64);
-      const uint8 = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) {
-        uint8[i] = raw.charCodeAt(i);
-      }
-      return uint8;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function renderFallbackA4Sheets(modul, course) {
-    const stack = document.getElementById("pdf-canvas-stack");
-    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
-    const iframe = document.getElementById("pdf-inline-iframe");
-    if (!stack) return;
-    if (iframe) iframe.style.display = "none";
-    stack.style.display = "flex";
-
-    const spreads = Array.isArray(modul.spreads) && modul.spreads.length > 0 ? modul.spreads : [];
-    if (pageInfoEl) {
-      pageInfoEl.textContent = `${spreads.length || 1} Halaman Lembar A4 (Siap Baca di HP & Desktop)`;
-    }
-
-    stack.innerHTML = spreads
-      .map(
-        (sp, idx) => `
-      <div class="pdf-a4-sheet" style="transform: scale(${currentPdfZoom}); transform-origin: top center;">
-        <div class="pdf-a4-header">
-          <div>
-            <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">
-              DOKUMEN PDF SOAL MODUL • ${window.escapeHtml(course ? course.code + " - " + course.name : "UTBELAJAR")}
-            </div>
-            <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary-navy);">
-              ${window.escapeHtml(modul.title)}
-            </div>
-          </div>
-          <span class="badge badge-blue">${window.escapeHtml(modul.edition || "Edisi 2026")} • Hal. ${idx + 1}</span>
-        </div>
-        <div class="book-page-content">
-          ${formatBookParagraphs(sp.leftText)}
-          <hr style="border: none; border-top: 1.5px dashed #CBD5E1; margin: 1.25rem 0;">
-          ${formatBookParagraphs(sp.rightText)}
-        </div>
+    streamEl.innerHTML = `
+      <div style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
+        ⏳ Menyiapkan halaman scan modul...
       </div>
-    `
-      )
-      .join("");
-  }
+    `;
 
-  async function renderPdfDocPages() {
-    const stack = document.getElementById("pdf-canvas-stack");
-    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
-    const zoomLabel = document.getElementById("pdf-zoom-level");
-    if (zoomLabel) zoomLabel.textContent = `${Math.round(currentPdfZoom * 100)}%`;
+    // KASUS 1: MODUL MEMILIKI DAFTAR GAMBAR SCAN ASLI (SEPERTI CAMSCANNER page-1.jpg, page-2.jpg, page-3.jpg)
+    if (Array.isArray(modul.images) && modul.images.length > 0) {
+      const total = modul.images.length;
+      if (counterEl) counterEl.textContent = `${total} Halaman (Scan JPG)`;
 
-    if (!activePdfDoc || !stack) {
-      if (activeModul) renderFallbackA4Sheets(activeModul, selectedCourse);
+      streamEl.innerHTML = modul.images
+        .map(
+          (imgSrc, idx) => `
+        <div class="comic-page-frame" style="max-width: ${Math.round(820 * currentComicZoom)}px;">
+          <img src="${imgSrc}" alt="Halaman ${idx + 1}" loading="lazy">
+          <span class="comic-page-number-pill">Halaman ${idx + 1} / ${total}</span>
+        </div>
+      `
+        )
+        .join("");
       return;
     }
 
-    stack.innerHTML = "";
-    const totalPages = activePdfDoc.numPages;
-    if (pageInfoEl) {
-      pageInfoEl.textContent = `${totalPages} Halaman PDF • Terbaca Langsung di HP & Desktop`;
-    }
-
-    const viewportEl = document.getElementById("pdf-canvas-viewport");
-    const availableWidth = Math.max(280, Math.min(820, (viewportEl?.clientWidth || window.innerWidth) - 32));
-    const dpr = Math.min(window.devicePixelRatio || 1.5, 2.25);
-
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      const page = await activePdfDoc.getPage(pageNum);
-      const unscaledViewport = page.getViewport({ scale: 1 });
-      const fitScale = (availableWidth / unscaledViewport.width) * currentPdfZoom;
-      const viewport = page.getViewport({ scale: fitScale });
-
-      const sheetWrapper = document.createElement("div");
-      sheetWrapper.className = "pdf-page-sheet";
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      canvas.width = Math.floor(viewport.width * dpr);
-      canvas.height = Math.floor(viewport.height * dpr);
-      canvas.style.width = `${Math.floor(viewport.width)}px`;
-      canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-      sheetWrapper.appendChild(canvas);
-      stack.appendChild(sheetWrapper);
-
-      const pageBadge = document.createElement("div");
-      pageBadge.className = "pdf-page-badge-num";
-      pageBadge.textContent = `Halaman ${pageNum} dari ${totalPages}`;
-      stack.appendChild(pageBadge);
-
-      await page.render({
-        canvasContext: ctx,
-        viewport: page.getViewport({ scale: fitScale * dpr }),
-      }).promise;
-    }
-  }
-
-  async function preparePdfSource(modul) {
-    if (activeBlobUrl) {
-      URL.revokeObjectURL(activeBlobUrl);
-      activeBlobUrl = null;
-    }
-    activePdfDoc = null;
-    currentPdfZoom = 1.0;
-
-    const stack = document.getElementById("pdf-canvas-stack");
-    const iframe = document.getElementById("pdf-inline-iframe");
-    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
-    if (stack) {
-      stack.style.display = "flex";
-      stack.innerHTML = `<div style="color:#E2E8F0; padding:2rem; text-align:center; font-weight:600;">⏳ Menyiapkan halaman PDF agar dapat dibaca langsung di layar Anda...</div>`;
-    }
-    if (iframe) iframe.style.display = "none";
-
-    let pdfBytes = null;
-
-    if (modul.pdf_data_url) {
-      pdfBytes = dataUrlToUint8Array(modul.pdf_data_url);
-      if (pdfBytes) {
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        activeBlobUrl = URL.createObjectURL(blob);
+    // KASUS 2: MODUL MEMILIKI FILE PDF DI INDEXEDDB ATAU DATA URL (HASIL UPLOAD ADMIN)
+    let pdfData = null;
+    if (modul.idb_key) {
+      const stored = await getFileFromIdb(modul.idb_key);
+      if (stored instanceof Blob) {
+        pdfData = await stored.arrayBuffer();
+      } else if (stored) {
+        pdfData = stored;
       }
-    } else if (modul.pdf_external_url) {
-      if (window.pdfjsLib) {
-        try {
-          activePdfDoc = await window.pdfjsLib.getDocument(modul.pdf_external_url).promise;
-          await renderPdfDocPages();
-          return;
-        } catch (err) {
-          // Jika URL eksternal diblokir CORS untuk canvas, gunakan Google Docs Embedded PDF Viewer agar tetap terbaca di HP
-          if (stack) stack.style.display = "none";
-          if (iframe) {
-            iframe.style.display = "block";
-            iframe.src = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(modul.pdf_external_url)}`;
-          }
-          if (pageInfoEl) pageInfoEl.textContent = "Penampil PDF Eksternal Aktif (Mobile & Desktop)";
-          return;
-        }
-      }
-    } else {
-      const blob = buildRealPdfBlob(modul, selectedCourse);
-      activeBlobUrl = URL.createObjectURL(blob);
-      const ab = await blob.arrayBuffer();
-      pdfBytes = new Uint8Array(ab);
+    } else if (modul.pdf_data_url) {
+      pdfData = modul.pdf_data_url;
+    } else if (modul.pdf_file_url) {
+      pdfData = modul.pdf_file_url;
     }
 
-    if (pdfBytes && window.pdfjsLib) {
+    if (pdfData && window.pdfjsLib) {
       try {
-        activePdfDoc = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
-        await renderPdfDocPages();
+        const loadingTask = window.pdfjsLib.getDocument(pdfData);
+        const pdfDoc = await loadingTask.promise;
+        const total = pdfDoc.numPages;
+        if (counterEl) counterEl.textContent = `${total} Halaman (PDF Scan)`;
+
+        streamEl.innerHTML = "";
+
+        for (let p = 1; p <= total; p++) {
+          const page = await pdfDoc.getPage(p);
+          const frame = document.createElement("div");
+          frame.className = "comic-page-frame";
+          frame.style.maxWidth = `${Math.round(820 * currentComicZoom)}px`;
+
+          const canvas = document.createElement("canvas");
+          frame.appendChild(canvas);
+
+          const pill = document.createElement("span");
+          pill.className = "comic-page-number-pill";
+          pill.textContent = `Halaman ${p} / ${total}`;
+          frame.appendChild(pill);
+
+          streamEl.appendChild(frame);
+
+          // Render halaman PDF ke canvas
+          const unscaledViewport = page.getViewport({ scale: 1 });
+          const targetW = Math.min(820, window.innerWidth - 32);
+          const dpr = Math.min(window.devicePixelRatio || 1.5, 2);
+          const fitScale = (targetW / unscaledViewport.width) * dpr;
+          const viewport = page.getViewport({ scale: fitScale });
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+
+          await page.render({
+            canvasContext: canvas.getContext("2d"),
+            viewport,
+          }).promise;
+        }
         return;
       } catch (err) {
-        console.warn("Fallback ke lembar A4 HTML:", err);
+        console.warn("Gagal merender PDF via pdfjs:", err);
       }
     }
 
-    renderFallbackA4Sheets(modul, selectedCourse);
+    // KASUS 3: BELUM ADA FILE SCAN PADA MODUL INI
+    if (counterEl) counterEl.textContent = "0 Halaman";
+    streamEl.innerHTML = `
+      <div style="background: #1E293B; color: #E2E8F0; padding: 2.5rem 1.5rem; border-radius: 12px; text-align: center; max-width: 600px; margin: 2rem auto;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">📄</div>
+        <h3 style="color: #FFFFFF; font-size: 1.15rem; margin-bottom: 0.4rem;">Belum Ada File Scan Modul</h3>
+        <p style="color: #94A3B8; font-size: 0.88rem; line-height: 1.6;">
+          Modul ini belum memiliki lampiran file PDF/gambar hasil scan CamScanner.
+          ${isAdmin ? 'Anda dapat mengunggah file PDF melalui panel <strong>"Manajemen Soal Modul"</strong> di atas.' : 'Silakan pilih mata kuliah <strong>MSIM4207</strong> untuk melihat contoh modul scan yang sudah tersedia.'}
+        </p>
+      </div>
+    `;
   }
 
-  function downloadActivePdf() {
+  // ============================================================================
+  // UPDATE ZOOM HALAMAN KOMIK (➖, 100%, ➕, Reset)
+  // ============================================================================
+  function applyComicZoom(newZoom) {
+    currentComicZoom = Math.min(2.0, Math.max(0.6, +newZoom.toFixed(2)));
+    const zoomText = document.getElementById("comic-zoom-label");
+    if (zoomText) zoomText.textContent = `${Math.round(currentComicZoom * 100)}%`;
+
+    const targetWidth = Math.round(820 * currentComicZoom);
+    document.querySelectorAll(".comic-page-frame").forEach((frame) => {
+      frame.style.maxWidth = `${targetWidth}px`;
+    });
+  }
+
+  // ============================================================================
+  // PROGRESS BAR SCROLL PEMBACA KOMIK
+  // ============================================================================
+  function updateComicScrollProgress() {
+    const fillEl = document.getElementById("comic-progress-fill");
+    const wrapperEl = document.getElementById("comic-reader-wrapper");
+    if (!fillEl || !wrapperEl) return;
+
+    const rect = wrapperEl.getBoundingClientRect();
+    const viewH = window.innerHeight || document.documentElement.clientHeight;
+    const totalScrollable = Math.max(1, rect.height - viewH * 0.5);
+    const scrolled = Math.max(0, -rect.top + viewH * 0.35);
+    const pct = Math.min(100, Math.max(12, Math.round((scrolled / totalScrollable) * 100)));
+    fillEl.style.width = `${pct}%`;
+  }
+
+  window.addEventListener("scroll", updateComicScrollProgress, { passive: true });
+
+  // ============================================================================
+  // UNDUH FILE PDF ASLI
+  // ============================================================================
+  async function downloadActivePdf() {
     if (!activeModul) return;
     const safeName =
       (activeModul.title || "Soal-Modul-UTBelajar")
         .replace(/[^a-zA-Z0-9_-]+/g, "-")
         .replace(/^-+|-+$/g, "") + ".pdf";
 
-    let downloadHref = "";
-    if (activeBlobUrl) {
-      downloadHref = activeBlobUrl;
-    } else if (activeModul.pdf_data_url) {
-      downloadHref = activeModul.pdf_data_url;
-    } else if (activeModul.pdf_external_url) {
-      window.open(activeModul.pdf_external_url, "_blank");
-      window.showToast("Membuka/mengunduh file PDF eksternal...", "info");
-      return;
-    } else {
-      const blob = buildRealPdfBlob(activeModul, selectedCourse);
-      activeBlobUrl = URL.createObjectURL(blob);
-      downloadHref = activeBlobUrl;
+    // 1. Jika ada file PDF tersimpan di IndexedDB
+    if (activeModul.idb_key) {
+      const stored = await getFileFromIdb(activeModul.idb_key);
+      if (stored instanceof Blob) {
+        triggerDownload(stored, safeName);
+        return;
+      }
     }
 
+    // 2. Jika ada path file PDF asli (misal: assets/modul/MSIM4207-Modul-01.pdf)
+    if (activeModul.pdf_file_url) {
+      const a = document.createElement("a");
+      a.href = activeModul.pdf_file_url;
+      a.download = safeName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.showToast(`Mengunduh file PDF "${safeName}"...`, "success");
+      return;
+    }
+
+    // 3. Jika ada data URL PDF
+    if (activeModul.pdf_data_url) {
+      triggerDownload(activeModul.pdf_data_url, safeName);
+      return;
+    }
+
+    // 4. Jika ada link URL eksternal
+    if (activeModul.pdf_external_url) {
+      window.open(activeModul.pdf_external_url, "_blank");
+      window.showToast("Membuka tautan PDF eksternal...", "info");
+      return;
+    }
+
+    window.showToast("File PDF tidak ditemukan.", "warning");
+  }
+
+  function triggerDownload(blobOrHref, filename) {
+    const isBlob = blobOrHref instanceof Blob;
+    const url = isBlob ? URL.createObjectURL(blobOrHref) : blobOrHref;
     const a = document.createElement("a");
-    a.href = downloadHref;
-    a.download = safeName;
+    a.href = url;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    window.showToast(`Mengunduh "${safeName}"...`, "success");
+    if (isBlob) {
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+    window.showToast(`Mengunduh "${filename}"...`, "success");
   }
 
+  // ============================================================================
+  // EVENT LISTENER NAVIGASI PEMBACA
+  // ============================================================================
   function setupReaderNavigation() {
     document.getElementById("btn-modul-back-prodi")?.addEventListener("click", () => {
       setStep(1);
@@ -805,151 +667,31 @@
       renderProdiStep();
     });
 
-    const switchReaderView = (mode) => {
-      const bookView = document.getElementById("view-open-book");
-      const pdfView = document.getElementById("view-direct-pdf");
-      const btnBook = document.getElementById("btn-mode-book");
-      const btnPdf = document.getElementById("btn-mode-pdf");
-
-      const isBook = mode === "book";
-      if (bookView) bookView.style.display = isBook ? "block" : "none";
-      if (pdfView) pdfView.style.display = isBook ? "none" : "block";
-      btnBook?.classList.toggle("active", isBook);
-      btnPdf?.classList.toggle("active", !isBook);
-
-      if (!isBook) {
-        renderPdfDocPages();
-      }
-    };
-
-    document.getElementById("btn-mode-book")?.addEventListener("click", () => switchReaderView("book"));
-    document.getElementById("btn-mode-pdf")?.addEventListener("click", () => switchReaderView("pdf"));
-    document.getElementById("btn-book-switch-pdf")?.addEventListener("click", () => switchReaderView("pdf"));
-    document.getElementById("btn-back-to-book-mode")?.addEventListener("click", () => switchReaderView("book"));
-
-    document.getElementById("btn-pdf-zoom-in")?.addEventListener("click", () => {
-      currentPdfZoom = Math.min(2.0, +(currentPdfZoom + 0.2).toFixed(2));
-      renderPdfDocPages();
+    // Kontrol Zoom
+    document.getElementById("btn-comic-zoom-in")?.addEventListener("click", () => {
+      applyComicZoom(currentComicZoom + 0.15);
     });
 
-    document.getElementById("btn-pdf-zoom-out")?.addEventListener("click", () => {
-      currentPdfZoom = Math.max(0.6, +(currentPdfZoom - 0.2).toFixed(2));
-      renderPdfDocPages();
+    document.getElementById("btn-comic-zoom-out")?.addEventListener("click", () => {
+      applyComicZoom(currentComicZoom - 0.15);
     });
 
-    document.getElementById("btn-pdf-zoom-reset")?.addEventListener("click", () => {
-      currentPdfZoom = 1.0;
-      renderPdfDocPages();
+    document.getElementById("btn-comic-zoom-reset")?.addEventListener("click", () => {
+      applyComicZoom(1.0);
     });
 
-    document.getElementById("btn-book-prev-spread")?.addEventListener("click", () => {
-      turnBookPage("prev");
+    // Tombol Scroll ke Atas
+    document.getElementById("btn-comic-scroll-top")?.addEventListener("click", () => {
+      document.getElementById("step-modul-reader")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    document.getElementById("btn-book-next-spread")?.addEventListener("click", () => {
-      turnBookPage("next");
-    });
-
-    // Interaksi Klik Halaman Kanan & Kiri Buku serta Swipe Layar (HP / Tablet / Mouse)
-    const spreadEl = document.getElementById("open-book-spread");
-    const leftPageEl = document.getElementById("book-page-left");
-    const rightPageEl = document.getElementById("book-page-right");
-
-    let pointerStartX = null;
-    let pointerStartY = null;
-    let didSwipeGesture = false;
-
-    if (spreadEl) {
-      // Touch Swipe (HP & Tablet)
-      spreadEl.addEventListener(
-        "touchstart",
-        (e) => {
-          if (e.touches && e.touches.length === 1) {
-            pointerStartX = e.touches[0].clientX;
-            pointerStartY = e.touches[0].clientY;
-            didSwipeGesture = false;
-          }
-        },
-        { passive: true }
-      );
-
-      spreadEl.addEventListener(
-        "touchend",
-        (e) => {
-          if (pointerStartX === null || !e.changedTouches || e.changedTouches.length === 0) return;
-          const dx = e.changedTouches[0].clientX - pointerStartX;
-          const dy = e.changedTouches[0].clientY - pointerStartY;
-          pointerStartX = null;
-          pointerStartY = null;
-
-          // Jika swipe horizontal cukup jauh (> 40px) dan lebih dominan dari scroll vertikal
-          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.15) {
-            didSwipeGesture = true;
-            if (dx < 0) {
-              // Swipe ke kiri -> Buku terlampir ke kiri & pindah halaman berikutnya
-              turnBookPage("next");
-            } else {
-              // Swipe ke kanan -> Buku terlampir ke kanan & kembali halaman sebelumnya
-              turnBookPage("prev");
-            }
-          }
-        },
-        { passive: true }
-      );
-
-      // Mouse Drag Swipe (Desktop)
-      spreadEl.addEventListener("mousedown", (e) => {
-        pointerStartX = e.clientX;
-        pointerStartY = e.clientY;
-        didSwipeGesture = false;
-      });
-
-      spreadEl.addEventListener("mouseup", (e) => {
-        if (pointerStartX === null) return;
-        const dx = e.clientX - pointerStartX;
-        const dy = e.clientY - pointerStartY;
-        pointerStartX = null;
-        pointerStartY = null;
-
-        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-          didSwipeGesture = true;
-          if (dx < 0) {
-            turnBookPage("next");
-          } else {
-            turnBookPage("prev");
-          }
-        }
-      });
-    }
-
-    // Klik pada Halaman Kanan -> Buku terlampir ke kiri & pindah halaman berikutnya
-    rightPageEl?.addEventListener("click", () => {
-      if (didSwipeGesture) {
-        didSwipeGesture = false;
-        return;
-      }
-      const selection = window.getSelection ? String(window.getSelection()) : "";
-      if (selection.length > 0) return;
-      turnBookPage("next");
-    });
-
-    // Klik pada Halaman Kiri -> Buku terlampir ke kanan & kembali ke halaman sebelumnya
-    leftPageEl?.addEventListener("click", () => {
-      if (didSwipeGesture) {
-        didSwipeGesture = false;
-        return;
-      }
-      const selection = window.getSelection ? String(window.getSelection()) : "";
-      if (selection.length > 0) return;
-      turnBookPage("prev");
-    });
-
+    // Tombol Unduh PDF
     document.getElementById("btn-download-modul-pdf")?.addEventListener("click", downloadActivePdf);
     document.getElementById("btn-download-modul-pdf-bottom")?.addEventListener("click", downloadActivePdf);
   }
 
   // ============================================================================
-  // PANEL MANAJEMEN KHUSUS ADMIN (TAMBAH, EDIT/UBAH, HAPUS)
+  // PANEL MANAJEMEN KHUSUS ADMIN (TAMBAH, EDIT, UPLOAD PDF, HAPUS)
   // ============================================================================
   function initAdminModulController() {
     const switchTab = (tabName) => {
@@ -977,7 +719,7 @@
       if (bodyEl) bodyEl.style.display = bodyEl.style.display === "none" ? "block" : "none";
     });
 
-    // 1. Form Prodi (Tambah & Edit)
+    // 1. Form Prodi
     const formProdi = document.getElementById("form-madmin-prodi");
     const cancelProdiBtn = document.getElementById("btn-cancel-m-prodi");
     cancelProdiBtn?.addEventListener("click", () => {
@@ -987,7 +729,7 @@
       cancelProdiBtn.style.display = "none";
     });
 
-    formProdi?.addEventListener("submit", (e) => {
+    formProdi?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const editId = document.getElementById("m-prodi-edit-id")?.value;
       const code = document.getElementById("m-prodi-code")?.value.trim().toUpperCase();
@@ -995,23 +737,37 @@
       const description = document.getElementById("m-prodi-desc")?.value.trim() || "Program studi digital.";
       if (!code || !name) return;
 
-      const list = getProdis();
+      const submitBtn = document.getElementById("btn-submit-m-prodi");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
       if (editId) {
-        const idx = list.findIndex((p) => p.id === editId);
-        if (idx !== -1) list[idx] = { ...list[idx], code, name, description };
-        window.showToast(`Program Studi "${name}" berhasil diperbarui!`, "success");
+        if (typeof window.dbUpdateProdi === "function") {
+          await window.dbUpdateProdi(editId, { code, name, description });
+        } else {
+          const list = getProdis();
+          const idx = list.findIndex((p) => p.id === editId);
+          if (idx !== -1) list[idx] = { ...list[idx], code, name, description };
+          localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+        }
+        window.showToast(`Program Studi "${name}" berhasil diperbarui di Supabase!`, "success");
       } else {
-        list.push({ id: "prodi-" + Date.now(), code, name, description });
-        window.showToast(`Program Studi "${name}" berhasil ditambahkan!`, "success");
+        if (typeof window.dbInsertProdi === "function") {
+          await window.dbInsertProdi({ code, name, description });
+        } else {
+          const list = getProdis();
+          list.push({ id: "prodi-" + Date.now(), code, name, description });
+          localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+        }
+        window.showToast(`Program Studi "${name}" berhasil ditambahkan ke Supabase!`, "success");
       }
 
-      localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+      window.setButtonLoading(submitBtn, false);
       cancelProdiBtn?.click();
       renderAdminModulLists();
       renderProdiStep();
     });
 
-    // 2. Form Mata Kuliah (Tambah & Edit)
+    // 2. Form Mata Kuliah
     const formCourse = document.getElementById("form-madmin-course");
     const cancelCourseBtn = document.getElementById("btn-cancel-m-course");
     cancelCourseBtn?.addEventListener("click", () => {
@@ -1046,13 +802,13 @@
       renderProdiStep();
     });
 
-    // 3. Form Buku & File PDF Modul (Tambah & Edit)
+    // 3. Form Upload & Kelola File PDF Modul
     const formModul = document.getElementById("form-madmin-modul");
     const cancelBookBtn = document.getElementById("btn-cancel-m-book");
     cancelBookBtn?.addEventListener("click", () => {
       formModul?.reset();
       document.getElementById("m-book-edit-id").value = "";
-      document.getElementById("btn-submit-m-book").textContent = "+ Simpan Buku & PDF Modul";
+      document.getElementById("btn-submit-m-book").textContent = "+ Upload & Simpan Modul";
       cancelBookBtn.style.display = "none";
     });
 
@@ -1061,40 +817,38 @@
       const editId = document.getElementById("m-book-edit-id")?.value;
       const course_id = document.getElementById("m-book-course")?.value;
       const title = document.getElementById("m-book-title")?.value.trim();
-      const edition = document.getElementById("m-book-edition")?.value.trim() || "Edisi 2026";
+      const edition = document.getElementById("m-book-edition")?.value.trim() || "Modul 01";
       const pdf_external_url = document.getElementById("m-book-pdf-url")?.value.trim() || "";
-      const leftText = document.getElementById("m-book-left-content")?.value.trim() || "";
-      const rightText = document.getElementById("m-book-right-content")?.value.trim() || "";
       const fileInput = document.getElementById("m-book-pdf-file");
-      const file = fileInput?.files?.[0] || null;
+      const files = fileInput?.files || [];
 
       if (!course_id || !title) return;
 
-      let pdf_data_url = "";
-      if (file) {
-        try {
-          pdf_data_url = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error("Gagal membaca file PDF"));
-            reader.readAsDataURL(file);
-          });
-        } catch (err) {
-          window.showToast("Gagal membaca file PDF: " + err.message, "error");
-          return;
+      const newId = editId || "mod-" + Date.now();
+      let idbKey = null;
+      let uploadedImages = [];
+
+      // Proses file yang diupload (PDF atau beberapa file gambar JPG/PNG)
+      if (files.length > 0) {
+        const firstFile = files[0];
+        if (firstFile.type === "application/pdf" || firstFile.name.toLowerCase().endsWith(".pdf")) {
+          // File PDF: Simpan di IndexedDB
+          idbKey = "modul_pdf_" + newId;
+          await saveFileToIdb(idbKey, firstFile);
+        } else {
+          // File Gambar JPG / PNG: Baca sebagai data URL
+          for (let i = 0; i < files.length; i++) {
+            const dataUrl = await new Promise((res) => {
+              const r = new FileReader();
+              r.onload = () => res(r.result);
+              r.readAsDataURL(files[i]);
+            });
+            uploadedImages.push(dataUrl);
+          }
         }
       }
 
       const list = getModuls();
-      const spreadObj = [
-        {
-          leftTitle: `Materi Utama — ${title}`,
-          leftText,
-          rightTitle: `Soal Evaluasi Modul — ${title}`,
-          rightText,
-        },
-      ];
-
       if (editId) {
         const idx = list.findIndex((m) => m.id === editId);
         if (idx !== -1) {
@@ -1103,34 +857,29 @@
             course_id,
             title,
             edition,
-            pdf_data_url: pdf_data_url || list[idx].pdf_data_url || "",
             pdf_external_url: pdf_external_url || list[idx].pdf_external_url || "",
-            spreads: spreadObj,
+            idb_key: idbKey || list[idx].idb_key || "",
+            images: uploadedImages.length > 0 ? uploadedImages : list[idx].images || [],
           };
         }
-        window.showToast(`Buku Modul "${title}" berhasil diperbarui!`, "success");
+        window.showToast(`Modul "${title}" berhasil diperbarui!`, "success");
       } else {
         list.push({
-          id: "mod-" + Date.now(),
+          id: newId,
           course_id,
           title,
           edition,
-          pdf_data_url,
           pdf_external_url,
-          spreads: spreadObj,
+          idb_key: idbKey,
+          images: uploadedImages,
         });
-        window.showToast(`Buku & PDF Modul "${title}" berhasil ditambahkan!`, "success");
+        window.showToast(`Modul "${title}" berhasil diunggah!`, "success");
       }
 
-      try {
-        localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
-      } catch (quotaErr) {
-        window.showToast("Ukuran file PDF terlalu besar untuk penyimpanan browser lokal. Gunakan file < 3MB atau Link URL PDF.", "warning");
-        return;
-      }
-
+      localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
       cancelBookBtn?.click();
       renderAdminModulLists();
+
       if (selectedCourse && selectedCourse.id === course_id) {
         openCourseReader(selectedCourse);
       }
@@ -1202,10 +951,19 @@
       });
 
       prodiListEl.querySelectorAll(".btn-del-mprodi").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const updated = getProdis().filter((p) => p.id !== btn.dataset.id);
-          localStorage.setItem("utb_catalog_prodis", JSON.stringify(updated));
-          window.showToast("Program studi berhasil dihapus.", "info");
+        btn.addEventListener("click", async () => {
+          const prodiId = btn.dataset.id;
+          const confirmed = window.confirm("Apakah Anda yakin ingin menghapus program studi ini dari database Supabase?");
+          if (!confirmed) return;
+
+          window.setButtonLoading(btn, true, "...");
+          if (typeof window.dbDeleteProdi === "function") {
+            await window.dbDeleteProdi(prodiId);
+          } else {
+            const updated = getProdis().filter((p) => p.id !== prodiId);
+            localStorage.setItem("utb_catalog_prodis", JSON.stringify(updated));
+          }
+          window.showToast("Program studi berhasil dihapus dari Supabase.", "info");
           renderAdminModulLists();
           renderProdiStep();
         });
@@ -1259,24 +1017,24 @@
       });
     }
 
-    // List 3: Buku & PDF Modul
+    // List 3: Modul
     const modulListEl = document.getElementById("madmin-list-modul");
     if (modulListEl) {
       modulListEl.innerHTML = moduls
         .map((m) => {
           const cObj = courses.find((c) => c.id === m.course_id);
-          const hasCustomPdf = Boolean(m.pdf_data_url || m.pdf_external_url);
+          const hasImages = Array.isArray(m.images) && m.images.length > 0;
           return `
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.95rem; background: #FFFFFF; border: 1px solid var(--border); border-radius: 10px; gap: 0.75rem; flex-wrap: wrap;">
               <div>
                 <div style="font-weight: 800; color: var(--primary-navy);">${window.escapeHtml(m.title)}</div>
                 <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                  Mata Kuliah: <strong>${window.escapeHtml(cObj?.code || "-")} - ${window.escapeHtml(cObj?.name || "-")}</strong> • ${window.escapeHtml(m.edition || "Edisi 2026")} •
-                  <span style="color: var(--success); font-weight: 700;">${hasCustomPdf ? "File PDF Kustom Terlampir" : "PDF Otomatis Siap Baca & Unduh"}</span>
+                  Mata Kuliah: <strong>${window.escapeHtml(cObj?.code || "-")} - ${window.escapeHtml(cObj?.name || "-")}</strong> • ${window.escapeHtml(m.edition || "Modul 01")} •
+                  <span style="color: var(--success); font-weight: 700;">${hasImages ? `${m.images.length} Halaman Scan Siap Baca` : "File PDF Terlampir"}</span>
                 </div>
               </div>
               <div style="display: flex; gap: 0.4rem;">
-                <button type="button" class="btn btn-soft btn-sm btn-preview-mbook" data-id="${m.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Buka Buku</button>
+                <button type="button" class="btn btn-soft btn-sm btn-preview-mbook" data-id="${m.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Lihat Modul</button>
                 <button type="button" class="btn btn-secondary btn-sm btn-edit-mbook" data-id="${m.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Ubah</button>
                 <button type="button" class="btn btn-danger btn-sm btn-del-mbook" data-id="${m.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
               </div>
@@ -1299,25 +1057,27 @@
         btn.addEventListener("click", () => {
           const item = moduls.find((m) => m.id === btn.dataset.id);
           if (!item) return;
-          const sp = item.spreads?.[0] || {};
           document.getElementById("m-book-edit-id").value = item.id;
           document.getElementById("m-book-course").value = item.course_id;
           document.getElementById("m-book-title").value = item.title;
-          document.getElementById("m-book-edition").value = item.edition || "Edisi 2026";
+          document.getElementById("m-book-edition").value = item.edition || "Modul 01";
           document.getElementById("m-book-pdf-url").value = item.pdf_external_url || "";
-          document.getElementById("m-book-left-content").value = sp.leftText || "";
-          document.getElementById("m-book-right-content").value = sp.rightText || "";
-          document.getElementById("btn-submit-m-book").textContent = "Simpan Perubahan Modul";
+          document.getElementById("btn-submit-m-book").textContent = "Simpan Perubahan";
           document.getElementById("btn-cancel-m-book").style.display = "inline-flex";
         });
       });
 
       modulListEl.querySelectorAll(".btn-del-mbook").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
+          const item = moduls.find((m) => m.id === btn.dataset.id);
+          if (item && item.idb_key) {
+            await deleteFileFromIdb(item.idb_key);
+          }
           const updated = getModuls().filter((m) => m.id !== btn.dataset.id);
           localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));
-          window.showToast("Buku & PDF Modul berhasil dihapus.", "info");
+          window.showToast("Modul berhasil dihapus.", "info");
           renderAdminModulLists();
+          if (selectedCourse) openCourseReader(selectedCourse);
         });
       });
     }

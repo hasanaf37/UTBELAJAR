@@ -34,7 +34,7 @@
       last_active_at: "2026-10-28T13:45:00.000Z",
     },
     {
-      id: "u1111111-1111-1111-1111-111111111111",
+      id: "f1111111-1111-1111-1111-111111111111",
       full_name: "Siti Aminah",
       role: "student",
       status: "Aktif",
@@ -45,7 +45,7 @@
       last_active_at: "2026-10-28T11:20:00.000Z",
     },
     {
-      id: "u2222222-2222-2222-2222-222222222222",
+      id: "f2222222-2222-2222-2222-222222222222",
       full_name: "Budi Santoso",
       role: "student",
       status: "Aktif",
@@ -56,7 +56,7 @@
       last_active_at: "2026-10-27T19:40:00.000Z",
     },
     {
-      id: "u3333333-3333-3333-3333-333333333333",
+      id: "f3333333-3333-3333-3333-333333333333",
       full_name: "Rizky Pratama",
       role: "student",
       status: "Nonaktif",
@@ -129,7 +129,7 @@
               },
             },
           ],
-          "u1111111-1111-1111-1111-111111111111": [
+          "f1111111-1111-1111-1111-111111111111": [
             {
               id: "att-seed-3",
               score: 85,
@@ -145,7 +145,7 @@
               },
             },
           ],
-          "u2222222-2222-2222-2222-222222222222": [
+          "f2222222-2222-2222-2222-222222222222": [
             {
               id: "att-seed-4",
               score: 75,
@@ -236,23 +236,19 @@
 
   async function loadStudyProgramsDropdown() {
     const selectEl = document.getElementById("program-studi-select");
-    if (!selectEl || !window.supabaseClient || !window.isSupabaseConfigured()) return;
+    if (!selectEl) return;
 
     try {
-      const { data: prodis, error } = await window.supabaseClient
-        .from("study_programs")
-        .select("id, name, code")
-        .eq("is_active", true)
-        .order("name", { ascending: true });
-
-      if (error) throw error;
+      const prodis = typeof window.dbGetStudyPrograms === "function"
+        ? await window.dbGetStudyPrograms()
+        : window.DEFAULT_PRODI_LIST || [];
 
       if (prodis && prodis.length > 0) {
         selectEl.innerHTML = `<option value="">-- Pilih Program Studi --</option>`;
         prodis.forEach((p) => {
           const opt = document.createElement("option");
           opt.value = p.id;
-          opt.textContent = `${p.name} (${p.code})`;
+          opt.textContent = p.name;
           selectEl.appendChild(opt);
         });
       }
@@ -280,6 +276,11 @@
 
     try {
       ensureDefaultUsersSeeded();
+      if (typeof window.dbGetUsers === "function") {
+        try {
+          await window.dbGetUsers();
+        } catch (_) {}
+      }
       const email = nameToAuthEmail(nama);
       let loggedInViaSupabase = false;
 
@@ -316,6 +317,22 @@
         matched.last_active_at = new Date().toISOString();
         localUsers[matchedIdx] = matched;
         localStorage.setItem("utb_local_users", JSON.stringify(localUsers));
+
+        if (window.supabaseClient && window.isSupabaseConfigured()) {
+          try {
+            if (matched.role === "admin") {
+              await window.supabaseClient
+                .from("admins")
+                .update({ last_login_at: matched.last_active_at })
+                .eq("username", matched.full_name);
+            } else {
+              await window.supabaseClient
+                .from("users")
+                .update({ last_active_at: matched.last_active_at })
+                .eq("full_name", matched.full_name);
+            }
+          } catch (_) {}
+        }
 
         localStorage.setItem(
           "utb_local_session",
@@ -383,7 +400,7 @@
     try {
       ensureDefaultUsersSeeded();
       const email = nameToAuthEmail(fullName);
-      let createdUserId = "user-" + Date.now();
+      let createdUserId = typeof window.generateUuid === "function" ? window.generateUuid() : "f0000000-0000-4000-8000-" + Date.now().toString(16).padStart(12, "0");
 
       if (window.supabaseClient && window.isSupabaseConfigured()) {
         try {
@@ -410,9 +427,6 @@
         }
       }
 
-      const localUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
-      const existingIndex = localUsers.findIndex((u) => u.full_name.toLowerCase() === fullName.toLowerCase());
-
       const isUserAdmin = fullName.toLowerCase() === "admin";
       const newUser = {
         id: createdUserId,
@@ -426,13 +440,18 @@
         last_active_at: new Date().toISOString(),
       };
 
-      if (existingIndex >= 0) {
-        localUsers[existingIndex] = newUser;
+      if (typeof window.dbInsertUser === "function") {
+        await window.dbInsertUser(newUser);
       } else {
-        localUsers.push(newUser);
+        const localUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+        const existingIndex = localUsers.findIndex((u) => u.full_name.toLowerCase() === fullName.toLowerCase());
+        if (existingIndex >= 0) {
+          localUsers[existingIndex] = newUser;
+        } else {
+          localUsers.push(newUser);
+        }
+        localStorage.setItem("utb_local_users", JSON.stringify(localUsers));
       }
-
-      localStorage.setItem("utb_local_users", JSON.stringify(localUsers));
       localStorage.setItem(
         "utb_local_session",
         JSON.stringify({

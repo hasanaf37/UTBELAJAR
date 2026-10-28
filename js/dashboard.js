@@ -28,7 +28,7 @@
       adminView.style.display = "block";
       const pageTitle = document.querySelector(".page-title");
       if (pageTitle) pageTitle.textContent = "Beranda Administrator — Laporan Pengguna";
-      initAdminDashboard();
+      await initAdminDashboard();
       return;
     }
 
@@ -45,14 +45,23 @@
     };
   }
 
-  function initAdminDashboard() {
+  async function initAdminDashboard() {
+    if (typeof window.dbGetUsers === "function") {
+      await window.dbGetUsers();
+    }
     renderAdminDashboard();
 
     document.getElementById("admin-user-search")?.addEventListener("input", renderAdminDashboard);
     document.getElementById("admin-user-status-filter")?.addEventListener("change", renderAdminDashboard);
-    document.getElementById("btn-admin-refresh-users")?.addEventListener("click", () => {
+    document.getElementById("btn-admin-refresh-users")?.addEventListener("click", async () => {
+      const refreshBtn = document.getElementById("btn-admin-refresh-users");
+      window.setButtonLoading(refreshBtn, true, "Menyinkronkan...");
+      if (typeof window.dbGetUsers === "function") {
+        await window.dbGetUsers();
+      }
       renderAdminDashboard();
-      window.showToast("Laporan pengguna berhasil diperbarui.", "info");
+      window.setButtonLoading(refreshBtn, false);
+      window.showToast("Data pengguna disinkronkan dengan Supabase.", "success");
     });
 
     document.getElementById("btn-admin-add-user")?.addEventListener("click", () => {
@@ -68,7 +77,55 @@
       window.closeModal("modal-admin-user-detail");
     });
 
-    document.getElementById("admin-add-user-form")?.addEventListener("submit", (e) => {
+    document.getElementById("btn-cancel-edit-admin-user")?.addEventListener("click", () => {
+      window.closeModal("modal-admin-edit-user");
+    });
+
+    document.getElementById("admin-edit-user-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const uid = document.getElementById("admin-edit-user-id")?.value;
+      const oldName = document.getElementById("admin-edit-user-old-name")?.value;
+      const role = document.getElementById("admin-edit-user-role")?.value || "student";
+      const newName = document.getElementById("admin-edit-username")?.value.trim();
+      const prodiSel = document.getElementById("admin-edit-prodi");
+      const prodiId = prodiSel?.value || "";
+      const prodiName = prodiSel?.options[prodiSel.selectedIndex]?.text || "";
+      const status = document.getElementById("admin-edit-status")?.value || "Aktif";
+      const password = document.getElementById("admin-edit-password")?.value || "";
+
+      if (!newName) {
+        window.showToast("Nama pengguna tidak boleh kosong.", "error");
+        return;
+      }
+
+      const submitBtn = document.getElementById("btn-save-edit-admin-user");
+      window.setButtonLoading(submitBtn, true, "Menyimpan...");
+
+      const payload = {
+        old_full_name: oldName,
+        full_name: newName,
+        role,
+        status,
+      };
+      if (role !== "admin") {
+        payload.program_studi_id = prodiId;
+        payload.program_studi_name = prodiName;
+      }
+      if (password && password.length >= 4) {
+        payload.password = password;
+      }
+
+      if (typeof window.dbAdminUpdateUser === "function") {
+        await window.dbAdminUpdateUser(uid, payload);
+      }
+
+      window.setButtonLoading(submitBtn, false);
+      window.closeModal("modal-admin-edit-user");
+      window.showToast(`Pengguna "${newName}" & Program Studi berhasil diperbarui ke Supabase!`, "success");
+      renderAdminDashboard();
+    });
+
+    document.getElementById("admin-add-user-form")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const uname = document.getElementById("admin-new-username")?.value.trim();
       const prodiSel = document.getElementById("admin-new-prodi");
@@ -89,8 +146,10 @@
         return;
       }
 
-      users.push({
-        id: "user-" + Date.now(),
+      const submitBtn = document.getElementById("admin-add-user-form")?.querySelector("button[type='submit']");
+      window.setButtonLoading(submitBtn, true, "Menyimpan...");
+
+      const newUser = {
         full_name: uname,
         role,
         status,
@@ -99,11 +158,18 @@
         password,
         created_at: new Date().toISOString(),
         last_active_at: new Date().toISOString(),
-      });
+      };
 
-      localStorage.setItem("utb_local_users", JSON.stringify(users));
+      if (typeof window.dbInsertUser === "function") {
+        await window.dbInsertUser(newUser);
+      } else {
+        users.push({ ...newUser, id: "user-" + Date.now() });
+        localStorage.setItem("utb_local_users", JSON.stringify(users));
+      }
+
+      window.setButtonLoading(submitBtn, false);
       window.closeModal("modal-admin-add-user");
-      window.showToast(`Pengguna "${uname}" berhasil ditambahkan!`, "success");
+      window.showToast(`Pengguna "${uname}" berhasil disimpan ke Supabase!`, "success");
       renderAdminDashboard();
     });
   }
@@ -262,6 +328,9 @@
               <button class="btn btn-secondary btn-sm btn-admin-detail-user" data-uid="${u.id}" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                 Detail
               </button>
+              <button class="btn btn-secondary btn-sm btn-admin-edit-user" data-uid="${u.id}" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                Edit
+              </button>
               <button class="btn btn-secondary btn-sm btn-admin-toggle-status" data-uid="${u.id}" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                 ${isAktif ? "Nonaktifkan" : "Aktifkan"}
               </button>
@@ -276,8 +345,57 @@
       })
       .join("");
 
+    tbody.querySelectorAll(".btn-admin-edit-user").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const allUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+        const target = allUsers.find((item) => item.id === uid);
+        if (!target) return;
+
+        const idInput = document.getElementById("admin-edit-user-id");
+        const oldNameInput = document.getElementById("admin-edit-user-old-name");
+        const roleInput = document.getElementById("admin-edit-user-role");
+        const unameInput = document.getElementById("admin-edit-username");
+        const statusInput = document.getElementById("admin-edit-status");
+        const passInput = document.getElementById("admin-edit-password");
+
+        if (idInput) idInput.value = target.id;
+        if (oldNameInput) oldNameInput.value = target.full_name;
+        if (roleInput) roleInput.value = target.role || "student";
+        if (unameInput) unameInput.value = target.full_name;
+        if (statusInput) statusInput.value = target.status || "Aktif";
+        if (passInput) passInput.value = "";
+
+        const prodiGroup = document.getElementById("admin-edit-prodi-group");
+        const prodiSel = document.getElementById("admin-edit-prodi");
+
+        if (target.role === "admin") {
+          if (prodiGroup) prodiGroup.style.display = "none";
+        } else {
+          if (prodiGroup) prodiGroup.style.display = "block";
+          if (prodiSel) {
+            const prodis =
+              typeof window.dbGetStudyPrograms === "function"
+                ? await window.dbGetStudyPrograms()
+                : window.DEFAULT_PRODI_LIST || [];
+
+            prodiSel.innerHTML = prodis
+              .map((p) => {
+                const isMatch =
+                  (target.program_studi_id && p.id === target.program_studi_id) ||
+                  (target.program_studi_name && p.name.toLowerCase().includes(target.program_studi_name.toLowerCase()));
+                return `<option value="${p.id}" ${isMatch ? "selected" : ""}>${window.escapeHtml(p.name)}</option>`;
+              })
+              .join("");
+          }
+        }
+
+        window.openModal("modal-admin-edit-user");
+      });
+    });
+
     tbody.querySelectorAll(".btn-admin-toggle-status").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const uid = btn.dataset.uid;
         const allUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
         const idx = allUsers.findIndex((item) => item.id === uid);
@@ -286,23 +404,38 @@
             window.showToast("Status akun Administrator utama selalu Aktif.", "info");
             return;
           }
-          allUsers[idx].status = allUsers[idx].status === "Nonaktif" ? "Aktif" : "Nonaktif";
-          localStorage.setItem("utb_local_users", JSON.stringify(allUsers));
-          window.showToast(`Status ${allUsers[idx].full_name} diubah menjadi ${allUsers[idx].status}.`, "success");
+          const newStatus = allUsers[idx].status === "Nonaktif" ? "Aktif" : "Nonaktif";
+          window.setButtonLoading(btn, true, "...");
+          if (typeof window.dbUpdateUserStatus === "function") {
+            await window.dbUpdateUserStatus(uid, allUsers[idx].full_name, newStatus);
+          } else {
+            allUsers[idx].status = newStatus;
+            localStorage.setItem("utb_local_users", JSON.stringify(allUsers));
+          }
+          window.showToast(`Status ${allUsers[idx].full_name} diubah menjadi ${newStatus} di Supabase.`, "success");
           renderAdminDashboard();
         }
       });
     });
 
     tbody.querySelectorAll(".btn-admin-delete-user").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const uid = btn.dataset.uid;
         const allUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
         const target = allUsers.find((item) => item.id === uid);
         if (!target) return;
-        const updated = allUsers.filter((item) => item.id !== uid);
-        localStorage.setItem("utb_local_users", JSON.stringify(updated));
-        window.showToast(`Pengguna "${target.full_name}" telah dihapus.`, "info");
+
+        const confirmed = window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${target.full_name}" dari database Supabase?`);
+        if (!confirmed) return;
+
+        window.setButtonLoading(btn, true, "...");
+        if (typeof window.dbDeleteUser === "function") {
+          await window.dbDeleteUser(uid, target.full_name);
+        } else {
+          const updated = allUsers.filter((item) => item.id !== uid);
+          localStorage.setItem("utb_local_users", JSON.stringify(updated));
+        }
+        window.showToast(`Pengguna "${target.full_name}" telah dihapus dari Supabase.`, "info");
         renderAdminDashboard();
       });
     });

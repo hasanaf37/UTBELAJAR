@@ -434,6 +434,49 @@
         </div>
       </div>
 
+      <!-- Modal Admin: Edit Pengguna & Program Studi -->
+      <div id="modal-admin-edit-user" class="modal-backdrop">
+        <div class="modal-dialog">
+          <h3 class="modal-title">Edit Pengguna &amp; Program Studi</h3>
+          <p class="modal-body" style="margin-bottom: 1rem;">
+            Perbarui data pengguna, program studi minat, status akun, atau ubah password.
+          </p>
+          <form id="admin-edit-user-form">
+            <input type="hidden" id="admin-edit-user-id">
+            <input type="hidden" id="admin-edit-user-old-name">
+            <input type="hidden" id="admin-edit-user-role">
+            <div class="form-group">
+              <label class="form-label">Nama Pengguna</label>
+              <input type="text" id="admin-edit-username" class="form-control" required>
+            </div>
+            <div class="form-group" id="admin-edit-prodi-group">
+              <label class="form-label">Program Studi</label>
+              <select id="admin-edit-prodi" class="form-control" required>
+                <option value="b1111111-1111-1111-1111-111111111111">Sistem Informasi (SI)</option>
+                <option value="b2222222-2222-2222-2222-222222222222">Manajemen (MNJ)</option>
+                <option value="b3333333-3333-3333-3333-333333333333">Ilmu Komunikasi (ILKOM)</option>
+                <option value="b4444444-4444-4444-4444-444444444444">Akuntansi (AKT)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status Akun</label>
+              <select id="admin-edit-status" class="form-control">
+                <option value="Aktif">Status: Aktif</option>
+                <option value="Nonaktif">Status: Nonaktif</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password Baru (Opsional)</label>
+              <input type="text" id="admin-edit-password" class="form-control" placeholder="Kosongkan jika password tidak diubah">
+            </div>
+            <div class="modal-footer" style="margin-top: 1.25rem;">
+              <button type="button" id="btn-cancel-edit-admin-user" class="btn btn-secondary btn-sm">Batal</button>
+              <button type="submit" id="btn-save-edit-admin-user" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Modal Admin: Detail Riwayat Latihan User -->
       <div id="modal-admin-user-detail" class="modal-backdrop">
         <div class="modal-dialog" style="max-width: 620px;">

@@ -18,7 +18,7 @@
     const secStatusEl = document.getElementById("profile-security-status");
 
     if (isAdmin) {
-      if (supaCard) supaCard.style.display = "flex";
+      if (supaCard) supaCard.style.display = "block";
       if (secStatusEl) secStatusEl.textContent = "Administrator (Akses Database Supabase)";
       setupSupabaseConfigCard();
     } else {
@@ -43,7 +43,11 @@
 
     toggleKeyBtn?.addEventListener("click", () => {
       if (!keyInput) return;
-      keyInput.type = keyInput.type === "password" ? "text" : "password";
+      const isPass = keyInput.type === "password";
+      keyInput.type = isPass ? "text" : "password";
+      toggleKeyBtn.innerHTML = isPass
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
     });
 
     refreshBtn?.addEventListener("click", async () => {
@@ -127,15 +131,63 @@
   async function loadUserProfileData() {
     try {
       let profile = null;
-      if (window.supabaseClient) {
+      const isAdmin = currentUser.role === "admin" || currentUser.user_metadata?.role === "admin";
+      const currentName = currentUser.user_metadata?.full_name || currentUser.full_name || "";
+
+      if (window.supabaseClient && window.isSupabaseConfigured()) {
         try {
-          const { data } = await window.supabaseClient
-            .from("profiles")
-            .select("id, full_name, program_studi_id, avatar_url, created_at, study_programs(id, name, code)")
-            .eq("id", currentUser.id)
-            .single();
-          profile = data;
+          if (isAdmin) {
+            const { data } = await window.supabaseClient
+              .from("admins")
+              .select("id, username, full_name, created_at")
+              .or(`username.eq.${currentName},full_name.eq.${currentName}`)
+              .limit(1)
+              .maybeSingle();
+
+            if (data) {
+              profile = {
+                id: data.id,
+                full_name: data.full_name || data.username,
+                program_studi_id: "b1111111-1111-1111-1111-111111111111",
+                program_studi_name: "Administrator Sistem",
+                created_at: data.created_at,
+              };
+            }
+          } else {
+            const { data } = await window.supabaseClient
+              .from("users")
+              .select("id, full_name, program_studi_id, program_studi_name, created_at")
+              .eq("full_name", currentName)
+              .limit(1)
+              .maybeSingle();
+
+            if (data) {
+              profile = {
+                id: data.id,
+                full_name: data.full_name,
+                program_studi_id: data.program_studi_id,
+                program_studi_name: data.program_studi_name,
+                created_at: data.created_at,
+              };
+            }
+          }
         } catch (_) {}
+      }
+
+      if (!profile) {
+        const localUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+        const match = localUsers.find(
+          (u) => (u.full_name && u.full_name.toLowerCase() === currentName.toLowerCase()) || u.id === currentUser.id
+        );
+        if (match) {
+          profile = {
+            id: match.id,
+            full_name: match.full_name,
+            program_studi_id: match.program_studi_id,
+            program_studi_name: match.program_studi_name,
+            created_at: match.created_at,
+          };
+        }
       }
 
       currentProfile = profile;
@@ -143,8 +195,7 @@
       const fullName = profile?.full_name || currentUser.user_metadata?.full_name || "Siswa UTBelajar";
       const email = currentUser.email || "-";
       const prodiName =
-        profile?.study_programs?.name || currentUser.user_metadata?.program_studi_name || "Sistem Informasi (SI)";
-      const prodiCode = profile?.study_programs?.code ? ` (${profile.study_programs.code})` : "";
+        profile?.program_studi_name || currentUser.user_metadata?.program_studi_name || "Sistem Informasi (SI)";
       const joinDate = window.formatDate(profile?.created_at || currentUser.created_at);
 
       const nameEl = document.getElementById("profile-fullname");
@@ -156,8 +207,8 @@
 
       if (nameEl) nameEl.textContent = fullName;
       if (emailEl) emailEl.textContent = email;
-      if (prodiTag) prodiTag.textContent = prodiName + prodiCode;
-      if (detailProdi) detailProdi.textContent = prodiName + prodiCode;
+      if (prodiTag) prodiTag.textContent = prodiName;
+      if (detailProdi) detailProdi.textContent = prodiName;
       if (detailJoined) detailJoined.textContent = joinDate;
 
       if (avatarEl) {
@@ -205,9 +256,29 @@
 
     if (!editBtn || !form) return;
 
-    editBtn.addEventListener("click", () => {
+    editBtn.addEventListener("click", async () => {
       const nameInput = document.getElementById("edit-fullname-input");
+      const prodiSelect = document.getElementById("edit-prodi-select");
       if (nameInput) nameInput.value = currentProfile?.full_name || currentUser.user_metadata?.full_name || "";
+
+      if (prodiSelect) {
+        prodiSelect.innerHTML = `<option value="">Memuat Program Studi...</option>`;
+        const prodis =
+          typeof window.dbGetStudyPrograms === "function"
+            ? await window.dbGetStudyPrograms()
+            : window.DEFAULT_PRODI_LIST || [];
+
+        const currentProdiId = currentProfile?.program_studi_id || currentUser.user_metadata?.program_studi_id || "";
+        const currentProdiName = (currentProfile?.program_studi_name || currentUser.user_metadata?.program_studi_name || "").toLowerCase();
+
+        prodiSelect.innerHTML = prodis
+          .map((p) => {
+            const isMatch = (currentProdiId && p.id === currentProdiId) || (currentProdiName && p.name.toLowerCase().includes(currentProdiName));
+            return `<option value="${p.id}" ${isMatch ? "selected" : ""}>${window.escapeHtml(p.name)}</option>`;
+          })
+          .join("");
+      }
+
       window.openModal("modal-edit-profile");
     });
 
@@ -217,20 +288,36 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const fullName = document.getElementById("edit-fullname-input")?.value.trim();
-      if (!fullName) return;
+      const newFullName = document.getElementById("edit-fullname-input")?.value.trim();
+      const prodiSelect = document.getElementById("edit-prodi-select");
+      const newProdiId = prodiSelect?.value || "";
+      const newProdiName = (prodiSelect && prodiSelect.options[prodiSelect.selectedIndex]?.text) || "";
+
+      if (!newFullName) return;
+
+      const submitBtn = form.querySelector("button[type='submit']");
+      window.setButtonLoading(submitBtn, true, "Menyimpan...");
+
+      const oldFullName = currentUser.user_metadata?.full_name || currentUser.full_name || "";
+
+      if (typeof window.dbUpdateUserProfile === "function") {
+        await window.dbUpdateUserProfile(oldFullName, newFullName, newProdiId, newProdiName);
+      }
 
       const localSessionRaw = localStorage.getItem("utb_local_session");
       if (localSessionRaw) {
         try {
           const parsed = JSON.parse(localSessionRaw);
-          parsed.user.user_metadata.full_name = fullName;
+          parsed.user.user_metadata.full_name = newFullName;
+          if (newProdiId) parsed.user.user_metadata.program_studi_id = newProdiId;
+          if (newProdiName) parsed.user.user_metadata.program_studi_name = newProdiName;
           localStorage.setItem("utb_local_session", JSON.stringify(parsed));
           currentUser = parsed.user;
         } catch (_) {}
       }
 
-      window.showToast("Profil berhasil diperbarui!", "success");
+      window.setButtonLoading(submitBtn, false);
+      window.showToast("Profil & Program Studi berhasil diperbarui ke Supabase!", "success");
       window.closeModal("modal-edit-profile");
       await loadUserProfileData();
     });

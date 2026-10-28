@@ -1,15 +1,8 @@
 /* ==============================================================================
-   UTBELAJAR - SOAL MODUL & DIGITAL BOOK / PDF READER STYLES
+   UTBELAJAR - KERANGKA PEMBACA PDF/JPG GAYA WEB BACA KOMIK (SCROLL KE BAWAH)
+   Menampilkan Halaman JPG di dalam PDF Secara Berurutan dari Atas ke Bawah
    ============================================================================== */
 
-.modul-Topbar-Actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/* Pilihan Daftar Modul di Dalam Mata Kuliah */
 .modul-shelf-bar {
   display: flex;
   align-items: center;
@@ -17,15 +10,16 @@
   flex-wrap: wrap;
   gap: 1rem;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-xs);
 }
 
 .modul-tabs-list {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
@@ -39,8 +33,8 @@
   border: 1.5px solid var(--border);
   background: var(--bg);
   color: var(--text-secondary);
-  font-weight: 700;
   font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -53,710 +47,272 @@
 
 .modul-pill-btn.active {
   background: var(--primary-blue);
-  color: #FFFFFF;
   border-color: var(--primary-blue);
+  color: #FFFFFF;
   box-shadow: 0 4px 12px rgba(65, 105, 245, 0.25);
 }
 
-/* Toolbar Kontrol Buku & PDF */
-.book-reader-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  background: linear-gradient(135deg, #172554 0%, #1E3A8A 100%);
-  color: #FFFFFF;
-  padding: 0.9rem 1.35rem;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.book-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.book-badge-code {
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.book-toolbar-title {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.book-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.reader-mode-switch {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 0.22rem;
-  border-radius: var(--radius-sm);
-}
-
-.reader-mode-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.reader-mode-btn.active {
-  background: #FFFFFF;
-  color: var(--primary-navy);
-}
-
-/* Panggung Buku Terbuka (Flipbook 2 Halaman) */
-.book-stage-wrapper {
-  background: #E2E8F0;
-  background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
-  background-size: 18px 18px;
-  padding: 2rem 1.75rem;
-  border: 1px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
-.book-gesture-hint {
-  max-width: 1120px;
-  margin: 0 auto 0.75rem;
-  text-align: center;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #E2E8F0;
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 0.42rem 0.95rem;
-  border-radius: 999px;
-}
-
-.open-book-frame {
-  max-width: 1120px;
-  margin: 0 auto;
-  background: #1E293B;
-  padding: 12px;
-  border-radius: 16px;
-  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.24), 0 4px 12px rgba(15, 23, 42, 0.14);
-  perspective: 2000px;
-}
-
-.open-book-spread {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 560px;
-  background: #FFFDF9;
-  border-radius: 10px;
+/* ==============================================================================
+   PANGGUNG WEB BACA KOMIK (VERTICAL SCROLL PDF / JPG READER)
+   ============================================================================== */
+.comic-reader-wrapper {
+  background: #0F172A;
+  border-radius: var(--radius-xl);
   overflow: hidden;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+  border: 1.5px solid #1E293B;
   position: relative;
-  transform-style: preserve-3d;
-  touch-action: pan-y;
-  user-select: none;
 }
 
-/* Garis Lipatan Tengah Buku (Spine) */
-.open-book-spread::after {
-  content: "";
-  position: absolute;
+/* Header Sticky Pembaca Komik */
+.comic-reader-header {
+  position: sticky;
   top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 28px;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    90deg,
-    rgba(15, 23, 42, 0) 0%,
-    rgba(15, 23, 42, 0.08) 42%,
-    rgba(15, 23, 42, 0.18) 50%,
-    rgba(15, 23, 42, 0.08) 58%,
-    rgba(15, 23, 42, 0) 100%
-  );
-  pointer-events: none;
-  z-index: 4;
-}
-
-.book-page {
-  padding: 2.25rem 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #1E293B;
-  line-height: 1.7;
-  font-size: 0.94rem;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.book-page.page-left {
-  border-right: 1px solid #E2E8F0;
-  background: linear-gradient(90deg, #FDFBF7 0%, #FFFDF9 92%, #F5F2EB 100%);
-}
-
-.book-page.page-right {
-  background: linear-gradient(90deg, #F5F2EB 0%, #FFFDF9 8%, #FDFBF7 100%);
-}
-
-.book-page.can-turn:hover .page-turn-hint-left,
-.book-page.can-turn:hover .page-turn-hint-right {
-  color: var(--primary-blue);
-  transform: translateX(2px);
-}
-
-.page-turn-hint-left,
-.page-turn-hint-right {
-  font-weight: 800;
-  color: #64748B;
-  transition: all 0.2s ease;
-}
-
-/* Sudut Lipatan Kertas Buku (Corner Peel Effect) */
-.page-corner-curl {
-  position: absolute;
-  bottom: 0;
-  width: 0;
-  height: 0;
-  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 3;
-}
-
-.page-corner-curl.curl-right {
-  right: 0;
-  border-style: solid;
-  border-width: 0 0 26px 26px;
-  border-color: transparent transparent #CBD5E1 transparent;
-  box-shadow: -3px -3px 8px rgba(15, 23, 42, 0.12);
-}
-
-.book-page.page-right.can-turn:hover .page-corner-curl.curl-right {
-  border-width: 0 0 46px 46px;
-  border-color: transparent transparent #94A3B8 transparent;
-}
-
-.page-corner-curl.curl-left {
-  left: 0;
-  border-style: solid;
-  border-width: 26px 0 0 26px;
-  border-color: transparent transparent transparent #CBD5E1;
-  box-shadow: 3px -3px 8px rgba(15, 23, 42, 0.12);
-}
-
-.book-page.page-left.can-turn:hover .page-corner-curl.curl-left {
-  border-width: 46px 0 0 46px;
-  border-color: transparent transparent transparent #94A3B8;
-}
-
-/* ============================================================================
-   ANIMASI 3D LEMBAR BUKU MELIPAT KE KIRI (NEXT) & KE KANAN (PREV)
-   ============================================================================ */
-.book-flip-leaf {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  z-index: 15;
-  pointer-events: none;
-  opacity: 0;
-  transform-style: preserve-3d;
-  background: linear-gradient(90deg, #F5F2EB 0%, #FFFDF9 50%, #E2E8F0 100%);
-  box-shadow: -12px 0 28px rgba(15, 23, 42, 0.25);
-  border-radius: 0 10px 10px 0;
-}
-
-.flip-leaf-inner {
-  width: 100%;
-  height: 100%;
-  padding: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1rem;
-  opacity: 0.45;
-}
-
-.flip-leaf-lines {
-  width: 100%;
-  height: 75%;
-  background: repeating-linear-gradient(
-    to bottom,
-    #CBD5E1 0px,
-    #CBD5E1 4px,
-    transparent 4px,
-    transparent 20px
-  );
-  border-radius: 6px;
-}
-
-/* Animasi Klik Kanan / Swipe ke Kiri -> Halaman Terlampir ke Kiri (Pindah Halaman Berikutnya) */
-.open-book-spread.turning-next .book-flip-leaf {
-  right: 0;
-  left: 50%;
-  transform-origin: left center;
-  opacity: 1;
-  animation: bookPageTurnLeft 0.56s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.open-book-spread.turning-next .book-page.page-right {
-  animation: bookContentFadeInRight 0.56s ease forwards;
-}
-
-/* Animasi Klik Kiri / Swipe ke Kanan -> Halaman Terlampir ke Kanan (Kembali Halaman Sebelumnya) */
-.open-book-spread.turning-prev .book-flip-leaf {
-  left: 0;
-  right: 50%;
-  transform-origin: right center;
-  border-radius: 10px 0 0 10px;
-  opacity: 1;
-  animation: bookPageTurnRight 0.56s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.open-book-spread.turning-prev .book-page.page-left {
-  animation: bookContentFadeInLeft 0.56s ease forwards;
-}
-
-@keyframes bookPageTurnLeft {
-  0% {
-    transform: perspective(1800px) rotateY(0deg);
-    box-shadow: -6px 0 18px rgba(15, 23, 42, 0.18);
-    background: linear-gradient(90deg, #F5F2EB 0%, #FFFDF9 75%, #E2E8F0 100%);
-  }
-  50% {
-    transform: perspective(1800px) rotateY(-90deg) scaleY(1.02);
-    box-shadow: -28px 0 45px rgba(15, 23, 42, 0.35);
-    background: linear-gradient(90deg, #E2E8F0 0%, #F8FAFC 50%, #CBD5E1 100%);
-  }
-  100% {
-    transform: perspective(1800px) rotateY(-180deg);
-    box-shadow: 6px 0 16px rgba(15, 23, 42, 0.1);
-    opacity: 0;
-  }
-}
-
-@keyframes bookPageTurnRight {
-  0% {
-    transform: perspective(1800px) rotateY(0deg);
-    box-shadow: 6px 0 18px rgba(15, 23, 42, 0.18);
-    background: linear-gradient(90deg, #E2E8F0 0%, #FFFDF9 25%, #F5F2EB 100%);
-  }
-  50% {
-    transform: perspective(1800px) rotateY(90deg) scaleY(1.02);
-    box-shadow: 28px 0 45px rgba(15, 23, 42, 0.35);
-    background: linear-gradient(90deg, #CBD5E1 0%, #F8FAFC 50%, #E2E8F0 100%);
-  }
-  100% {
-    transform: perspective(1800px) rotateY(180deg);
-    box-shadow: -6px 0 16px rgba(15, 23, 42, 0.1);
-    opacity: 0;
-  }
-}
-
-@keyframes bookContentFadeInRight {
-  0% { opacity: 0.45; transform: translateX(8px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes bookContentFadeInLeft {
-  0% { opacity: 0.45; transform: translateX(-8px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-
-.book-page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1.5px solid #E2E8F0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #64748B;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.book-page-content {
-  flex: 1;
-}
-
-.book-page-content h3 {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--primary-navy);
-  margin-bottom: 0.75rem;
-}
-
-.book-page-content h4 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--primary-blue);
-  margin: 1rem 0 0.45rem;
-}
-
-.book-page-content p {
-  margin-bottom: 0.85rem;
-  text-align: justify;
-}
-
-.book-question-card {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-left: 4px solid var(--primary-blue);
-  border-radius: 10px;
-  padding: 0.95rem 1.1rem;
-  margin-bottom: 0.9rem;
-}
-
-.book-question-card .bq-title {
-  font-weight: 800;
-  color: var(--primary-navy);
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-}
-
-.book-question-card .bq-options {
-  list-style: none;
-  padding-left: 0;
-  margin: 0.4rem 0;
-  font-size: 0.86rem;
-}
-
-.book-question-card .bq-options li {
-  padding: 0.15rem 0;
-}
-
-.book-question-card .bq-answer {
-  margin-top: 0.5rem;
-  padding-top: 0.45rem;
-  border-top: 1px dashed #CBD5E1;
-  font-size: 0.82rem;
-  color: #15803D;
-  font-weight: 700;
-}
-
-.book-page-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.85rem;
-  margin-top: 1.25rem;
-  border-top: 1px solid #E2E8F0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #64748B;
-}
-
-/* Navigasi Halaman Bawah Buku */
-.book-pagination-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.35rem;
-  flex-wrap: wrap;
-}
-
-.book-page-indicator {
-  background: #FFFFFF;
-  color: var(--primary-navy);
-  padding: 0.45rem 1.1rem;
-  border-radius: var(--radius-full);
-  font-weight: 800;
-  font-size: 0.85rem;
-  box-shadow: var(--shadow-sm);
-}
-
-/* Mode Penampil PDF Langsung Tanpa Unduh (Universal HP & Desktop) */
-.pdf-direct-container {
-  max-width: 1120px;
-  margin: 0 auto;
-  background: #1E293B;
-  padding: 12px;
-  border-radius: 14px;
-  box-shadow: var(--shadow-lg);
-}
-
-.pdf-viewer-toolbar {
+  z-index: 25;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(10px);
+  padding: 0.85rem 1.4rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  background: #0F172A;
-  color: #F8FAFC;
-  padding: 0.7rem 1rem;
-  border-radius: 10px 10px 0 0;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #1E293B;
 }
 
-.pdf-viewer-info {
+.comic-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.comic-episode-badge {
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+  color: #FFFFFF;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 0.28rem 0.75rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.04em;
+}
+
+.comic-episode-title {
+  color: #F8FAFC;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.comic-header-right {
   display: flex;
   align-items: center;
   gap: 0.65rem;
   flex-wrap: wrap;
 }
 
-.pdf-status-pill {
-  background: rgba(65, 105, 245, 0.25);
-  color: #93C5FD;
-  border: 1px solid rgba(147, 197, 253, 0.35);
-  padding: 0.22rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.pdf-page-count-text {
-  font-size: 0.82rem;
-  color: #CBD5E1;
-  font-weight: 600;
-}
-
-.pdf-viewer-Controls {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.pdf-ctrl-btn {
+.comic-panel-count {
   background: #1E293B;
+  color: #93C5FD;
+  border: 1px solid #334155;
+  padding: 0.28rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.comic-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #1E293B;
+  border: 1px solid #334155;
+  padding: 0.2rem 0.35rem;
+  border-radius: 8px;
+}
+
+.comic-zoom-btn {
+  background: #0F172A;
   color: #F8FAFC;
   border: 1px solid #475569;
   border-radius: 6px;
-  padding: 0.3rem 0.65rem;
-  font-size: 0.78rem;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.pdf-ctrl-btn:hover {
+.comic-zoom-btn:hover {
   background: var(--primary-blue);
   border-color: var(--primary-blue);
 }
 
-.pdf-zoom-badge {
-  min-width: 48px;
+.comic-zoom-text {
+  min-width: 44px;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
   color: #F8FAFC;
 }
 
-.pdf-canvas-viewport {
+/* Bar Progres Scroll Baca Komik */
+.comic-progress-track {
+  position: sticky;
+  top: 56px;
+  z-index: 24;
   width: 100%;
-  max-height: 680px;
-  overflow: auto;
-  background: #334155;
-  border-radius: 0 0 10px 10px;
-  padding: 1.25rem 0.85rem;
-  -webkit-overflow-scrolling: touch;
+  height: 5px;
+  background: #1E293B;
 }
 
-.pdf-canvas-stack {
+.comic-progress-fill {
+  height: 100%;
+  width: 15%;
+  background: linear-gradient(90deg, #4169F5 0%, #8B5CF6 50%, #38BDF8 100%);
+  transition: width 0.15s ease-out;
+}
+
+/* ==============================================================================
+   ALUR STRIP VERTIKAL KOMIK (MENYUSUN GAMBAR JPG DARI PDF KE BAWAH)
+   ============================================================================== */
+.comic-vertical-stream {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
-  min-height: 360px;
+  gap: 6px;
+  min-height: 420px;
 }
 
-.pdf-page-sheet {
-  background: #FFFFFF;
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-.pdf-page-sheet canvas {
-  display: block;
-  max-width: 100%;
-  height: auto !important;
-}
-
-.pdf-page-badge-num {
-  text-align: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #E2E8F0;
-  background: rgba(15, 23, 42, 0.75);
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  margin-top: -0.5rem;
-}
-
-/* Fallback Lembar Dokumen A4 PDF (100% Terbaca di HP walaupun Offline) */
-.pdf-a4-sheet {
+/* Setiap Lembar Halaman Gambar JPG di Dalam Strip Komik */
+.comic-page-frame {
   width: 100%;
-  max-width: 780px;
   background: #FFFFFF;
-  color: #0F172A;
   border-radius: 6px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
-  padding: 2.25rem 2.5rem;
-  font-family: var(--font-sans);
-  line-height: 1.65;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  position: relative;
+  transition: width 0.2s ease;
 }
 
-.pdf-a4-header {
-  border-bottom: 2px solid #1E293B;
-  padding-bottom: 0.85rem;
-  margin-bottom: 1.25rem;
+.comic-page-frame img,
+.comic-page-frame canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  user-select: none;
+}
+
+.comic-page-number-pill {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #F8FAFC;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+}
+
+/* Kartu Penutup Chapter di Ujung Bawah Strip */
+.comic-end-card {
+  max-width: 820px;
+  margin: 1rem auto 1.75rem;
+  background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+  border: 1.5px solid #334155;
+  border-radius: 16px;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  color: #F8FAFC;
+}
+
+.comic-end-badge {
+  display: inline-block;
+  background: rgba(34, 197, 94, 0.2);
+  color: #86EFAC;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.comic-end-card h4 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 0.3rem;
+}
+
+.comic-end-card p {
+  font-size: 0.86rem;
+  color: #94A3B8;
+  margin-bottom: 1.15rem;
+}
+
+.comic-end-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.pdf-embed-frame {
-  width: 100%;
-  height: 660px;
-  border: none;
-  border-radius: 8px;
-  background: #FFFFFF;
-}
-
-@media (max-width: 900px) {
-  .open-book-spread {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-  .open-book-spread::after {
-    display: none;
-  }
-  .book-page.page-left {
-    border-right: none;
-    border-bottom: 2px dashed #CBD5E1;
-  }
-  .book-flip-leaf {
-    width: 100%;
-  }
-  .open-book-spread.turning-next .book-flip-leaf {
-    left: 0;
-    right: 0;
-    transform-origin: left center;
-  }
-  .open-book-spread.turning-prev .book-flip-leaf {
-    left: 0;
-    right: 0;
-    transform-origin: right center;
-  }
-}
-
+/* ==============================================================================
+   RESPONSIVITAS MOBILE (HP) & TABLET UNTUK WEB BACA KOMIK
+   ============================================================================== */
 @media (max-width: 768px) {
   .modul-shelf-bar {
     flex-direction: column;
     align-items: stretch;
-    padding: 0.9rem 1rem;
+    padding: 0.85rem 1rem;
   }
 
   .modul-tabs-list {
     flex-direction: column;
   }
 
-  .modul-pill-btn {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
+  .modul-pill-btn,
   #btn-download-modul-pdf {
     width: 100%;
     justify-content: center;
   }
 
-  .book-reader-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.85rem 1rem;
-  }
-
-  .book-toolbar-right,
-  .reader-mode-switch {
-    width: 100%;
-  }
-
-  .reader-mode-btn {
-    flex: 1;
-    text-align: center;
-    padding: 0.45rem 0.5rem;
-    font-size: 0.74rem;
-  }
-
-  .book-stage-wrapper {
-    padding: 0.85rem 0.65rem;
-  }
-
-  .open-book-frame {
-    padding: 6px;
-  }
-
-  .book-page {
-    padding: 1.25rem 1.15rem;
-    font-size: 0.88rem;
-  }
-
-  .book-pagination-bar {
+  .comic-reader-header {
+    padding: 0.75rem 0.85rem;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.6rem;
   }
 
-  .book-pagination-bar .btn,
-  .book-page-indicator {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
-
-  .pdf-embed-frame {
-    height: 460px;
-  }
-
-  .pdf-viewer-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.65rem 0.75rem;
-  }
-
-  .pdf-viewer-Controls {
+  .comic-header-right {
     width: 100%;
     justify-content: space-between;
   }
 
-  .pdf-ctrl-btn {
-    flex: 1;
-    text-align: center;
-    padding: 0.4rem 0.5rem;
+  .comic-vertical-stream {
+    padding: 0.35rem 0.2rem;
+    gap: 4px;
   }
 
-  .pdf-canvas-viewport {
-    max-height: 540px;
-    padding: 0.75rem 0.4rem;
+  .comic-page-frame {
+    border-radius: 4px;
   }
 
-  .pdf-a4-sheet {
-    padding: 1.25rem 1rem;
-    font-size: 0.88rem;
+  .comic-end-card {
+    margin: 0.75rem 0.5rem 1.25rem;
+    padding: 1.35rem 1rem;
+  }
+
+  .comic-end-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }

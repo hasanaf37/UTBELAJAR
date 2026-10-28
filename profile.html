@@ -140,92 +140,143 @@
           </div>
 
           <!-- Status & Konfigurasi Database Supabase (Hanya Tampil untuk ADMIN) -->
-          <div id="supabase-status-card" class="profile-stats-card" style="display: none; border: 1.5px solid rgba(65, 105, 245, 0.25);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border);">
-              <div>
-                <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--soft-blue); color: var(--primary-blue); padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800; margin-bottom: 0.3rem;">
-                  <span>🗄️ KONEKSI DATABASE SUPABASE</span>
+          <div id="supabase-status-card" class="supa-dashboard-card" style="display: none;">
+            <!-- Header Card -->
+            <div class="supa-header">
+              <div class="supa-title-wrap">
+                <div class="supa-chip">
+                  <span class="supa-chip-dot"></span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                  <span>DATABASE SUPABASE (CLOUD)</span>
                 </div>
-                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--primary-navy);">
-                  Status &amp; Konfigurasi Database Supabase
-                </h3>
-                <p style="font-size: 0.83rem; color: var(--text-secondary);">
-                  Pantau status koneksi server Supabase, segarkan (*refresh*) status, atau ubah Project URL dan API Key secara langsung.
+                <h3 class="supa-title">Status &amp; Konfigurasi Database</h3>
+                <p class="supa-desc">
+                  Pantau metrik kesehatan koneksi real-time, latensi server, atau sesuaikan kredensial API Supabase.
                 </p>
               </div>
-              <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <span id="supa-status-badge" class="badge badge-warning">Memeriksa Status...</span>
-                <button type="button" id="btn-refresh-supabase-status" class="btn btn-secondary btn-sm">
+              <div class="supa-header-actions">
+                <span id="supa-status-badge" class="badge badge-warning supa-badge-live">Memeriksa Status...</span>
+                <button type="button" id="btn-refresh-supabase-status" class="btn btn-secondary btn-sm supa-btn-refresh">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                  <span>Refresh Status</span>
+                  <span>Segarkan</span>
                 </button>
               </div>
             </div>
 
-            <!-- Grid Indikator Status Real-Time -->
-            <div class="profile-info-grid" style="margin-bottom: 1.25rem; background: var(--bg); padding: 1rem; border-radius: 12px;">
-              <div class="info-item">
-                <span class="info-label">Status Koneksi Server</span>
-                <span id="supa-info-state" class="info-value">Memeriksa...</span>
+            <!-- 4 Metric Cards Grid -->
+            <div class="supa-metrics-grid">
+              <div class="supa-metric-box">
+                <div class="supa-metric-top">
+                  <span class="supa-metric-label">Status Server</span>
+                  <div class="supa-metric-icon icon-green">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </div>
+                </div>
+                <div id="supa-info-state" class="supa-metric-value">Memeriksa...</div>
+                <div id="supa-info-detail" class="supa-metric-sub">-</div>
               </div>
-              <div class="info-item">
-                <span class="info-label">Detail Layanan (Auth &amp; DB)</span>
-                <span id="supa-info-detail" class="info-value">-</span>
+
+              <div class="supa-metric-box">
+                <div class="supa-metric-top">
+                  <span class="supa-metric-label">Kecepatan Respons</span>
+                  <div class="supa-metric-icon icon-blue">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  </div>
+                </div>
+                <div id="supa-info-latency" class="supa-metric-value">- ms</div>
+                <div class="supa-metric-sub">Latensi Jaringan (Ping)</div>
               </div>
-              <div class="info-item">
-                <span class="info-label">Waktu Respons (Ping/Latency)</span>
-                <span id="supa-info-latency" class="info-value">- ms</span>
+
+              <div class="supa-metric-box">
+                <div class="supa-metric-top">
+                  <span class="supa-metric-label">Pengecekan Terakhir</span>
+                  <div class="supa-metric-icon icon-purple">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                </div>
+                <div id="supa-info-checked-at" class="supa-metric-value supa-metric-time">-</div>
+                <div class="supa-metric-sub">Waktu Pengecekan Sistem</div>
               </div>
-              <div class="info-item">
-                <span class="info-label">Pengecekan Terakhir</span>
-                <span id="supa-info-checked-at" class="info-value">-</span>
+
+              <div class="supa-metric-box">
+                <div class="supa-metric-top">
+                  <span class="supa-metric-label">Mode Penyimpanan</span>
+                  <div class="supa-metric-icon icon-orange">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>
+                  </div>
+                </div>
+                <div class="supa-metric-value" style="font-size: 1.05rem; color: var(--primary-navy);">PostgreSQL Cloud</div>
+                <div class="supa-metric-sub">Dual-Sync + Local Cache</div>
               </div>
             </div>
 
-            <!-- Form Ganti URL dan API Key Supabase -->
-            <form id="supabase-config-form">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="input-supabase-url" class="form-label" style="font-size: 0.8rem;">Supabase Project URL</label>
-                  <input
-                    type="url"
-                    id="input-supabase-url"
-                    class="form-control"
-                    placeholder="https://xxxx.supabase.co"
-                    required
-                  >
+            <!-- Form Kredensial URL & Key -->
+            <div class="supa-config-section">
+              <div class="supa-config-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--primary-navy); margin: 0;">Pengaturan Kredensial API</h4>
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="input-supabase-key" class="form-label" style="font-size: 0.8rem;">Supabase Publishable / Anon API Key</label>
-                  <div style="display: flex; gap: 0.45rem;">
-                    <input
-                      type="password"
-                      id="input-supabase-key"
-                      class="form-control"
-                      placeholder="sb_publishable_... atau eyJ..."
-                      required
-                    >
-                    <button type="button" id="btn-toggle-supa-key-vis" class="btn btn-secondary btn-sm" style="padding: 0 0.75rem;" title="Tampilkan/Sembunyikan API Key">
-                      👁️
+                <span class="supa-config-note">Kredensial disimpan aman pada browser Anda</span>
+              </div>
+
+              <form id="supabase-config-form" class="supa-form">
+                <div class="supa-form-grid">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="input-supabase-url" class="form-label" style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em;">
+                      Supabase Project URL
+                    </label>
+                    <div class="supa-input-wrapper">
+                      <svg class="supa-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      <input
+                        type="url"
+                        id="input-supabase-url"
+                        class="form-control supa-input-code"
+                        placeholder="https://xxxx.supabase.co"
+                        required
+                      >
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="input-supabase-key" class="form-label" style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em;">
+                      Supabase Publishable / Anon API Key
+                    </label>
+                    <div class="supa-input-wrapper">
+                      <svg class="supa-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                      <input
+                        type="password"
+                        id="input-supabase-key"
+                        class="form-control supa-input-code"
+                        placeholder="sb_publishable_... atau eyJ..."
+                        required
+                        style="padding-right: 2.75rem;"
+                      >
+                      <button type="button" id="btn-toggle-supa-key-vis" class="supa-btn-toggle-eye" title="Tampilkan / Sembunyikan API Key">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="supa-footer-bar">
+                  <div class="supa-footer-hint">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Perubahan URL dan API Key langsung disimpan dan menghubungkan ulang sesi web ke Supabase.</span>
+                  </div>
+                  <div class="supa-action-buttons">
+                    <button type="button" id="btn-reset-supabase-config" class="btn btn-secondary btn-sm supa-btn-action">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                      <span>Reset Default</span>
+                    </button>
+                    <button type="submit" id="btn-save-supabase-config" class="btn btn-primary btn-sm supa-btn-action">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                      <span>Simpan URL &amp; API Key</span>
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-                <span style="font-size: 0.78rem; color: var(--text-secondary);">
-                  Perubahan URL dan API Key akan langsung disimpan dan dihubungkan ulang ke Supabase.
-                </span>
-                <div style="display: flex; gap: 0.6rem;">
-                  <button type="button" id="btn-reset-supabase-config" class="btn btn-secondary btn-sm">
-                    Reset Default
-                  </button>
-                  <button type="submit" id="btn-save-supabase-config" class="btn btn-primary btn-sm">
-                    Simpan URL &amp; API Key
-                  </button>
-                </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
 
           <!-- Aksi Akun & Logout -->

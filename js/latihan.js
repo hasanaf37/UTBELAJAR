@@ -137,6 +137,9 @@
 
     const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     if (isAdmin) {
+      if (typeof window.dbGetCatalogProdis === "function") {
+        await window.dbGetCatalogProdis();
+      }
       initAdminLatihanManager();
     }
 
@@ -180,26 +183,35 @@
       }
     });
 
-    // Form 1: Tambah Program Studi
-    document.getElementById("form-admin-prodi")?.addEventListener("submit", (e) => {
+    // Form 1: Tambah Program Studi (Langsung ke Supabase)
+    document.getElementById("form-admin-prodi")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const code = document.getElementById("input-prodi-code")?.value.trim().toUpperCase();
       const name = document.getElementById("input-prodi-name")?.value.trim();
       const description = document.getElementById("input-prodi-desc")?.value.trim() || "Program studi digital UTBelajar.";
       if (!code || !name) return;
 
-      const list = getCatalogProdis();
-      list.push({
-        id: "prodi-" + Date.now(),
-        code,
-        name,
-        description,
-      });
-      localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
+      if (typeof window.dbInsertProdi === "function") {
+        await window.dbInsertProdi({ code, name, description });
+      } else {
+        const list = getCatalogProdis();
+        list.push({
+          id: "prodi-" + Date.now(),
+          code,
+          name,
+          description,
+        });
+        localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+      }
+
+      window.setButtonLoading(submitBtn, false);
       e.target.reset();
-      window.showToast(`Program Studi "${name}" berhasil ditambahkan!`, "success");
+      window.showToast(`Program Studi "${name}" berhasil disimpan ke Supabase!`, "success");
       renderAdminCatalogAll();
-      loadStudyPrograms();
+      await loadStudyPrograms();
     });
 
     // Form 2: Tambah Mata Kuliah
@@ -350,12 +362,21 @@
         .join("");
 
       prodiListEl.querySelectorAll(".btn-del-prodi").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const updated = getCatalogProdis().filter((item) => item.id !== btn.dataset.id);
-          localStorage.setItem("utb_catalog_prodis", JSON.stringify(updated));
-          window.showToast("Program studi dihapus.", "info");
+        btn.addEventListener("click", async () => {
+          const prodiId = btn.dataset.id;
+          const confirmed = window.confirm("Apakah Anda yakin ingin menghapus program studi ini dari database Supabase?");
+          if (!confirmed) return;
+
+          window.setButtonLoading(btn, true, "...");
+          if (typeof window.dbDeleteProdi === "function") {
+            await window.dbDeleteProdi(prodiId);
+          } else {
+            const updated = getCatalogProdis().filter((item) => item.id !== prodiId);
+            localStorage.setItem("utb_catalog_prodis", JSON.stringify(updated));
+          }
+          window.showToast("Program studi berhasil dihapus dari Supabase.", "info");
           renderAdminCatalogAll();
-          loadStudyPrograms();
+          await loadStudyPrograms();
         });
       });
     }
