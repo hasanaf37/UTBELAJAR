@@ -479,10 +479,14 @@
 
       <!-- Modal Admin: Detail Riwayat Latihan User -->
       <div id="modal-admin-user-detail" class="modal-backdrop">
-        <div class="modal-dialog" style="max-width: 620px;">
-          <h3 id="admin-detail-user-title" class="modal-title">Detail Laporan Pengguna</h3>
-          <div id="admin-detail-user-body" class="modal-body" style="max-height: 380px; overflow-y: auto; margin-top: 0.75rem;"></div>
-          <div class="modal-footer" style="margin-top: 1.25rem;">
+        <div class="modal-dialog" style="max-width: 680px; width: 95%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 id="admin-detail-user-title" class="modal-title" style="margin-bottom: 0;">Detail Laporan Pengguna</h3>
+            <button type="button" id="btn-top-close-admin-detail" style="background: none; border: none; font-size: 1.35rem; color: var(--text-secondary); cursor: pointer; line-height: 1; padding: 0.25rem 0.5rem;" title="Tutup">✕</button>
+          </div>
+          <div id="admin-detail-user-body" class="modal-body" style="max-height: 480px; overflow-y: auto; margin-top: 0.5rem; padding-right: 0.25rem;"></div>
+          <div class="modal-footer" style="margin-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+            <span id="admin-detail-footer-count" style="font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;"></span>
             <button type="button" id="btn-close-admin-detail" class="btn btn-primary btn-sm">Tutup</button>
           </div>
         </div>

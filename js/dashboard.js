@@ -103,6 +103,10 @@
       window.closeModal("modal-admin-user-detail");
     });
 
+    document.getElementById("btn-top-close-admin-detail")?.addEventListener("click", () => {
+      window.closeModal("modal-admin-user-detail");
+    });
+
     document.getElementById("btn-cancel-edit-admin-user")?.addEventListener("click", () => {
       window.closeModal("modal-admin-edit-user");
     });
@@ -524,59 +528,283 @@
     tbody.querySelectorAll(".btn-admin-detail-user").forEach((btn) => {
       btn.addEventListener("click", () => {
         const uid = btn.dataset.uid;
-        const uObj = enrichedUsers.find((item) => item.id === uid);
-        if (!uObj) return;
-        const titleEl = document.getElementById("admin-detail-user-title");
-        const bodyEl = document.getElementById("admin-detail-user-body");
-        if (titleEl) titleEl.textContent = `Laporan Detail — ${uObj.full_name}`;
-        if (bodyEl) {
-          const attRows =
-            uObj.attempts.length === 0
-              ? `<p style="color: var(--text-secondary); padding: 1rem 0;">Pengguna ini belum mengerjakan paket latihan soal.</p>`
-              : uObj.attempts
-                  .map(
-                    (a, i) => `
-                  <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                      <div style="font-weight: 700; color: var(--primary-navy);">${
-                        i + 1
-                      }. ${window.escapeHtml(a.question_sets?.title || "Paket Latihan Soal")}</div>
-                      <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                        ${window.escapeHtml(a.question_sets?.courses?.name || "Mata Kuliah")} • ${
-                      a.total_questions || 0
-                    } Soal (Benar: ${a.correct_answers || 0}) • ${window.formatDateTime(a.completed_at)}
-                      </div>
-                    </div>
-                    <span class="badge ${Number(a.score) >= 70 ? "badge-success" : "badge-warning"}">Skor ${
-                      a.score
-                    }</span>
-                  </div>
-                `
-                  )
-                  .join("");
-
-          bodyEl.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem; background: var(--bg); padding: 0.85rem; border-radius: 12px;">
-              <div><small style="color: var(--text-secondary);">Nama Pengguna</small><div style="font-weight: 700;">${window.escapeHtml(
-                uObj.full_name
-              )}</div></div>
-              <div><small style="color: var(--text-secondary);">Program Studi</small><div style="font-weight: 700;">${window.escapeHtml(
-                uObj.program_studi_name || "-"
-              )}</div></div>
-              <div><small style="color: var(--text-secondary);">Status &amp; Keaktifan</small><div style="font-weight: 700;">${
-                uObj.status
-              } (${window.formatDateTime(uObj.lastActive)})</div></div>
-              <div><small style="color: var(--text-secondary);">Total Soal Dikerjakan</small><div style="font-weight: 700;">${
-                uObj.soalCount
-              } Soal (${uObj.paketCount} Paket)</div></div>
-            </div>
-            <h4 style="font-size: 0.9rem; font-weight: 800; color: var(--primary-navy); margin-bottom: 0.5rem;">Riwayat Pengerjaan Soal</h4>
-            ${attRows}
-          `;
-        }
+        renderAdminUserDetailModal(uid);
         window.openModal("modal-admin-user-detail");
       });
     });
+  }
+
+  function renderAdminUserDetailModal(uid) {
+    const users = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+    const uObj = users.find((item) => item.id === uid);
+    if (!uObj) return;
+
+    let attempts = JSON.parse(localStorage.getItem(`utb_attempts_${uid}`) || "[]");
+
+    // Pastikan setiap record riwayat memiliki ID unik agar dapat dipilih & dihapus
+    let attemptsUpdated = false;
+    attempts.forEach((a, idx) => {
+      if (!a.id) {
+        a.id = `att-${idx}-${new Date(a.completed_at || Date.now()).getTime()}`;
+        attemptsUpdated = true;
+      }
+    });
+    if (attemptsUpdated) {
+      localStorage.setItem(`utb_attempts_${uid}`, JSON.stringify(attempts));
+    }
+
+    const titleEl = document.getElementById("admin-detail-user-title");
+    const bodyEl = document.getElementById("admin-detail-user-body");
+    const footerCountEl = document.getElementById("admin-detail-footer-count");
+
+    if (titleEl) titleEl.textContent = `Laporan Detail — ${uObj.full_name}`;
+    if (footerCountEl) {
+      footerCountEl.textContent = `Total: ${attempts.length} Riwayat Latihan`;
+    }
+
+    if (!bodyEl) return;
+
+    // Kalkulasi statistik pengerjaan terkini
+    const totalPaket = attempts.length;
+    let totalSoal = 0;
+    let sumScore = 0;
+    attempts.forEach((a) => {
+      totalSoal += Number(a.total_questions) || 0;
+      sumScore += Number(a.score) || 0;
+    });
+    const avgScore = totalPaket > 0 ? Math.round(sumScore / totalPaket) : 0;
+    const latestAttemptDate = attempts[0]?.completed_at || null;
+    const lastActive =
+      latestAttemptDate && latestAttemptDate > (uObj.last_active_at || "")
+        ? latestAttemptDate
+        : uObj.last_active_at || uObj.created_at;
+
+    // Pengecekan real-time status online/offline
+    const currentSession = JSON.parse(localStorage.getItem("utb_local_session") || "null");
+    const currentUserId = currentSession?.user?.id;
+    const currentUserName = (
+      currentSession?.user?.user_metadata?.full_name ||
+      currentSession?.user?.email?.split("@")[0] ||
+      ""
+    ).toLowerCase();
+    const isSelf =
+      String(uObj.id) === String(currentUserId) ||
+      (currentUserName && uObj.full_name?.toLowerCase() === currentUserName);
+
+    let isOnline = false;
+    if (isSelf) {
+      isOnline = true;
+    } else if (uObj.is_online === false) {
+      isOnline = false;
+    } else {
+      const lastActiveStr = uObj.last_active_at || lastActive;
+      if (lastActiveStr) {
+        const diffSeconds = (Date.now() - new Date(lastActiveStr).getTime()) / 1000;
+        if (diffSeconds >= 0 && diffSeconds <= 120) {
+          isOnline = true;
+        }
+      }
+    }
+    const realTimeStatus = isOnline ? "Aktif" : "Tidak Aktif";
+
+    // Summary Card Pengguna
+    const summaryHtml = `
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.15rem; background: var(--bg); padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--border);">
+        <div>
+          <small style="color: var(--text-secondary); display: block; font-size: 0.75rem; font-weight: 500;">Nama Pengguna</small>
+          <div style="font-weight: 700; color: var(--primary-navy);">${window.escapeHtml(uObj.full_name)}</div>
+        </div>
+        <div>
+          <small style="color: var(--text-secondary); display: block; font-size: 0.75rem; font-weight: 500;">Program Studi</small>
+          <div style="font-weight: 700;">${window.escapeHtml(uObj.program_studi_name || "-")}</div>
+        </div>
+        <div>
+          <small style="color: var(--text-secondary); display: block; font-size: 0.75rem; font-weight: 500;">Status &amp; Keaktifan</small>
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isOnline ? "#10b981" : "#94a3b8"};"></span>
+            ${realTimeStatus} (${window.formatDateTime(lastActive)})
+          </div>
+        </div>
+        <div>
+          <small style="color: var(--text-secondary); display: block; font-size: 0.75rem; font-weight: 500;">Total Pengerjaan &amp; Rata-Rata Nilai</small>
+          <div style="font-weight: 700;">${totalSoal} Soal (${totalPaket} Paket) • Skor ${avgScore}</div>
+        </div>
+      </div>
+    `;
+
+    // Riwayat Header & Toolbar Pemilihan Riwayat
+    const toolbarHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h4 style="font-size: 0.92rem; font-weight: 800; color: var(--primary-navy); margin: 0;">Riwayat Pengerjaan Soal</h4>
+          <span style="font-size: 0.74rem; background: var(--bg); border: 1px solid var(--border); padding: 0.15rem 0.5rem; border-radius: 12px; color: var(--text-secondary); font-weight: 600;">${totalPaket} Sesi</span>
+        </div>
+        ${
+          totalPaket > 0
+            ? `
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; user-select: none; color: var(--text-secondary); margin: 0;">
+              <input type="checkbox" id="admin-detail-select-all" style="width: 15px; height: 15px; accent-color: var(--primary-navy, #1e3a8a); cursor: pointer;">
+              <span>Pilih Semua</span>
+            </label>
+            <button type="button" id="btn-admin-delete-selected-attempts" disabled style="opacity: 0.45; cursor: not-allowed; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.32rem 0.65rem; transition: all 0.2s ease;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Hapus Terpilih (<span id="admin-detail-selected-count">0</span>)</span>
+            </button>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
+    // Daftar List Attempts
+    let listHtml = "";
+    if (totalPaket === 0) {
+      listHtml = `
+        <div style="text-align: center; padding: 2.25rem 1rem; color: var(--text-secondary); background: var(--bg); border: 1px dashed var(--border); border-radius: 12px; margin-top: 0.35rem;">
+          <p style="margin: 0; font-size: 0.88rem; font-weight: 500;">Pengguna ini belum memiliki riwayat pengerjaan paket latihan soal.</p>
+        </div>
+      `;
+    } else {
+      listHtml = attempts
+        .map(
+          (a, i) => `
+        <div class="admin-attempt-card" style="padding: 0.75rem 0.85rem; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.55rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: var(--surface); transition: background 0.15s ease;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+            <input type="checkbox" class="attempt-item-checkbox" data-att-id="${window.escapeHtml(
+              String(a.id)
+            )}" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-navy, #1e3a8a); flex-shrink: 0;">
+            <div style="min-width: 0;">
+              <div style="font-weight: 700; color: var(--primary-navy); font-size: 0.88rem; word-break: break-word; line-height: 1.35;">
+                ${i + 1}. ${window.escapeHtml(a.question_sets?.title || "Paket Latihan Soal")}
+              </div>
+              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.3;">
+                ${window.escapeHtml(a.question_sets?.courses?.name || "Mata Kuliah")} • ${
+            a.total_questions || 0
+          } Soal (Benar: ${a.correct_answers || 0}) • ${window.formatDateTime(a.completed_at)}
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+            <span class="badge ${
+              Number(a.score) >= 70 ? "badge-success" : "badge-warning"
+            }" style="white-space: nowrap; font-size: 0.75rem;">Skor ${a.score}</span>
+            <button type="button" class="btn-delete-single-attempt" data-att-id="${window.escapeHtml(
+              String(a.id)
+            )}" title="Hapus riwayat latihan ini" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.28rem 0.55rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; transition: all 0.2s ease;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Hapus</span>
+            </button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+    }
+
+    bodyEl.innerHTML = summaryHtml + toolbarHtml + listHtml;
+
+    // Event binding di dalam modal detail
+    const selectAllCheckbox = document.getElementById("admin-detail-select-all");
+    const deleteSelectedBtn = document.getElementById("btn-admin-delete-selected-attempts");
+    const selectedCountSpan = document.getElementById("admin-detail-selected-count");
+    const itemCheckboxes = bodyEl.querySelectorAll(".attempt-item-checkbox");
+
+    function updateSelectionState() {
+      const checkedBoxes = bodyEl.querySelectorAll(".attempt-item-checkbox:checked");
+      const count = checkedBoxes.length;
+      if (selectedCountSpan) selectedCountSpan.textContent = count;
+      if (deleteSelectedBtn) {
+        if (count > 0) {
+          deleteSelectedBtn.removeAttribute("disabled");
+          deleteSelectedBtn.style.opacity = "1";
+          deleteSelectedBtn.style.cursor = "pointer";
+        } else {
+          deleteSelectedBtn.setAttribute("disabled", "true");
+          deleteSelectedBtn.style.opacity = "0.45";
+          deleteSelectedBtn.style.cursor = "not-allowed";
+        }
+      }
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = itemCheckboxes.length > 0 && count === itemCheckboxes.length;
+        selectAllCheckbox.indeterminate = count > 0 && count < itemCheckboxes.length;
+      }
+    }
+
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener("change", (e) => {
+        const isChecked = e.target.checked;
+        itemCheckboxes.forEach((cb) => {
+          cb.checked = isChecked;
+        });
+        updateSelectionState();
+      });
+    }
+
+    itemCheckboxes.forEach((cb) => {
+      cb.addEventListener("change", () => {
+        updateSelectionState();
+      });
+    });
+
+    // Event handler tombol hapus satu riwayat
+    bodyEl.querySelectorAll(".btn-delete-single-attempt").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const attId = btn.dataset.attId;
+        if (!attId) return;
+        const confirmed = window.confirm("Apakah Anda yakin ingin menghapus 1 riwayat pengerjaan soal ini?");
+        if (!confirmed) return;
+
+        btn.disabled = true;
+        btn.innerHTML = `<span>...</span>`;
+        if (typeof window.dbDeleteQuizAttempts === "function") {
+          await window.dbDeleteQuizAttempts(uid, [attId]);
+        } else {
+          const localKey = `utb_attempts_${uid}`;
+          const current = JSON.parse(localStorage.getItem(localKey) || "[]");
+          const filtered = current.filter((item, idx) => String(item.id || `att-${idx}`) !== String(attId));
+          localStorage.setItem(localKey, JSON.stringify(filtered));
+        }
+
+        window.showToast("1 riwayat pengerjaan soal berhasil dihapus.", "success");
+        renderAdminUserDetailModal(uid);
+        renderAdminDashboard();
+      });
+    });
+
+    // Event handler tombol hapus beberapa riwayat terpilih
+    if (deleteSelectedBtn) {
+      deleteSelectedBtn.addEventListener("click", async () => {
+        const checkedBoxes = bodyEl.querySelectorAll(".attempt-item-checkbox:checked");
+        const idsToDelete = Array.from(checkedBoxes)
+          .map((cb) => cb.dataset.attId)
+          .filter(Boolean);
+        if (idsToDelete.length === 0) return;
+
+        const confirmed = window.confirm(
+          `Apakah Anda yakin ingin menghapus ${idsToDelete.length} riwayat pengerjaan soal yang dipilih? Tindakan ini tidak dapat dibatalkan.`
+        );
+        if (!confirmed) return;
+
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.innerHTML = `<span>Menghapus...</span>`;
+
+        if (typeof window.dbDeleteQuizAttempts === "function") {
+          await window.dbDeleteQuizAttempts(uid, idsToDelete);
+        } else {
+          const localKey = `utb_attempts_${uid}`;
+          const current = JSON.parse(localStorage.getItem(localKey) || "[]");
+          const filtered = current.filter((item, idx) => !idsToDelete.includes(String(item.id || `att-${idx}`)));
+          localStorage.setItem(localKey, JSON.stringify(filtered));
+        }
+
+        window.showToast(`${idsToDelete.length} riwayat pengerjaan soal berhasil dihapus.`, "success");
+        renderAdminUserDetailModal(uid);
+        renderAdminDashboard();
+      });
+    }
   }
 
   async function loadDashboardData() {

@@ -317,6 +317,30 @@
     }
   };
 
+  // 5. Hapus riwayat pengerjaan soal (quiz attempts) pengguna dari Supabase & Local
+  window.dbDeleteQuizAttempts = async function (userId, attemptIds) {
+    if (!userId || !Array.isArray(attemptIds) || attemptIds.length === 0) return;
+    const strIds = attemptIds.map((id) => String(id));
+    const localKey = `utb_attempts_${userId}`;
+    const local = JSON.parse(localStorage.getItem(localKey) || "[]");
+    const updated = local.filter((att, idx) => {
+      const attId = String(att.id || `att-${idx}`);
+      return !strIds.includes(attId);
+    });
+    localStorage.setItem(localKey, JSON.stringify(updated));
+
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        const realIds = attemptIds.filter((id) => id && !String(id).startsWith("att-"));
+        if (realIds.length > 0) {
+          await window.supabaseClient.from("quiz_attempts").delete().in("id", realIds);
+        }
+      } catch (err) {
+        console.warn("Gagal hapus quiz_attempts di Supabase:", err.message);
+      }
+    }
+  };
+
   // Default master daftar program studi
   window.DEFAULT_PRODI_LIST = [
     { id: "b1111111-1111-1111-1111-111111111111", code: "SI", name: "Sistem Informasi (SI)" },
