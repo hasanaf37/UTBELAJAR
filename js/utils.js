@@ -70,6 +70,19 @@ window.formatDateTime = function (dateString) {
   });
 };
 
+window.formatRelativeTime = function (dateString) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "-";
+  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diffSec < 0) return "Baru saja";
+  if (diffSec < 45) return "Baru saja";
+  if (diffSec < 120) return "1 menit lalu";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)} menit lalu`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} jam lalu`;
+  return window.formatDateTime(dateString);
+};
+
 window.formatDuration = function (seconds) {
   if (!seconds || seconds <= 0) return "0 Menit";
   const mins = Math.floor(seconds / 60);

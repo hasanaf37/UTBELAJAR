@@ -61,8 +61,34 @@
       }
       renderAdminDashboard();
       window.setButtonLoading(refreshBtn, false);
-      window.showToast("Data pengguna disinkronkan dengan Supabase.", "success");
+      window.showToast("Data status pengguna disinkronkan secara real-time.", "success");
     });
+
+    // Real-Time Event Listener: respon instan saat tab lain mengirim heartbeat aktivitas
+    window.addEventListener("storage", (e) => {
+      if (e.key === "utb_presence_heartbeat" || e.key === "utb_local_users") {
+        renderAdminDashboard();
+      }
+    });
+
+    // Auto-refresh real-time berkala tiap 10 detik (mengecek timeout 120s aktivitas web)
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        renderAdminDashboard();
+      }
+    }, 10000);
+
+    // Auto-sync database Supabase berkala tiap 20 detik jika terhubung
+    setInterval(async () => {
+      if (document.visibilityState === "visible" && window.supabaseClient && window.isSupabaseConfigured()) {
+        if (typeof window.dbGetUsers === "function") {
+          try {
+            await window.dbGetUsers();
+            renderAdminDashboard();
+          } catch (_) {}
+        }
+      }
+    }, 20000);
 
     document.getElementById("btn-admin-add-user")?.addEventListener("click", () => {
       document.getElementById("admin-add-user-form")?.reset();
@@ -179,6 +205,14 @@
     const searchVal = (document.getElementById("admin-user-search")?.value || "").toLowerCase().trim();
     const statusFilter = document.getElementById("admin-user-status-filter")?.value || "all";
 
+    const currentSession = JSON.parse(localStorage.getItem("utb_local_session") || "null");
+    const currentUserId = currentSession?.user?.id;
+    const currentUserName = (
+      currentSession?.user?.user_metadata?.full_name ||
+      currentSession?.user?.email?.split("@")[0] ||
+      ""
+    ).toLowerCase();
+
     let totalSystemAttempts = 0;
     let totalSystemQuestionsAnswered = 0;
     let sumAllScores = 0;
@@ -208,9 +242,39 @@
         ? latestAttemptDate
         : u.last_active_at || u.created_at;
 
+      // =========================================================================
+      // PENGECEKAN STATUS KEAKTIFAN DI WEB SECARA REAL-TIME
+      // =========================================================================
+      const isSelf =
+        String(u.id) === String(currentUserId) ||
+        (currentUserName && u.full_name?.toLowerCase() === currentUserName);
+
+      let isOnline = false;
+      if (isSelf) {
+        // Pengguna yang sedang membuka browser dashboard pasti aktif saat ini
+        isOnline = true;
+      } else if (u.is_online === false) {
+        isOnline = false;
+      } else {
+        const lastActiveStr = u.last_active_at || lastActive;
+        if (lastActiveStr) {
+          const diffSeconds = (Date.now() - new Date(lastActiveStr).getTime()) / 1000;
+          // Dianggap aktif di web jika ada heartbeat atau aktivitas dalam 120 detik terakhir (2 menit)
+          if (diffSeconds >= 0 && diffSeconds <= 120) {
+            isOnline = true;
+          }
+        }
+      }
+
+      const realTimeStatus = isOnline ? "Aktif" : "Tidak Aktif";
+      const accountStatus = u.account_status || u.status || "Aktif";
+
       return {
         ...u,
-        status: u.status || "Aktif",
+        isOnline,
+        realTimeStatus,
+        status: realTimeStatus,
+        accountStatus,
         role: u.role || (u.full_name.toLowerCase() === "admin" ? "admin" : "student"),
         paketCount,
         soalCount,
@@ -221,12 +285,12 @@
       };
     });
 
-    const activeUsersCount = enrichedUsers.filter((u) => u.status === "Aktif").length;
+    const activeUsersCount = enrichedUsers.filter((u) => u.isOnline).length;
     const { totalSets, totalQuestions } = getCatalogCounts();
     const globalAvgScore = countAllScores > 0 ? (sumAllScores / countAllScores).toFixed(1) : "0";
 
     setCounter("admin-stat-total-users", enrichedUsers.length);
-    setCounter("admin-stat-active-users", `${activeUsersCount} User Berstatus Aktif`);
+    setCounter("admin-stat-active-users", `${activeUsersCount} User Sedang Aktif di Web`);
     setCounter("admin-stat-total-questions", `${totalQuestions} Soal`);
     setCounter("admin-stat-total-sets", `Dalam ${totalSets} Paket Latihan`);
     setCounter("admin-stat-total-attempts", `${totalSystemAttempts}x`);
@@ -238,7 +302,7 @@
         !searchVal ||
         u.full_name.toLowerCase().includes(searchVal) ||
         (u.program_studi_name || "").toLowerCase().includes(searchVal);
-      const matchesStatus = statusFilter === "all" || u.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || u.realTimeStatus === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
@@ -259,7 +323,6 @@
     tbody.innerHTML = filtered
       .map((u) => {
         const isUserAdmin = u.role === "admin";
-        const isAktif = u.status === "Aktif";
         const initials = u.full_name
           .split(" ")
           .map((n) => n[0])
@@ -299,10 +362,22 @@
               ${window.escapeHtml(u.program_studi_name || "Sistem Informasi (SI)")}
             </td>
             <td style="padding: 0.9rem 0.75rem;">
-              <span class="badge ${isAktif ? "badge-success" : "badge-danger"}" style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span>
-                ${window.escapeHtml(u.status)}
-              </span>
+              ${
+                u.isOnline
+                  ? `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 999px;">
+                      <span class="online-indicator-dot"></span>
+                      <span>Aktif</span>
+                    </span>`
+                  : `<span class="badge" style="background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 999px;">
+                      <span style="width: 8px; height: 8px; border-radius: 50%; background: #94A3B8;"></span>
+                      <span>Tidak Aktif</span>
+                    </span>`
+              }
+              ${
+                u.accountStatus === "Nonaktif"
+                  ? `<div style="font-size: 0.68rem; color: var(--danger); font-weight: 600; margin-top: 0.2rem;">(Akun Dinonaktifkan)</div>`
+                  : ""
+              }
             </td>
             <td style="padding: 0.9rem 0.75rem;">
               <div style="font-weight: 700; color: var(--primary-navy);">${u.soalCount} Butir Soal</div>
@@ -317,10 +392,14 @@
               </div>
             </td>
             <td style="padding: 0.9rem 0.75rem; font-size: 0.8rem;">
-              <div style="color: var(--text-main); font-weight: 600;">
-                Aktif: ${window.formatDateTime(u.lastActive)}
+              <div style="font-weight: 700; color: ${u.isOnline ? "var(--success)" : "var(--text-main)"}; display: flex; align-items: center; gap: 0.35rem;">
+                ${
+                  u.isOnline
+                    ? `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--success);"></span> Sedang Aktif di Web`
+                    : `Terakhir: ${window.formatRelativeTime ? window.formatRelativeTime(u.lastActive) : window.formatDateTime(u.lastActive)}`
+                }
               </div>
-              <div style="color: var(--text-secondary); font-size: 0.74rem;">
+              <div style="color: var(--text-secondary); font-size: 0.74rem; margin-top: 0.15rem;">
                 Daftar: ${window.formatDate(u.created_at)}
               </div>
             </td>
@@ -332,7 +411,7 @@
                 Edit
               </button>
               <button class="btn btn-secondary btn-sm btn-admin-toggle-status" data-uid="${u.id}" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                ${isAktif ? "Nonaktifkan" : "Aktifkan"}
+                ${u.accountStatus === "Nonaktif" ? "Aktifkan Akun" : "Nonaktifkan"}
               </button>
               ${
                 !isUserAdmin
@@ -404,15 +483,17 @@
             window.showToast("Status akun Administrator utama selalu Aktif.", "info");
             return;
           }
-          const newStatus = allUsers[idx].status === "Nonaktif" ? "Aktif" : "Nonaktif";
+          const currentAcc = allUsers[idx].account_status || allUsers[idx].status || "Aktif";
+          const newStatus = currentAcc === "Nonaktif" ? "Aktif" : "Nonaktif";
           window.setButtonLoading(btn, true, "...");
+          allUsers[idx].account_status = newStatus;
+          allUsers[idx].status = newStatus;
           if (typeof window.dbUpdateUserStatus === "function") {
             await window.dbUpdateUserStatus(uid, allUsers[idx].full_name, newStatus);
           } else {
-            allUsers[idx].status = newStatus;
             localStorage.setItem("utb_local_users", JSON.stringify(allUsers));
           }
-          window.showToast(`Status ${allUsers[idx].full_name} diubah menjadi ${newStatus} di Supabase.`, "success");
+          window.showToast(`Izin akun ${allUsers[idx].full_name} diubah menjadi ${newStatus}.`, "success");
           renderAdminDashboard();
         }
       });

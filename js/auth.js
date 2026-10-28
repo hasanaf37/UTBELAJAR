@@ -500,9 +500,130 @@
     element.innerHTML = "";
   }
 
+  // ==============================================================================
+  // REAL-TIME PRESENCE & HEARTBEAT SYSTEM
+  // Melacak status pengguna secara aktif (Online / Aktif) vs (Offline / Tidak Aktif)
+  // ==============================================================================
+  let presenceHeartbeatTimer = null;
+
+  window.pingUserPresence = async function (isOnline = true) {
+    try {
+      const session = await window.getCurrentSession();
+      if (!session || !session.user) return;
+
+      const user = session.user;
+      const nowIso = isOnline ? new Date().toISOString() : new Date(Date.now() - 180000).toISOString();
+      const fullName = (user.user_metadata?.full_name || user.email?.split("@")[0] || "").trim();
+      const userId = user.id;
+
+      // 1. Simpan ke utb_local_users
+      const localUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+      let updatedLocal = false;
+      for (let i = 0; i < localUsers.length; i++) {
+        const u = localUsers[i];
+        if (
+          String(u.id) === String(userId) ||
+          (fullName && u.full_name && u.full_name.toLowerCase() === fullName.toLowerCase())
+        ) {
+          u.last_active_at = nowIso;
+          u.is_online = isOnline;
+          updatedLocal = true;
+          break;
+        }
+      }
+      if (updatedLocal) {
+        localStorage.setItem("utb_local_users", JSON.stringify(localUsers));
+      }
+
+      // 2. Broadcast sinyal kehadiran (presence) ke seluruh tab yang sedang terbuka
+      localStorage.setItem(
+        "utb_presence_heartbeat",
+        JSON.stringify({
+          userId: userId,
+          fullName: fullName,
+          isOnline: isOnline,
+          lastActiveAt: nowIso,
+          timestamp: Date.now(),
+        })
+      );
+
+      // 3. Sinkronkan ke Supabase database jika terhubung dan status online
+      if (window.supabaseClient && window.isSupabaseConfigured()) {
+        try {
+          const role = user.user_metadata?.role || user.role || "";
+          if (role === "admin" || fullName.toLowerCase() === "admin") {
+            await window.supabaseClient
+              .from("admins")
+              .update({ last_login_at: nowIso })
+              .eq("username", fullName);
+          } else {
+            await window.supabaseClient
+              .from("users")
+              .update({ last_active_at: nowIso })
+              .eq("full_name", fullName);
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  };
+
+  function startPresenceTracking() {
+    // Ping segera saat halaman aktif dimuat
+    setTimeout(() => {
+      window.pingUserPresence(true);
+    }, 500);
+
+    // Heartbeat berkala tiap 20 detik
+    if (presenceHeartbeatTimer) clearInterval(presenceHeartbeatTimer);
+    presenceHeartbeatTimer = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        window.pingUserPresence(true);
+      }
+    }, 20000);
+
+    // Kirim sinyal saat tab kembali dibuka
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        window.pingUserPresence(true);
+      }
+    });
+
+    // Deteksi saat pengguna menutup tab/jendela
+    window.addEventListener("beforeunload", () => {
+      try {
+        const session = JSON.parse(localStorage.getItem("utb_local_session") || "null");
+        if (session && session.user) {
+          const offlineIso = new Date(Date.now() - 180000).toISOString();
+          const localUsers = JSON.parse(localStorage.getItem("utb_local_users") || "[]");
+          const uIdx = localUsers.findIndex(
+            (u) =>
+              String(u.id) === String(session.user.id) ||
+              u.full_name?.toLowerCase() === (session.user.user_metadata?.full_name || "").toLowerCase()
+          );
+          if (uIdx !== -1) {
+            localUsers[uIdx].is_online = false;
+            localUsers[uIdx].last_active_at = offlineIso;
+            localStorage.setItem("utb_local_users", JSON.stringify(localUsers));
+          }
+          localStorage.setItem(
+            "utb_presence_heartbeat",
+            JSON.stringify({
+              userId: session.user.id,
+              fullName: session.user.user_metadata?.full_name || "",
+              isOnline: false,
+              lastActiveAt: offlineIso,
+              timestamp: Date.now(),
+            })
+          );
+        }
+      } catch (_) {}
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     ensureDefaultUsersSeeded();
     initPasswordToggles();
+    startPresenceTracking();
 
     const loginForm = document.getElementById("login-form");
     if (loginForm) {

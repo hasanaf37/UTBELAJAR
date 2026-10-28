@@ -15,7 +15,7 @@
     }
 
     toggleBtn.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth <= 1024) {
         sidebar.classList.remove("mobile-open");
         const overlay = document.querySelector(".sidebar-overlay");
         if (overlay) overlay.classList.remove("active");
@@ -133,6 +133,9 @@
 
   window.handleLogout = async function () {
     try {
+      if (typeof window.pingUserPresence === "function") {
+        await window.pingUserPresence(false);
+      }
       localStorage.removeItem("utb_local_session");
       if (window.supabaseClient) {
         await window.supabaseClient.auth.signOut();

@@ -124,7 +124,7 @@
               </div>
               <div>
                 <div id="admin-stat-total-users" class="stat-number">0</div>
-                <span id="admin-stat-active-users" class="stat-label">0 User Aktif</span>
+                <span id="admin-stat-active-users" class="stat-label">0 User Aktif di Web</span>
               </div>
             </div>
 
@@ -176,7 +176,7 @@
                   Laporan Data Pengguna &amp; Aktivitas Belajar
                 </h3>
                 <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                  Daftar lengkap pengguna beserta status akun, jumlah paket &amp; soal dikerjakan, nilai rata-rata, dan tanggal keaktifan.
+                  Daftar lengkap pengguna beserta status keaktifan real-time di web, jumlah paket &amp; soal dikerjakan, nilai rata-rata, dan riwayat aktivitas.
                 </p>
               </div>
               <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
@@ -187,10 +187,10 @@
                   placeholder="Cari nama atau prodi..."
                   style="width: 220px; padding: 0.5rem 0.85rem; font-size: 0.85rem;"
                 >
-                <select id="admin-user-status-filter" class="form-control" style="width: 150px; padding: 0.5rem 0.75rem; font-size: 0.85rem;">
-                  <option value="all">Semua Status</option>
+                <select id="admin-user-status-filter" class="form-control" style="width: 170px; padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                  <option value="all">Semua Status (Real-time)</option>
                   <option value="Aktif">Status: Aktif</option>
-                  <option value="Nonaktif">Status: Nonaktif</option>
+                  <option value="Tidak Aktif">Status: Tidak Aktif</option>
                 </select>
                 <button id="btn-admin-refresh-users" class="btn btn-secondary btn-sm">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -205,7 +205,7 @@
                   <tr style="border-bottom: 2px solid var(--border); color: var(--text-secondary); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em;">
                     <th style="padding: 0.85rem 0.75rem;">Nama Pengguna</th>
                     <th style="padding: 0.85rem 0.75rem;">Program Studi</th>
-                    <th style="padding: 0.85rem 0.75rem;">Status</th>
+                    <th style="padding: 0.85rem 0.75rem;">Status Keaktifan</th>
                     <th style="padding: 0.85rem 0.75rem;">Jumlah Soal Dikerjakan</th>
                     <th style="padding: 0.85rem 0.75rem;">Rata-rata Nilai</th>
                     <th style="padding: 0.85rem 0.75rem;">Tanggal Daftar &amp; Keaktifan</th>
