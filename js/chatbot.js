@@ -6,10 +6,153 @@
   const DEFAULT_SYSTEM_PROMPT =
     "Anda adalah UTBelajar AI, asisten belajar digital independen untuk mahasiswa. Berikan penjelasan materi kuliah, rangkuman modul, dan contoh soal latihan dengan bahasa Indonesia yang terstruktur, ramah, dan mudah dipahami.";
 
+  const DEFAULT_WELCOME_HTML = `
+    <div class="chat-welcome-box">
+      <div class="welcome-ai-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <h3>Halo! Saya UTBelajar AI</h3>
+      <p>Asisten belajar digital independenmu. Tanyakan konsep mata kuliah, strategi belajar, rangkuman materi, atau latihan soal.</p>
+      
+      <div class="prompt-chips-grid">
+        <div class="prompt-chip" data-prompt="Jelaskan konsep basis data relasional dan bentuk normalisasi (1NF sampai 3NF) dengan sederhana.">
+          💡 Konsep basis data &amp; normalisasi
+        </div>
+        <div class="prompt-chip" data-prompt="Bantu saya memahami perbedaan metodologi Agile Scrum dan Waterfall dalam Rekayasa Perangkat Lunak.">
+          📚 Perbedaan Agile Scrum vs Waterfall
+        </div>
+        <div class="prompt-chip" data-prompt="Buatkan 3 contoh latihan soal pilihan ganda tentang Analisis dan Perancangan Sistem beserta pembahasannya.">
+          📝 Buatkan contoh latihan soal
+        </div>
+        <div class="prompt-chip" data-prompt="Bagaimana strategi belajar mandiri yang efektif agar nilai ujian maksimal?">
+          🎯 Strategi belajar mandiri efektif
+        </div>
+      </div>
+    </div>
+  `;
+
   let currentUser = null;
   let activeConversationId = null;
   let isSending = false;
   let chatHistory = [];
+
+  function getUserConversationsKey() {
+    const uid = currentUser?.id || "guest";
+    return `utb_ai_conversations_${uid}`;
+  }
+
+  function getConversations() {
+    try {
+      const raw = localStorage.getItem(getUserConversationsKey());
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveConversations(list) {
+    try {
+      localStorage.setItem(getUserConversationsKey(), JSON.stringify(list));
+    } catch (_) {}
+  }
+
+  function renderHistorySidebar() {
+    const listEl = document.getElementById("chat-history-list");
+    if (!listEl) return;
+
+    const conversations = getConversations();
+    if (conversations.length === 0) {
+      listEl.innerHTML = `
+        <div style="padding: 1.25rem 0.75rem; text-align: center; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5;">
+          Belum ada riwayat percakapan.<br>Mulai obrolan baru di bawah.
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = conversations
+      .map((c) => {
+        const isActive = c.id === activeConversationId;
+        return `
+          <div class="history-item ${isActive ? "active" : ""}" data-cid="${c.id}">
+            <span class="history-title" title="${window.escapeHtml(c.title || "Percakapan")}">
+              ${window.escapeHtml(c.title || "Percakapan")}
+            </span>
+            <button class="history-delete-btn" data-cid="${c.id}" title="Hapus Percakapan" aria-label="Hapus">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        `;
+      })
+      .join("");
+
+    listEl.querySelectorAll(".history-item").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        if (e.target.closest(".history-delete-btn")) return;
+        const cid = el.dataset.cid;
+        loadConversation(cid);
+      });
+    });
+
+    listEl.querySelectorAll(".history-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const cid = btn.dataset.cid;
+        deleteConversation(cid);
+      });
+    });
+  }
+
+  function loadConversation(cid) {
+    const conversations = getConversations();
+    const conv = conversations.find((c) => c.id === cid);
+    if (!conv) return;
+
+    activeConversationId = cid;
+    chatHistory = Array.isArray(conv.messages) ? [...conv.messages] : [];
+
+    const container = document.getElementById("chat-messages-container");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (chatHistory.length === 0) {
+      container.innerHTML = DEFAULT_WELCOME_HTML;
+    } else {
+      chatHistory.forEach((msg) => {
+        appendMessageBubble(msg.role, msg.content);
+      });
+    }
+
+    renderHistorySidebar();
+    setTimeout(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }, 50);
+  }
+
+  function deleteConversation(cid) {
+    let conversations = getConversations();
+    conversations = conversations.filter((c) => c.id !== cid);
+    saveConversations(conversations);
+
+    if (activeConversationId === cid) {
+      activeConversationId = null;
+      chatHistory = [];
+      const container = document.getElementById("chat-messages-container");
+      if (container) container.innerHTML = DEFAULT_WELCOME_HTML;
+    }
+
+    renderHistorySidebar();
+    window.showToast("Percakapan telah dihapus.", "info");
+  }
+
+  function startNewConversation() {
+    activeConversationId = null;
+    chatHistory = [];
+    const container = document.getElementById("chat-messages-container");
+    if (container) container.innerHTML = DEFAULT_WELCOME_HTML;
+    renderHistorySidebar();
+  }
 
   function getAiConfig() {
     try {
@@ -52,6 +195,14 @@
 
     currentUser = await window.requireAuth();
     if (!currentUser) return;
+
+    // 2. Muat riwayat percakapan sebelumnya untuk pengguna yang sedang login
+    const conversations = getConversations();
+    if (conversations.length > 0) {
+      loadConversation(conversations[0].id);
+    } else {
+      renderHistorySidebar();
+    }
 
     try {
       const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
@@ -261,12 +412,29 @@
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
         modelName
       )}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`;
+
+      // Format riwayat multi-turn conversation untuk Gemini
+      const geminiContents = [];
+      const prev = chatHistory.slice(-20);
+      for (const m of prev) {
+        geminiContents.push({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        });
+      }
+      if (
+        geminiContents.length === 0 ||
+        geminiContents[geminiContents.length - 1].parts[0]?.text !== userMessage
+      ) {
+        geminiContents.push({ role: "user", parts: [{ text: userMessage }] });
+      }
+
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT }] },
-          contents: [{ role: "user", parts: [{ text: userMessage }] }],
+          contents: geminiContents,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -313,15 +481,19 @@
         headers["X-Title"] = "UTBelajar AI";
       }
 
-      // Susun riwayat percakapan (system prompt + konteks obrolan sebelumnya + pertanyaan pengguna saat ini)
+      // Susun riwayat percakapan lengkap (system prompt + konteks percakapan sebelumnya + pertanyaan pengguna saat ini)
       const messages = [];
       if (cfg.systemPrompt && cfg.systemPrompt.trim()) {
         messages.push({ role: "system", content: cfg.systemPrompt.trim() });
       }
 
-      const prev = chatHistory.slice(-6);
+      // Mengirimkan hingga 20 interaksi terakhir agar agen mengingat percakapan secara utuh
+      const prev = chatHistory.slice(-20);
       for (const m of prev) {
-        messages.push({ role: m.role, content: m.content });
+        messages.push({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        });
       }
       if (messages.length === 0 || messages[messages.length - 1].content !== userMessage) {
         messages.push({ role: "user", content: userMessage });
@@ -465,9 +637,7 @@
     sendBtn.addEventListener("click", handleSendMessage);
 
     newChatBtn?.addEventListener("click", () => {
-      activeConversationId = null;
-      chatHistory = [];
-      if (container) container.innerHTML = "";
+      startNewConversation();
       updateScrollButtonVisibility();
     });
   }
@@ -501,11 +671,37 @@
 
     appendMessageBubble("user", message);
 
+    // Buat percakapan baru di sidebar jika belum ada percakapan aktif
+    let conversations = getConversations();
+    if (!activeConversationId) {
+      activeConversationId = "conv-" + Date.now();
+      const newTitle = message.length > 32 ? message.slice(0, 32) + "..." : message;
+      conversations.unshift({
+        id: activeConversationId,
+        title: newTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: [],
+      });
+      saveConversations(conversations);
+      renderHistorySidebar();
+    }
+
     try {
       const reply = await requestAiReply(message);
       chatHistory.push({ role: "user", content: message });
       chatHistory.push({ role: "assistant", content: reply });
+
+      // Simpan riwayat percakapan secara persisten
+      const convIdx = conversations.findIndex((c) => c.id === activeConversationId);
+      if (convIdx !== -1) {
+        conversations[convIdx].messages = [...chatHistory];
+        conversations[convIdx].updated_at = new Date().toISOString();
+        saveConversations(conversations);
+      }
+
       appendMessageBubble("assistant", reply);
+      renderHistorySidebar();
     } catch (err) {
       const currentProv = (getAiConfig().provider || "AI").toUpperCase();
       appendMessageBubble(
