@@ -3,6 +3,32 @@
 // ==============================================================================
 
 (function () {
+  function openMobileDrawer() {
+    const sidebar = document.querySelector(".app-sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+    if (!sidebar) return;
+
+    sidebar.classList.add("mobile-open");
+    if (overlay) overlay.classList.add("active");
+
+    // Kunci scroll halaman belakang pada HP & tablet untuk menghindari bug
+    document.body.classList.add("sidebar-open-locked");
+    document.documentElement.classList.add("sidebar-open-locked");
+  }
+
+  function closeMobileDrawer() {
+    const sidebar = document.querySelector(".app-sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+    if (!sidebar) return;
+
+    sidebar.classList.remove("mobile-open");
+    if (overlay) overlay.classList.remove("active");
+
+    // Buka kembali scroll halaman
+    document.body.classList.remove("sidebar-open-locked");
+    document.documentElement.classList.remove("sidebar-open-locked");
+  }
+
   function initSidebar() {
     const sidebar = document.querySelector(".app-sidebar");
     const toggleBtn = document.querySelector(".sidebar-toggle-btn");
@@ -16,9 +42,7 @@
 
     toggleBtn.addEventListener("click", () => {
       if (window.innerWidth <= 1024) {
-        sidebar.classList.remove("mobile-open");
-        const overlay = document.querySelector(".sidebar-overlay");
-        if (overlay) overlay.classList.remove("active");
+        closeMobileDrawer();
         return;
       }
       sidebar.classList.toggle("collapsed");
@@ -31,7 +55,7 @@
     const mobileToggle = document.querySelector(".mobile-menu-toggle");
     let overlay = document.querySelector(".sidebar-overlay");
 
-    if (!mobileToggle || !sidebar) return;
+    if (!sidebar) return;
 
     if (!overlay) {
       overlay = document.createElement("div");
@@ -39,14 +63,50 @@
       document.body.appendChild(overlay);
     }
 
-    mobileToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("mobile-open");
-      overlay.classList.toggle("active");
-    });
+    if (mobileToggle) {
+      mobileToggle.addEventListener("click", () => {
+        if (sidebar.classList.contains("mobile-open")) {
+          closeMobileDrawer();
+        } else {
+          openMobileDrawer();
+        }
+      });
+    }
 
     overlay.addEventListener("click", () => {
-      sidebar.classList.remove("mobile-open");
-      overlay.classList.remove("active");
+      closeMobileDrawer();
+    });
+
+    // Mencegah scroll tembus saat menyentuh overlay
+    overlay.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+      },
+      { passive: false }
+    );
+
+    // Tutup drawer & kembalikan scroll saat navigasi diklik pada HP/tablet
+    sidebar.querySelectorAll(".nav-item, .brand-link, .user-profile-btn").forEach((el) => {
+      el.addEventListener("click", () => {
+        if (window.innerWidth <= 1024) {
+          closeMobileDrawer();
+        }
+      });
+    });
+
+    // Tutup drawer dengan tombol Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && sidebar.classList.contains("mobile-open")) {
+        closeMobileDrawer();
+      }
+    });
+
+    // Kembalikan scroll saat layar diperbesar ke desktop (> 1024px)
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 1024 && sidebar.classList.contains("mobile-open")) {
+        closeMobileDrawer();
+      }
     });
   }
 

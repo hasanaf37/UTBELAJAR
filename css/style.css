@@ -849,6 +849,13 @@ button, input, select, textarea {
   margin-bottom: 1.5rem;
 }
 
+/* Scroll Lock saat drawer sidebar mobile terbuka */
+html.sidebar-open-locked,
+body.sidebar-open-locked {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 /* ==============================================================================
    RESPONSIVE DESIGN (TABLET & MOBILE / HP)
    ============================================================================== */
@@ -858,6 +865,10 @@ button, input, select, textarea {
     transform: translateX(-100%);
     width: 280px !important;
     z-index: 1100 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
   }
 
   .app-sidebar.mobile-open {
@@ -1048,6 +1059,8 @@ button, input, select, textarea {
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(2px);
   z-index: 1050;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 .sidebar-overlay.active {
