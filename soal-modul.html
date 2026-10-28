@@ -374,10 +374,28 @@
               </div>
             </div>
 
-            <!-- 2. Tampilan Penampil PDF Langsung di Browser (Tanpa Unduh) -->
+            <!-- 2. Tampilan Penampil PDF Langsung di Browser HP & Desktop (Tanpa Unduh) -->
             <div id="view-direct-pdf" style="display: none;">
               <div class="pdf-direct-container">
-                <iframe id="pdf-inline-iframe" class="pdf-embed-frame" title="Penampil PDF Soal Modul"></iframe>
+                <!-- Toolbar Penampil PDF Universal (HP & Desktop) -->
+                <div class="pdf-viewer-toolbar">
+                  <div class="pdf-viewer-info">
+                    <span id="pdf-viewer-status" class="pdf-status-pill">📄 Dokumen PDF Aktif</span>
+                    <span id="pdf-viewer-page-info" class="pdf-page-count-text">Memuat halaman...</span>
+                  </div>
+                  <div class="pdf-viewer-Controls">
+                    <button type="button" id="btn-pdf-zoom-out" class="pdf-ctrl-btn" title="Perkecil Tampilan PDF">➖</button>
+                    <span id="pdf-zoom-level" class="pdf-zoom-badge">100%</span>
+                    <button type="button" id="btn-pdf-zoom-in" class="pdf-ctrl-btn" title="Perbesar Tampilan PDF">➕</button>
+                    <button type="button" id="btn-pdf-zoom-reset" class="pdf-ctrl-btn" title="Reset Ukuran">Reset</button>
+                  </div>
+                </div>
+
+                <!-- Wadah Render Kertas PDF (HTML5 Canvas / Lembar A4 - 100% Terbaca di HP & Desktop) -->
+                <div id="pdf-canvas-viewport" class="pdf-canvas-viewport">
+                  <div id="pdf-canvas-stack" class="pdf-canvas-stack"></div>
+                  <iframe id="pdf-inline-iframe" class="pdf-embed-frame" title="Penampil PDF Soal Modul" style="display: none;"></iframe>
+                </div>
               </div>
               <div style="text-align: center; margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
                 <button type="button" id="btn-back-to-book-mode" class="btn btn-secondary btn-sm">
@@ -405,6 +423,7 @@
 
   <div id="toast-container"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>

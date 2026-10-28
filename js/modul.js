@@ -388,7 +388,15 @@
     if (nextBtn) nextBtn.disabled = activeSpreadIndex >= spreads.length - 1;
   }
 
-  // Generator Dokumen PDF 100% Valid (%PDF-1.4) agar dapat dilihat tanpa diunduh & diunduh langsung
+  let currentPdfZoom = 1.0;
+  let activePdfDoc = null;
+
+  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  // Generator Dokumen PDF Multi-Halaman 100% Valid (%PDF-1.4)
   function buildRealPdfBlob(modul, course) {
     const cleanPdfText = (str) =>
       String(str || "")
@@ -426,37 +434,53 @@
     allLines.push(`Mata Kuliah : ${course ? course.code + " - " + course.name : "Mata Kuliah"}`);
     allLines.push(`Judul Modul : ${modul.title}`);
     allLines.push(`Edisi       : ${modul.edition || "Edisi 2026"}`);
-    allLines.push(`--------------------------------------------------------------------------------`);
+    allLines.push(`==============================================================================`);
     allLines.push(``);
 
     const spreads = Array.isArray(modul.spreads) ? modul.spreads : [];
     spreads.forEach((sp, idx) => {
       allLines.push(`[BAGIAN ${idx + 1}] ${sp.leftTitle || "Ringkasan Materi"}`);
-      wrapLines(sp.leftText, 78).forEach((l) => allLines.push(l));
+      wrapLines(sp.leftText, 76).forEach((l) => allLines.push(l));
       allLines.push(``);
       allLines.push(`[SOAL EVALUASI ${idx + 1}] ${sp.rightTitle || "Latihan Soal Modul"}`);
-      wrapLines(sp.rightText, 78).forEach((l) => allLines.push(l));
+      wrapLines(sp.rightText, 76).forEach((l) => allLines.push(l));
       allLines.push(``);
-      allLines.push(`--------------------------------------------------------------------------------`);
+      allLines.push(`------------------------------------------------------------------------------`);
       allLines.push(``);
     });
 
     allLines.push(`Copyright HasanAF 2026 - UTBelajar`);
 
-    let streamContent = "BT\n/F1 11 Tf\n50 790 Td\n14 TL\n";
-    const maxLines = Math.min(allLines.length, 48);
-    for (let i = 0; i < maxLines; i++) {
-      streamContent += `(${cleanPdfText(allLines[i])}) Tj T*\n`;
+    const linesPerPage = 46;
+    const pageChunks = [];
+    for (let i = 0; i < allLines.length; i += linesPerPage) {
+      pageChunks.push(allLines.slice(i, i + linesPerPage));
     }
-    streamContent += "ET";
+    if (pageChunks.length === 0) pageChunks.push(["UTBelajar Modul PDF"]);
 
-    const objects = [
-      "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
-      "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
-      "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n",
-      "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
-      `5 0 obj\n<< /Length ${streamContent.length} >>\nstream\n${streamContent}\nendstream\nendobj\n`,
-    ];
+    const objects = [];
+    // Obj 1: Catalog, Obj 2: Pages, Obj 3: Font
+    objects.push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+    const kidsRefs = pageChunks.map((_, idx) => `${4 + idx * 2} 0 R`).join(" ");
+    objects.push(`2 0 obj\n<< /Type /Pages /Kids [${kidsRefs}] /Count ${pageChunks.length} >>\nendobj\n`);
+    objects.push("3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
+
+    pageChunks.forEach((lines, idx) => {
+      const pageObjNum = 4 + idx * 2;
+      const contentObjNum = pageObjNum + 1;
+      let streamContent = "BT\n/F1 10.5 Tf\n45 792 Td\n15 TL\n";
+      lines.forEach((line) => {
+        streamContent += `(${cleanPdfText(line)}) Tj T*\n`;
+      });
+      streamContent += `\n(--- Halaman ${idx + 1} dari ${pageChunks.length} | UTBelajar ---) Tj\nET`;
+
+      objects.push(
+        `${pageObjNum} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjNum} 0 R >>\nendobj\n`
+      );
+      objects.push(
+        `${contentObjNum} 0 obj\n<< /Length ${streamContent.length} >>\nstream\n${streamContent}\nendstream\nendobj\n`
+      );
+    });
 
     let pdf = "%PDF-1.4\n";
     const offsets = [0];
@@ -475,28 +499,174 @@
     return new Blob([pdf], { type: "application/pdf" });
   }
 
-  function preparePdfSource(modul) {
+  function dataUrlToUint8Array(dataUrl) {
+    try {
+      const parts = String(dataUrl).split(",");
+      const base64 = parts.length > 1 ? parts[1] : parts[0];
+      const raw = atob(base64);
+      const uint8 = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) {
+        uint8[i] = raw.charCodeAt(i);
+      }
+      return uint8;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function renderFallbackA4Sheets(modul, course) {
+    const stack = document.getElementById("pdf-canvas-stack");
+    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
+    const iframe = document.getElementById("pdf-inline-iframe");
+    if (!stack) return;
+    if (iframe) iframe.style.display = "none";
+    stack.style.display = "flex";
+
+    const spreads = Array.isArray(modul.spreads) && modul.spreads.length > 0 ? modul.spreads : [];
+    if (pageInfoEl) {
+      pageInfoEl.textContent = `${spreads.length || 1} Halaman Lembar A4 (Siap Baca di HP & Desktop)`;
+    }
+
+    stack.innerHTML = spreads
+      .map(
+        (sp, idx) => `
+      <div class="pdf-a4-sheet" style="transform: scale(${currentPdfZoom}); transform-origin: top center;">
+        <div class="pdf-a4-header">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">
+              DOKUMEN PDF SOAL MODUL • ${window.escapeHtml(course ? course.code + " - " + course.name : "UTBELAJAR")}
+            </div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary-navy);">
+              ${window.escapeHtml(modul.title)}
+            </div>
+          </div>
+          <span class="badge badge-blue">${window.escapeHtml(modul.edition || "Edisi 2026")} • Hal. ${idx + 1}</span>
+        </div>
+        <div class="book-page-content">
+          <h3>${window.escapeHtml(sp.leftTitle || "Ringkasan Materi")}</h3>
+          ${formatBookParagraphs(sp.leftText)}
+          <hr style="border: none; border-top: 1.5px dashed #CBD5E1; margin: 1.25rem 0;">
+          <h3>${window.escapeHtml(sp.rightTitle || "Latihan & Evaluasi Modul")}</h3>
+          ${formatBookParagraphs(sp.rightText)}
+        </div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  async function renderPdfDocPages() {
+    const stack = document.getElementById("pdf-canvas-stack");
+    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
+    const zoomLabel = document.getElementById("pdf-zoom-level");
+    if (zoomLabel) zoomLabel.textContent = `${Math.round(currentPdfZoom * 100)}%`;
+
+    if (!activePdfDoc || !stack) {
+      if (activeModul) renderFallbackA4Sheets(activeModul, selectedCourse);
+      return;
+    }
+
+    stack.innerHTML = "";
+    const totalPages = activePdfDoc.numPages;
+    if (pageInfoEl) {
+      pageInfoEl.textContent = `${totalPages} Halaman PDF • Terbaca Langsung di HP & Desktop`;
+    }
+
+    const viewportEl = document.getElementById("pdf-canvas-viewport");
+    const availableWidth = Math.max(280, Math.min(820, (viewportEl?.clientWidth || window.innerWidth) - 32));
+    const dpr = Math.min(window.devicePixelRatio || 1.5, 2.25);
+
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const page = await activePdfDoc.getPage(pageNum);
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const fitScale = (availableWidth / unscaledViewport.width) * currentPdfZoom;
+      const viewport = page.getViewport({ scale: fitScale });
+
+      const sheetWrapper = document.createElement("div");
+      sheetWrapper.className = "pdf-page-sheet";
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      sheetWrapper.appendChild(canvas);
+      stack.appendChild(sheetWrapper);
+
+      const pageBadge = document.createElement("div");
+      pageBadge.className = "pdf-page-badge-num";
+      pageBadge.textContent = `Halaman ${pageNum} dari ${totalPages}`;
+      stack.appendChild(pageBadge);
+
+      await page.render({
+        canvasContext: ctx,
+        viewport: page.getViewport({ scale: fitScale * dpr }),
+      }).promise;
+    }
+  }
+
+  async function preparePdfSource(modul) {
     if (activeBlobUrl) {
       URL.revokeObjectURL(activeBlobUrl);
       activeBlobUrl = null;
     }
+    activePdfDoc = null;
+    currentPdfZoom = 1.0;
 
+    const stack = document.getElementById("pdf-canvas-stack");
     const iframe = document.getElementById("pdf-inline-iframe");
-    let srcUrl = "";
+    const pageInfoEl = document.getElementById("pdf-viewer-page-info");
+    if (stack) {
+      stack.style.display = "flex";
+      stack.innerHTML = `<div style="color:#E2E8F0; padding:2rem; text-align:center; font-weight:600;">⏳ Menyiapkan halaman PDF agar dapat dibaca langsung di layar Anda...</div>`;
+    }
+    if (iframe) iframe.style.display = "none";
+
+    let pdfBytes = null;
 
     if (modul.pdf_data_url) {
-      srcUrl = modul.pdf_data_url;
+      pdfBytes = dataUrlToUint8Array(modul.pdf_data_url);
+      if (pdfBytes) {
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        activeBlobUrl = URL.createObjectURL(blob);
+      }
     } else if (modul.pdf_external_url) {
-      srcUrl = modul.pdf_external_url;
+      if (window.pdfjsLib) {
+        try {
+          activePdfDoc = await window.pdfjsLib.getDocument(modul.pdf_external_url).promise;
+          await renderPdfDocPages();
+          return;
+        } catch (err) {
+          // Jika URL eksternal diblokir CORS untuk canvas, gunakan Google Docs Embedded PDF Viewer agar tetap terbaca di HP
+          if (stack) stack.style.display = "none";
+          if (iframe) {
+            iframe.style.display = "block";
+            iframe.src = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(modul.pdf_external_url)}`;
+          }
+          if (pageInfoEl) pageInfoEl.textContent = "Penampil PDF Eksternal Aktif (Mobile & Desktop)";
+          return;
+        }
+      }
     } else {
       const blob = buildRealPdfBlob(modul, selectedCourse);
       activeBlobUrl = URL.createObjectURL(blob);
-      srcUrl = activeBlobUrl;
+      const ab = await blob.arrayBuffer();
+      pdfBytes = new Uint8Array(ab);
     }
 
-    if (iframe) {
-      iframe.src = srcUrl;
+    if (pdfBytes && window.pdfjsLib) {
+      try {
+        activePdfDoc = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
+        await renderPdfDocPages();
+        return;
+      } catch (err) {
+        console.warn("Fallback ke lembar A4 HTML:", err);
+      }
     }
+
+    renderFallbackA4Sheets(modul, selectedCourse);
   }
 
   function downloadActivePdf() {
@@ -507,17 +677,17 @@
         .replace(/^-+|-+$/g, "") + ".pdf";
 
     let downloadHref = "";
-    if (activeModul.pdf_data_url) {
+    if (activeBlobUrl) {
+      downloadHref = activeBlobUrl;
+    } else if (activeModul.pdf_data_url) {
       downloadHref = activeModul.pdf_data_url;
     } else if (activeModul.pdf_external_url) {
       window.open(activeModul.pdf_external_url, "_blank");
       window.showToast("Membuka/mengunduh file PDF eksternal...", "info");
       return;
     } else {
-      if (!activeBlobUrl) {
-        const blob = buildRealPdfBlob(activeModul, selectedCourse);
-        activeBlobUrl = URL.createObjectURL(blob);
-      }
+      const blob = buildRealPdfBlob(activeModul, selectedCourse);
+      activeBlobUrl = URL.createObjectURL(blob);
       downloadHref = activeBlobUrl;
     }
 
@@ -557,12 +727,31 @@
       if (pdfView) pdfView.style.display = isBook ? "none" : "block";
       btnBook?.classList.toggle("active", isBook);
       btnPdf?.classList.toggle("active", !isBook);
+
+      if (!isBook) {
+        renderPdfDocPages();
+      }
     };
 
     document.getElementById("btn-mode-book")?.addEventListener("click", () => switchReaderView("book"));
     document.getElementById("btn-mode-pdf")?.addEventListener("click", () => switchReaderView("pdf"));
     document.getElementById("btn-book-switch-pdf")?.addEventListener("click", () => switchReaderView("pdf"));
     document.getElementById("btn-back-to-book-mode")?.addEventListener("click", () => switchReaderView("book"));
+
+    document.getElementById("btn-pdf-zoom-in")?.addEventListener("click", () => {
+      currentPdfZoom = Math.min(2.0, +(currentPdfZoom + 0.2).toFixed(2));
+      renderPdfDocPages();
+    });
+
+    document.getElementById("btn-pdf-zoom-out")?.addEventListener("click", () => {
+      currentPdfZoom = Math.max(0.6, +(currentPdfZoom - 0.2).toFixed(2));
+      renderPdfDocPages();
+    });
+
+    document.getElementById("btn-pdf-zoom-reset")?.addEventListener("click", () => {
+      currentPdfZoom = 1.0;
+      renderPdfDocPages();
+    });
 
     document.getElementById("btn-book-prev-spread")?.addEventListener("click", () => {
       if (activeSpreadIndex > 0) {

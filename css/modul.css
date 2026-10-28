@@ -299,14 +299,149 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Mode Penampil PDF Langsung Tanpa Unduh */
+/* Mode Penampil PDF Langsung Tanpa Unduh (Universal HP & Desktop) */
 .pdf-direct-container {
   max-width: 1120px;
   margin: 0 auto;
   background: #1E293B;
-  padding: 10px;
+  padding: 12px;
   border-radius: 14px;
   box-shadow: var(--shadow-lg);
+}
+
+.pdf-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: #0F172A;
+  color: #F8FAFC;
+  padding: 0.7rem 1rem;
+  border-radius: 10px 10px 0 0;
+  border-bottom: 1px solid #334155;
+}
+
+.pdf-viewer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.pdf-status-pill {
+  background: rgba(65, 105, 245, 0.25);
+  color: #93C5FD;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.pdf-page-count-text {
+  font-size: 0.82rem;
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+.pdf-viewer-Controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pdf-ctrl-btn {
+  background: #1E293B;
+  color: #F8FAFC;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pdf-ctrl-btn:hover {
+  background: var(--primary-blue);
+  border-color: var(--primary-blue);
+}
+
+.pdf-zoom-badge {
+  min-width: 48px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #F8FAFC;
+}
+
+.pdf-canvas-viewport {
+  width: 100%;
+  max-height: 680px;
+  overflow: auto;
+  background: #334155;
+  border-radius: 0 0 10px 10px;
+  padding: 1.25rem 0.85rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pdf-canvas-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 360px;
+}
+
+.pdf-page-sheet {
+  background: #FFFFFF;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.pdf-page-sheet canvas {
+  display: block;
+  max-width: 100%;
+  height: auto !important;
+}
+
+.pdf-page-badge-num {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #E2E8F0;
+  background: rgba(15, 23, 42, 0.75);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  margin-top: -0.5rem;
+}
+
+/* Fallback Lembar Dokumen A4 PDF (100% Terbaca di HP walaupun Offline) */
+.pdf-a4-sheet {
+  width: 100%;
+  max-width: 780px;
+  background: #FFFFFF;
+  color: #0F172A;
+  border-radius: 6px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  padding: 2.25rem 2.5rem;
+  font-family: var(--font-sans);
+  line-height: 1.65;
+}
+
+.pdf-a4-header {
+  border-bottom: 2px solid #1E293B;
+  padding-bottom: 0.85rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .pdf-embed-frame {
@@ -398,5 +533,32 @@
 
   .pdf-embed-frame {
     height: 460px;
+  }
+
+  .pdf-viewer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .pdf-viewer-Controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pdf-ctrl-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .pdf-canvas-viewport {
+    max-height: 540px;
+    padding: 0.75rem 0.4rem;
+  }
+
+  .pdf-a4-sheet {
+    padding: 1.25rem 1rem;
+    font-size: 0.88rem;
   }
 }
