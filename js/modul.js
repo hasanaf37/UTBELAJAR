@@ -30,20 +30,20 @@
       pdf_external_url: "",
       spreads: [
         {
-          leftTitle: "BAB 1: Konsep Model Relasional & Kunci Tabel",
+          leftTitle: "",
           leftText:
-            "Basis data relasional mengorganisasikan data ke dalam tabel-tabel dua dimensi yang terdiri dari baris (tuple/record) dan kolom (atribut).\n\n1. Primary Key (Kunci Utama): Atribut unik yang mengidentifikasi setiap baris secara spesifik dan tidak boleh bernilai NULL.\n2. Foreign Key (Kunci Tamu): Atribut pada suatu tabel yang merujuk pada Primary Key di tabel lain untuk menjaga integritas referensial.\n3. Entity-Relationship Diagram (ERD): Pemodelan visual hubungan antar entitas (One-to-One, One-to-Many, Many-to-Many).",
-          rightTitle: "Soal Evaluasi Modul — Bagian 1",
+            "SOAL 1:\nAtribut yang digunakan untuk menghubungkan tabel anak (child) ke tabel induk (parent) dalam basis data relasional disebut...\nA. Candidate Key\nB. Foreign Key\nC. Super Key\nD. Alternate Key\nKunci Jawaban: B (Foreign Key menjaga integritas referensial antar tabel).\n\nSOAL 2:\nKondisi di mana nilai Primary Key tidak boleh kosong (NULL) disebut aturan...\nA. Entity Integrity\nB. Domain Integrity\nC. Referential Integrity\nD. User-Defined Integrity\nKunci Jawaban: A (Entity Integrity mewajibkan setiap PK bernilai unik dan tidak NULL).",
+          rightTitle: "",
           rightText:
-            "SOAL 1:\nAtribut yang digunakan untuk menghubungkan tabel anak (child) ke tabel induk (parent) dalam basis data relasional disebut...\nA. Candidate Key\nB. Foreign Key\nC. Super Key\nD. Alternate Key\nKunci Jawaban: B (Foreign Key menjaga integritas referensial antar tabel).\n\nSOAL 2:\nKondisi di mana nilai Primary Key tidak boleh kosong disebut aturan...\nA. Entity Integrity\nB. Domain Integrity\nC. Referential Integrity\nD. User-Defined Integrity\nKunci Jawaban: A (Entity Integrity mewajibkan setiap PK bernilai unik dan tidak NULL).",
+            "SOAL 3:\nApabila sebuah tabel masih memiliki atribut bernilai ganda (multi-valued attribute) dalam satu kolom, maka tabel tersebut belum memenuhi...\nA. 1NF (First Normal Form)\nB. 2NF (Second Normal Form)\nC. 3NF (Third Normal Form)\nD. BCNF\nKunci Jawaban: A (Syarat mutlak 1NF adalah nilai atomik/tunggal).\n\nSOAL 4:\nPerintah DDL SQL untuk menambahkan kolom baru pada tabel yang sudah ada adalah...\nA. UPDATE TABLE\nB. INSERT COLUMN\nC. ALTER TABLE ... ADD\nD. MODIFY TABLE\nKunci Jawaban: C (ALTER TABLE digunakan untuk mengubah struktur tabel).",
         },
         {
-          leftTitle: "BAB 2: Tahapan Normalisasi Data (1NF, 2NF, 3NF)",
+          leftTitle: "",
           leftText:
-            "Normalisasi adalah proses dekomposisi tabel untuk menghilangkan redundansi data serta mencegah anomali (Insertion, Update, dan Deletion Anomaly).\n\n• Bentuk Normal Pertama (1NF): Setiap sel tabel hanya memuat satu nilai atomik (tunggal) dan tidak ada grup berulang.\n• Bentuk Normal Kedua (2NF): Memenuhi 1NF dan semua atribut non-kunci bergantung penuh pada Primary Key.\n• Bentuk Normal Ketiga (3NF): Memenuhi 2NF dan tidak terdapat ketergantungan transitif antar atribut non-kunci.",
-          rightTitle: "Soal Evaluasi Modul — Bagian 2",
+            "SOAL 5:\nSuatu tabel dikatakan memenuhi Bentuk Normal Kedua (2NF) apabila telah memenuhi 1NF dan...\nA. Tidak memiliki atribut komposit\nB. Semua atribut non-kunci bergantung penuh pada Primary Key (tidak ada ketergantungan parsial)\nC. Tidak memiliki Foreign Key\nD. Hanya terdiri dari satu kolom kunci\nKunci Jawaban: B (2NF menghilangkan ketergantungan fungsional parsial).\n\nSOAL 6:\nKetergantungan transitif (Transitive Dependency) antar atribut non-kunci harus dihilangkan pada tahap normalisasi...\nA. 1NF\nB. 2NF\nC. 3NF (Third Normal Form)\nD. Unnormalized Form\nKunci Jawaban: C (3NF mengharuskan tidak adanya ketergantungan transitif).",
+          rightTitle: "",
           rightText:
-            "SOAL 3:\nApabila sebuah tabel masih memiliki atribut bernilai ganda (multi-valued attribute) dalam satu kolom, maka tabel tersebut belum memenuhi...\nA. 1NF (First Normal Form)\nB. 2NF (Second Normal Form)\nC. 3NF (Third Normal Form)\nD. BCNF\nKunci Jawaban: A (Syarat mutlak 1NF adalah nilai atomik).\n\nSOAL 4:\nPerintah DDL SQL untuk menambahkan kolom baru pada tabel yang sudah ada adalah...\nA. UPDATE TABLE\nB. INSERT COLUMN\nC. ALTER TABLE ... ADD\nD. MODIFY TABLE\nKunci Jawaban: C (ALTER TABLE digunakan untuk mengubah struktur tabel).",
+            "SOAL 7:\nPerintah DML SQL yang digunakan untuk mengambil dan menampilkan data dari satu atau beberapa tabel adalah...\nA. SELECT\nB. EXTRACT\nC. FETCH TABLE\nD. SHOW DATA\nKunci Jawaban: A (SELECT merupakan perintah utama query data pada SQL).\n\nSOAL 8:\nKlausa SQL yang digunakan untuk menyaring hasil pengelompokan agregasi (GROUP BY) adalah...\nA. WHERE\nB. ORDER BY\nC. HAVING\nD. DISTINCT\nKunci Jawaban: C (HAVING memfilter grup hasil agregasi, sedangkan WHERE memfilter baris).",
         },
       ],
     },
@@ -56,12 +56,20 @@
       pdf_external_url: "",
       spreads: [
         {
-          leftTitle: "BAB 1: Tahapan SDLC & Analisis Kebutuhan",
+          leftTitle: "",
           leftText:
-            "System Development Life Cycle (SDLC) merupakan kerangka kerja terstruktur dalam merancang dan membangun sistem informasi.\n\n1. Perencanaan (Planning): Studi kelayakan teknis, ekonomi, dan operasional.\n2. Analisis (Analysis): Pengumpulan kebutuhan fungsional & non-fungsional yang dituangkan dalam dokumen SRS.\n3. Perancangan (Design): Pembuatan arsitektur antarmuka, skema database, dan diagram UML.\n4. Implementasi & Pengujian: Pengkodean perangkat lunak serta pengujian Black-Box dan White-Box.",
-          rightTitle: "Soal Evaluasi Modul — SDLC & UML",
-          rightText:
             "SOAL 1:\nDokumen spesifikasi resmi yang merangkum seluruh kebutuhan fungsional dan non-fungsional pengguna pada tahap analisis disebut...\nA. ERD Document\nB. SRS (Software Requirements Specification)\nC. User Manual\nD. Source Code\nKunci Jawaban: B (SRS mendokumentasikan spesifikasi kebutuhan sistem).\n\nSOAL 2:\nDiagram UML yang memvisualisasikan urutan interaksi pesan antar objek berdasarkan urutan waktu adalah...\nA. Sequence Diagram\nB. Class Diagram\nC. Use Case Diagram\nD. Deployment Diagram\nKunci Jawaban: A (Sequence Diagram fokus pada urutan waktu pengiriman pesan).",
+          rightTitle: "",
+          rightText:
+            "SOAL 3:\nRelasi pada Use Case Diagram yang menandakan bahwa suatu use case wajib dijalankan setiap kali use case utama dipanggil adalah...\nA. <<extend>>\nB. <<include>>\nC. <<generalize>>\nD. <<interface>>\nKunci Jawaban: B (Relasi <<include>> bersifat wajib/mandatory).\n\nSOAL 4:\nMetode pengujian yang berfokus pada alur logika internal, percabangan kode, dan statement coverage disebut...\nA. Black-Box Testing\nB. White-Box Testing\nC. User Acceptance Testing\nD. Stress Testing\nKunci Jawaban: B (White-Box menguji struktur kode secara langsung).",
+        },
+        {
+          leftTitle: "",
+          leftText:
+            "SOAL 5:\nTahap dalam SDLC yang bertujuan mengevaluasi kelayakan teknis, operasional, dan finansial sebelum proyek dimulai adalah...\nA. Tahap Implementasi\nB. Tahap Perencanaan (Planning & Feasibility Study)\nC. Tahap Pemeliharaan (Maintenance)\nD. Tahap Pengujian\nKunci Jawaban: B (Studi kelayakan dilakukan pada fase Perencanaan/Planning).\n\nSOAL 6:\nDiagram UML yang menggambarkan struktur statis sistem berupa kelas, atribut, operasi/metode, serta hubungan antar objek adalah...\nA. Activity Diagram\nB. Class Diagram\nC. Use Case Diagram\nD. Statechart Diagram\nKunci Jawaban: B (Class Diagram memodelkan struktur statis berorientasi objek).",
+          rightTitle: "",
+          rightText:
+            "SOAL 7:\nModel pengembangan perangkat lunak yang dilakukan secara berurutan mulai dari analisis, desain, pengkodean, hingga pengujian seperti air terjun disebut...\nA. Agile Scrum\nB. Waterfall Model\nC. Extreme Programming\nD. Spiral Model\nKunci Jawaban: B (Waterfall bekerja secara sekuensial/linier).\n\nSOAL 8:\nPengujian yang dilakukan langsung oleh pengguna akhir (end-user) untuk memastikan sistem telah sesuai kebutuhan bisnis sebelum rilis disebut...\nA. Unit Testing\nB. Integration Testing\nC. UAT (User Acceptance Testing)\nD. Regression Testing\nKunci Jawaban: C (UAT adalah pengujian penerimaan pengguna akhir).",
         },
       ],
     },
@@ -74,12 +82,20 @@
       pdf_external_url: "",
       spreads: [
         {
-          leftTitle: "BAB 1: Manajemen Strategik & Matriks SWOT",
+          leftTitle: "",
           leftText:
-            "Manajemen strategik memadukan analisis lingkungan internal (Strengths & Weaknesses) dengan lingkungan eksternal (Opportunities & Threats).\n\n• Strategi SO (Agresif): Memanfaatkan kekuatan internal untuk merebut peluang pasar.\n• Strategi ST (Diversifikasi): Menggunakan kekuatan inti untuk meredam ancaman kompetitor.\n• Strategi WO (Turnaround): Memperbaiki kelemahan internal guna menangkap peluang baru.\n• Strategi WT (Defensif): Meminimalkan kelemahan sekaligus menghindari ancaman eksternal.",
-          rightTitle: "Soal Evaluasi Modul — Manajemen Strategik",
-          rightText:
             "SOAL 1:\nLima Kekuatan Porter (Porter's Five Forces) digunakan oleh perusahaan untuk menganalisis...\nA. Efisiensi gaji karyawan internal\nB. Daya tarik dan tingkat persaingan industri eksternal\nC. Pencatatan jurnal akuntansi harian\nD. Struktur jaringan komputer kantor\nKunci Jawaban: B (Model Porter mengevaluasi kekuatan persaingan industri).\n\nSOAL 2:\nStrategi bisnis yang berfokus menciptakan produk unik agar memiliki nilai tambah di mata konsumen disebut strategi...\nA. Cost Leadership\nB. Diferensiasi (Differentiation)\nC. Likuidasi\nD. Divestasi\nKunci Jawaban: B (Diferensiasi menekankan keunikan nilai produk).",
+          rightTitle: "",
+          rightText:
+            "SOAL 3:\nManakah yang BUKAN merupakan salah satu dari empat perspektif utama dalam Balanced Scorecard (BSC)?\nA. Perspektif Keuangan (Financial)\nB. Perspektif Pelanggan (Customer)\nC. Perspektif Politik Makro\nD. Perspektif Pembelajaran & Pertumbuhan\nKunci Jawaban: C (BSC terdiri dari Keuangan, Pelanggan, Proses Bisnis Internal, dan Pembelajaran/Pertumbuhan).\n\nSOAL 4:\nTahap akhir dalam proses manajemen strategik untuk memastikan sasaran perusahaan tercapai sesuai rencana adalah...\nA. Perumusan Visi\nB. Evaluasi dan Pengendalian Strategi\nC. Rekrutmen Staf\nD. Promosi Penjualan\nKunci Jawaban: B (Evaluasi strategi memantau pencapaian target).",
+        },
+        {
+          leftTitle: "",
+          leftText:
+            "SOAL 5:\nDalam matriks SWOT, strategi yang menggunakan kekuatan internal (Strengths) untuk memanfaatkan peluang eksternal (Opportunities) disebut...\nA. Strategi WO\nB. Strategi SO (Agresif/Pertumbuhan)\nC. Strategi ST\nD. Strategi WT\nKunci Jawaban: B (Strategi SO memaksimalkan kekuatan untuk merebut peluang).\n\nSOAL 6:\nStrategi korporasi ketika sebuah perusahaan mengakuisisi pemasok bahan bakunya sendiri untuk mengamankan rantai pasok disebut...\nA. Integrasi ke Belakang (Backward Integration)\nB. Integrasi ke Depan (Forward Integration)\nC. Integrasi Horizontal\nD. Diversifikasi Konglomerat\nKunci Jawaban: A (Backward Integration mengendalikan hulu/pemasok).",
+          rightTitle: "",
+          rightText:
+            "SOAL 7:\nStrategi bisnis yang berupaya mencapai biaya produksi dan operasional paling rendah di dalam industrinya disebut...\nA. Focus Differentiation\nB. Cost Leadership (Keunggulan Biaya)\nC. Retrenchment\nD. Joint Venture\nKunci Jawaban: B (Cost Leadership menekankan efisiensi biaya terendah).\n\nSOAL 8:\nAnalisis lingkungan makro eksternal yang mencakup faktor Politik, Ekonomi, Sosial, Teknologi, Lingkungan, dan Hukum dikenal dengan singkatan...\nA. SWOT\nB. PESTEL\nC. BCG Matrix\nD. VRIO\nKunci Jawaban: B (PESTEL menganalisis faktor makro eksternal organisasi).",
         },
       ],
     },
@@ -122,7 +138,24 @@
       const raw = localStorage.getItem("utb_catalog_moduls");
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Pastikan modul default hanya berisi langsung soal pilihan ganda tanpa deskripsi bab
+          let updated = false;
+          parsed.forEach((m) => {
+            const def = DEFAULT_MODULS.find((d) => d.id === m.id);
+            if (def) {
+              const hasOldBabDesc =
+                !Array.isArray(m.spreads) ||
+                m.spreads.some((sp) => (sp.leftTitle && sp.leftTitle.includes("BAB")) || !String(sp.leftText || "").trim().startsWith("SOAL"));
+              if (hasOldBabDesc) {
+                m.spreads = def.spreads;
+                updated = true;
+              }
+            }
+          });
+          if (updated) localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          return parsed;
+        }
       }
     } catch (_) {}
     localStorage.setItem("utb_catalog_moduls", JSON.stringify(DEFAULT_MODULS));
@@ -322,14 +355,16 @@
     return String(rawText)
       .split(/\n\n+/)
       .map((block) => {
-        const escaped = window.escapeHtml(block.trim()).replace(/\n/g, "<br>");
-        if (block.trim().startsWith("SOAL")) {
-          return `<div class="book-question-card">${escaped}</div>`;
-        }
-        return `<p>${escaped}</p>`;
+        const trimmed = block.trim();
+        // Abaikan baris deskripsi bab lama jika ada
+        if (/^BAB\s+\d+/i.test(trimmed)) return "";
+        const escaped = window.escapeHtml(trimmed).replace(/\n/g, "<br>");
+        return `<div class="book-question-card">${escaped}</div>`;
       })
       .join("");
   }
+
+  let isBookFlipping = false;
 
   function renderBookSpread() {
     if (!activeModul) return;
@@ -361,22 +396,18 @@
     const indicatorEl = document.getElementById("book-spread-indicator");
     const prevBtn = document.getElementById("btn-book-prev-spread");
     const nextBtn = document.getElementById("btn-book-next-spread");
+    const leftPageCard = document.getElementById("book-page-left");
+    const rightPageCard = document.getElementById("book-page-right");
 
     if (leftCodeEl) leftCodeEl.textContent = selectedCourse ? `${selectedCourse.code} • ${selectedCourse.name}` : "MODUL KULIAH";
     if (rightEdEl) rightEdEl.textContent = activeModul.edition || "EDISI 2026";
 
     if (leftBodyEl) {
-      leftBodyEl.innerHTML = `
-        <h3>${window.escapeHtml(current.leftTitle || "Ringkasan Materi Modul")}</h3>
-        ${formatBookParagraphs(current.leftText)}
-      `;
+      leftBodyEl.innerHTML = formatBookParagraphs(current.leftText);
     }
 
     if (rightBodyEl) {
-      rightBodyEl.innerHTML = `
-        <h3>${window.escapeHtml(current.rightTitle || "Soal Evaluasi Modul")}</h3>
-        ${formatBookParagraphs(current.rightText)}
-      `;
+      rightBodyEl.innerHTML = formatBookParagraphs(current.rightText);
     }
 
     if (leftNumEl) leftNumEl.textContent = `Halaman ${leftPageNum}`;
@@ -384,8 +415,68 @@
     if (indicatorEl) {
       indicatorEl.textContent = `Lembar ${activeSpreadIndex + 1} dari ${spreads.length} (Halaman ${leftPageNum}–${rightPageNum})`;
     }
-    if (prevBtn) prevBtn.disabled = activeSpreadIndex === 0;
-    if (nextBtn) nextBtn.disabled = activeSpreadIndex >= spreads.length - 1;
+
+    const canPrev = activeSpreadIndex > 0;
+    const canNext = activeSpreadIndex < spreads.length - 1;
+    if (prevBtn) prevBtn.disabled = !canPrev;
+    if (nextBtn) nextBtn.disabled = !canNext;
+
+    if (leftPageCard) {
+      leftPageCard.classList.toggle("can-turn", canPrev);
+      const hintLeft = leftPageCard.querySelector(".page-turn-hint-left");
+      if (hintLeft) hintLeft.textContent = canPrev ? "◀ Klik / Geser Kanan (Sebelumnya)" : "Awal Buku";
+    }
+    if (rightPageCard) {
+      rightPageCard.classList.toggle("can-turn", canNext);
+      const hintRight = rightPageCard.querySelector(".page-turn-hint-right");
+      if (hintRight) hintRight.textContent = canNext ? "Klik / Geser Kiri (Berikutnya) ▶" : "Akhir Buku";
+    }
+  }
+
+  function turnBookPage(direction) {
+    if (!activeModul || isBookFlipping) return;
+    const spreads = Array.isArray(activeModul.spreads) ? activeModul.spreads : [];
+    const spreadEl = document.getElementById("open-book-spread");
+
+    if (direction === "next") {
+      if (activeSpreadIndex >= spreads.length - 1) {
+        window.showToast("Anda sudah berada di halaman terakhir modul ini.", "info");
+        return;
+      }
+      isBookFlipping = true;
+      if (spreadEl) {
+        spreadEl.classList.remove("turning-prev", "turning-next");
+        void spreadEl.offsetWidth;
+        spreadEl.classList.add("turning-next");
+      }
+      setTimeout(() => {
+        activeSpreadIndex++;
+        renderBookSpread();
+      }, 210);
+      setTimeout(() => {
+        if (spreadEl) spreadEl.classList.remove("turning-next");
+        isBookFlipping = false;
+      }, 570);
+    } else if (direction === "prev") {
+      if (activeSpreadIndex <= 0) {
+        window.showToast("Anda sudah berada di halaman pertama modul ini.", "info");
+        return;
+      }
+      isBookFlipping = true;
+      if (spreadEl) {
+        spreadEl.classList.remove("turning-prev", "turning-next");
+        void spreadEl.offsetWidth;
+        spreadEl.classList.add("turning-prev");
+      }
+      setTimeout(() => {
+        activeSpreadIndex--;
+        renderBookSpread();
+      }, 210);
+      setTimeout(() => {
+        if (spreadEl) spreadEl.classList.remove("turning-prev");
+        isBookFlipping = false;
+      }, 570);
+    }
   }
 
   let currentPdfZoom = 1.0;
@@ -439,10 +530,10 @@
 
     const spreads = Array.isArray(modul.spreads) ? modul.spreads : [];
     spreads.forEach((sp, idx) => {
-      allLines.push(`[BAGIAN ${idx + 1}] ${sp.leftTitle || "Ringkasan Materi"}`);
+      allLines.push(`[HALAMAN ${idx * 2 + 1} - SOAL PILIHAN GANDA]`);
       wrapLines(sp.leftText, 76).forEach((l) => allLines.push(l));
       allLines.push(``);
-      allLines.push(`[SOAL EVALUASI ${idx + 1}] ${sp.rightTitle || "Latihan Soal Modul"}`);
+      allLines.push(`[HALAMAN ${idx * 2 + 2} - SOAL PILIHAN GANDA]`);
       wrapLines(sp.rightText, 76).forEach((l) => allLines.push(l));
       allLines.push(``);
       allLines.push(`------------------------------------------------------------------------------`);
@@ -543,10 +634,8 @@
           <span class="badge badge-blue">${window.escapeHtml(modul.edition || "Edisi 2026")} • Hal. ${idx + 1}</span>
         </div>
         <div class="book-page-content">
-          <h3>${window.escapeHtml(sp.leftTitle || "Ringkasan Materi")}</h3>
           ${formatBookParagraphs(sp.leftText)}
           <hr style="border: none; border-top: 1.5px dashed #CBD5E1; margin: 1.25rem 0;">
-          <h3>${window.escapeHtml(sp.rightTitle || "Latihan & Evaluasi Modul")}</h3>
           ${formatBookParagraphs(sp.rightText)}
         </div>
       </div>
@@ -754,17 +843,105 @@
     });
 
     document.getElementById("btn-book-prev-spread")?.addEventListener("click", () => {
-      if (activeSpreadIndex > 0) {
-        activeSpreadIndex--;
-        renderBookSpread();
-      }
+      turnBookPage("prev");
     });
 
     document.getElementById("btn-book-next-spread")?.addEventListener("click", () => {
-      if (activeModul && Array.isArray(activeModul.spreads) && activeSpreadIndex < activeModul.spreads.length - 1) {
-        activeSpreadIndex++;
-        renderBookSpread();
+      turnBookPage("next");
+    });
+
+    // Interaksi Klik Halaman Kanan & Kiri Buku serta Swipe Layar (HP / Tablet / Mouse)
+    const spreadEl = document.getElementById("open-book-spread");
+    const leftPageEl = document.getElementById("book-page-left");
+    const rightPageEl = document.getElementById("book-page-right");
+
+    let pointerStartX = null;
+    let pointerStartY = null;
+    let didSwipeGesture = false;
+
+    if (spreadEl) {
+      // Touch Swipe (HP & Tablet)
+      spreadEl.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.touches && e.touches.length === 1) {
+            pointerStartX = e.touches[0].clientX;
+            pointerStartY = e.touches[0].clientY;
+            didSwipeGesture = false;
+          }
+        },
+        { passive: true }
+      );
+
+      spreadEl.addEventListener(
+        "touchend",
+        (e) => {
+          if (pointerStartX === null || !e.changedTouches || e.changedTouches.length === 0) return;
+          const dx = e.changedTouches[0].clientX - pointerStartX;
+          const dy = e.changedTouches[0].clientY - pointerStartY;
+          pointerStartX = null;
+          pointerStartY = null;
+
+          // Jika swipe horizontal cukup jauh (> 40px) dan lebih dominan dari scroll vertikal
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+            didSwipeGesture = true;
+            if (dx < 0) {
+              // Swipe ke kiri -> Buku terlampir ke kiri & pindah halaman berikutnya
+              turnBookPage("next");
+            } else {
+              // Swipe ke kanan -> Buku terlampir ke kanan & kembali halaman sebelumnya
+              turnBookPage("prev");
+            }
+          }
+        },
+        { passive: true }
+      );
+
+      // Mouse Drag Swipe (Desktop)
+      spreadEl.addEventListener("mousedown", (e) => {
+        pointerStartX = e.clientX;
+        pointerStartY = e.clientY;
+        didSwipeGesture = false;
+      });
+
+      spreadEl.addEventListener("mouseup", (e) => {
+        if (pointerStartX === null) return;
+        const dx = e.clientX - pointerStartX;
+        const dy = e.clientY - pointerStartY;
+        pointerStartX = null;
+        pointerStartY = null;
+
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          didSwipeGesture = true;
+          if (dx < 0) {
+            turnBookPage("next");
+          } else {
+            turnBookPage("prev");
+          }
+        }
+      });
+    }
+
+    // Klik pada Halaman Kanan -> Buku terlampir ke kiri & pindah halaman berikutnya
+    rightPageEl?.addEventListener("click", () => {
+      if (didSwipeGesture) {
+        didSwipeGesture = false;
+        return;
       }
+      const selection = window.getSelection ? String(window.getSelection()) : "";
+      if (selection.length > 0) return;
+      turnBookPage("next");
+    });
+
+    // Klik pada Halaman Kiri -> Buku terlampir ke kanan & kembali ke halaman sebelumnya
+    leftPageEl?.addEventListener("click", () => {
+      if (didSwipeGesture) {
+        didSwipeGesture = false;
+        return;
+      }
+      const selection = window.getSelection ? String(window.getSelection()) : "";
+      if (selection.length > 0) return;
+      turnBookPage("prev");
     });
 
     document.getElementById("btn-download-modul-pdf")?.addEventListener("click", downloadActivePdf);

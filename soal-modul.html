@@ -198,12 +198,12 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
                   <div>
-                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kiri Buku (Ringkasan Materi &amp; Konsep)</label>
-                    <textarea id="m-book-left-content" class="form-control" rows="3" placeholder="Tuliskan ringkasan materi modul untuk halaman buku..." required></textarea>
+                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kiri Buku (Soal Pilihan Ganda)</label>
+                    <textarea id="m-book-left-content" class="form-control" rows="3" placeholder="Tuliskan soal pilihan ganda (SOAL 1, A, B, C, D, Kunci Jawaban)..." required></textarea>
                   </div>
                   <div>
-                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kanan Buku (Daftar Soal Modul &amp; Kunci)</label>
-                    <textarea id="m-book-right-content" class="form-control" rows="3" placeholder="Tuliskan soal-soal modul beserta pembahasan..." required></textarea>
+                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kanan Buku (Soal Pilihan Ganda)</label>
+                    <textarea id="m-book-right-content" class="form-control" rows="3" placeholder="Tuliskan soal pilihan ganda lanjutan (SOAL 2, A, B, C, D, Kunci Jawaban)..." required></textarea>
                   </div>
                 </div>
 
@@ -321,37 +321,49 @@
 
           <!-- Panggung Utama Buku & PDF -->
           <div class="book-stage-wrapper">
-            <!-- 1. Tampilan Buku 2 Halaman Terbuka -->
+            <!-- 1. Tampilan Buku 2 Halaman Terbuka (Dengan Animasi Lipat / Balik Halaman & Swipe) -->
             <div id="view-open-book">
+              <div class="book-gesture-hint">
+                <span>👆 Klik halaman kanan / geser (swipe) ke kiri untuk halaman berikutnya • Klik halaman kiri / geser ke kanan untuk halaman sebelumnya</span>
+              </div>
               <div class="open-book-frame">
-                <div class="open-book-spread">
+                <div id="open-book-spread" class="open-book-spread">
                   <!-- Halaman Kiri -->
-                  <div class="book-page page-left">
+                  <div id="book-page-left" class="book-page page-left" title="Klik atau geser ke kanan untuk ke halaman sebelumnya">
                     <div>
                       <div class="book-page-header">
                         <span id="book-left-header-code">MODUL KULIAH</span>
-                        <span>RINGKASAN MATERI &amp; KONSEP</span>
+                        <span>SOAL PILIHAN GANDA</span>
                       </div>
                       <div id="book-left-body" class="book-page-content"></div>
                     </div>
                     <div class="book-page-footer">
-                      <span>UTBelajar Digital Book</span>
+                      <span class="page-turn-hint-left">◀ Balik ke Kiri</span>
                       <span id="book-left-page-num">Hal. 1</span>
                     </div>
+                    <div class="page-corner-curl curl-left" aria-hidden="true"></div>
                   </div>
 
                   <!-- Halaman Kanan -->
-                  <div class="book-page page-right">
+                  <div id="book-page-right" class="book-page page-right" title="Klik atau geser ke kiri untuk ke halaman berikutnya">
                     <div>
                       <div class="book-page-header">
-                        <span>LATIHAN &amp; SOAL MODUL</span>
+                        <span>SOAL PILIHAN GANDA</span>
                         <span id="book-right-header-edition">EDISI 2026</span>
                       </div>
                       <div id="book-right-body" class="book-page-content"></div>
                     </div>
                     <div class="book-page-footer">
                       <span id="book-right-page-num">Hal. 2</span>
-                      <span>Baca Tanpa Unduh / Tersedia PDF</span>
+                      <span class="page-turn-hint-right">Balik Halaman ▶</span>
+                    </div>
+                    <div class="page-corner-curl curl-right" aria-hidden="true"></div>
+                  </div>
+
+                  <!-- Lembar Efek Animasi 3D Lipatan Balik Buku -->
+                  <div id="book-flip-leaf" class="book-flip-leaf" aria-hidden="true">
+                    <div class="flip-leaf-inner">
+                      <div class="flip-leaf-lines"></div>
                     </div>
                   </div>
                 </div>
