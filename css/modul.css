@@ -1,0 +1,402 @@
+/* ==============================================================================
+   UTBELAJAR - SOAL MODUL & DIGITAL BOOK / PDF READER STYLES
+   ============================================================================== */
+
+.modul-Topbar-Actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Pilihan Daftar Modul di Dalam Mata Kuliah */
+.modul-shelf-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.modul-tabs-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modul-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modul-pill-btn:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+  background: var(--soft-blue);
+}
+
+.modul-pill-btn.active {
+  background: var(--primary-blue);
+  color: #FFFFFF;
+  border-color: var(--primary-blue);
+  box-shadow: 0 4px 12px rgba(65, 105, 245, 0.25);
+}
+
+/* Toolbar Kontrol Buku & PDF */
+.book-reader-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, #172554 0%, #1E3A8A 100%);
+  color: #FFFFFF;
+  padding: 0.9rem 1.35rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.book-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.book-badge-code {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.book-toolbar-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.book-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.reader-mode-switch {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.22rem;
+  border-radius: var(--radius-sm);
+}
+
+.reader-mode-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reader-mode-btn.active {
+  background: #FFFFFF;
+  color: var(--primary-navy);
+}
+
+/* Panggung Buku Terbuka (Flipbook 2 Halaman) */
+.book-stage-wrapper {
+  background: #E2E8F0;
+  background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+  background-size: 18px 18px;
+  padding: 2rem 1.75rem;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.open-book-frame {
+  max-width: 1120px;
+  margin: 0 auto;
+  background: #1E293B;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.24), 0 4px 12px rgba(15, 23, 42, 0.14);
+}
+
+.open-book-spread {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 560px;
+  background: #FFFDF9;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Garis Lipatan Tengah Buku (Spine) */
+.open-book-spread::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 28px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0) 0%,
+    rgba(15, 23, 42, 0.08) 42%,
+    rgba(15, 23, 42, 0.18) 50%,
+    rgba(15, 23, 42, 0.08) 58%,
+    rgba(15, 23, 42, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.book-page {
+  padding: 2.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #1E293B;
+  line-height: 1.7;
+  font-size: 0.94rem;
+}
+
+.book-page.page-left {
+  border-right: 1px solid #E2E8F0;
+  background: linear-gradient(90deg, #FDFBF7 0%, #FFFDF9 92%, #F5F2EB 100%);
+}
+
+.book-page.page-right {
+  background: linear-gradient(90deg, #F5F2EB 0%, #FFFDF9 8%, #FDFBF7 100%);
+}
+
+.book-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1.5px solid #E2E8F0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.book-page-content {
+  flex: 1;
+}
+
+.book-page-content h3 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin-bottom: 0.75rem;
+}
+
+.book-page-content h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin: 1rem 0 0.45rem;
+}
+
+.book-page-content p {
+  margin-bottom: 0.85rem;
+  text-align: justify;
+}
+
+.book-question-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-left: 4px solid var(--primary-blue);
+  border-radius: 10px;
+  padding: 0.95rem 1.1rem;
+  margin-bottom: 0.9rem;
+}
+
+.book-question-card .bq-title {
+  font-weight: 800;
+  color: var(--primary-navy);
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.book-question-card .bq-options {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.4rem 0;
+  font-size: 0.86rem;
+}
+
+.book-question-card .bq-options li {
+  padding: 0.15rem 0;
+}
+
+.book-question-card .bq-answer {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed #CBD5E1;
+  font-size: 0.82rem;
+  color: #15803D;
+  font-weight: 700;
+}
+
+.book-page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.85rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid #E2E8F0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748B;
+}
+
+/* Navigasi Halaman Bawah Buku */
+.book-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.35rem;
+  flex-wrap: wrap;
+}
+
+.book-page-indicator {
+  background: #FFFFFF;
+  color: var(--primary-navy);
+  padding: 0.45rem 1.1rem;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mode Penampil PDF Langsung Tanpa Unduh */
+.pdf-direct-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  background: #1E293B;
+  padding: 10px;
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+}
+
+.pdf-embed-frame {
+  width: 100%;
+  height: 660px;
+  border: none;
+  border-radius: 8px;
+  background: #FFFFFF;
+}
+
+@media (max-width: 900px) {
+  .open-book-spread {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .open-book-spread::after {
+    display: none;
+  }
+  .book-page.page-left {
+    border-right: none;
+    border-bottom: 2px dashed #CBD5E1;
+  }
+}
+
+@media (max-width: 768px) {
+  .modul-shelf-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.9rem 1rem;
+  }
+
+  .modul-tabs-list {
+    flex-direction: column;
+  }
+
+  .modul-pill-btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  #btn-download-modul-pdf {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .book-reader-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+  }
+
+  .book-toolbar-right,
+  .reader-mode-switch {
+    width: 100%;
+  }
+
+  .reader-mode-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.45rem 0.5rem;
+    font-size: 0.74rem;
+  }
+
+  .book-stage-wrapper {
+    padding: 0.85rem 0.65rem;
+  }
+
+  .open-book-frame {
+    padding: 6px;
+  }
+
+  .book-page {
+    padding: 1.25rem 1.15rem;
+    font-size: 0.88rem;
+  }
+
+  .book-pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .book-pagination-bar .btn,
+  .book-page-indicator {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .pdf-embed-frame {
+    height: 460px;
+  }
+}

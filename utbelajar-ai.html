@@ -26,21 +26,25 @@
 
       <nav class="sidebar-nav">
         <div class="nav-section-title">Navigasi Utama</div>
-        <a href="dashboard.html" class="nav-item">
+        <a href="dashboard.html" class="nav-item" data-tooltip="Beranda">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
           <span class="nav-text">Beranda</span>
         </a>
-        <a href="latihan-soal.html" class="nav-item">
+        <a href="soal-modul.html" class="nav-item" data-tooltip="Soal Modul">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span class="nav-text">Soal Modul</span>
+        </a>
+        <a href="latihan-soal.html" class="nav-item" data-tooltip="Latihan Soal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <span class="nav-text">Latihan Soal</span>
         </a>
-        <a href="utbelajar-ai.html" class="nav-item active">
+        <a href="utbelajar-ai.html" class="nav-item active" data-tooltip="UTBelajar AI">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
           <span class="nav-text">UTBelajar AI</span>
         </a>
 
         <div class="nav-section-title">Akun &amp; Pengaturan</div>
-        <a href="profile.html" class="nav-item">
+        <a href="profile.html" class="nav-item" data-tooltip="Profil Saya">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="nav-text">Profil Saya</span>
         </a>
@@ -69,6 +73,92 @@
       </header>
 
       <main class="page-content" style="padding: 1.5rem 2rem;">
+        <!-- ================================================================ -->
+        <!-- PANEL KONFIGURASI API KEY AI CHATBOT (KHUSUS ADMINISTRATOR)      -->
+        <!-- ================================================================ -->
+        <div id="admin-ai-config-panel" class="card" style="display: none; margin-bottom: 1.5rem; border: 1.5px solid rgba(65, 105, 245, 0.3); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border);">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--soft-blue); color: var(--primary-blue); padding: 0.22rem 0.7rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800; margin-bottom: 0.3rem;">
+                <span>🔑 KONFIGURASI API KEY UTBelajar AI (ADMIN)</span>
+              </div>
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--primary-navy);">
+                Pengaturan Provider &amp; API Key Chatbot AI
+              </h2>
+              <p style="font-size: 0.83rem; color: var(--text-secondary);">
+                Atur API Key (Google Gemini, OpenAI, atau Groq) agar UTBelajar AI dapat menjawab seluruh pertanyaan pengguna secara cerdas.
+              </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span id="admin-ai-status-badge" class="badge badge-warning">Belum Ada API Key Eksternal</span>
+              <button type="button" id="btn-toggle-ai-config-body" class="btn btn-secondary btn-sm">
+                Sembunyikan/Tampilkan
+              </button>
+            </div>
+          </div>
+
+          <form id="admin-ai-config-form">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 0.85rem;">
+              <div>
+                <label class="form-label" style="font-size: 0.78rem;">Provider Layanan AI</label>
+                <select id="ai-cfg-provider" class="form-control">
+                  <option value="gemini">Google Gemini API (Direkomendasikan)</option>
+                  <option value="openrouter">OpenRouter API (Multi-Model)</option>
+                  <option value="openai">OpenAI API (ChatGPT)</option>
+                  <option value="groq">Groq Cloud API (Llama 3)</option>
+                  <option value="custom">Custom Layanan AI (Endpoint Kustom)</option>
+                  <option value="supabase">Supabase Edge Function (ai-chat)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.78rem;">Model AI</label>
+                <input type="text" id="ai-cfg-model" class="form-control" value="gemini-2.0-flash" placeholder="Mis: gemini-2.0-flash / openrouter/auto">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.78rem;">API Key AI</label>
+                <div style="display: flex; gap: 0.4rem;">
+                  <input type="password" id="ai-cfg-apikey" class="form-control" placeholder="Masukkan API Key (AIza... / sk-or-... / sk-...)">
+                  <button type="button" id="btn-toggle-ai-key-vis" class="btn btn-secondary btn-sm" style="padding: 0 0.75rem;" title="Lihat/Sembunyikan API Key">
+                    👁️
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="ai-cfg-endpoint-group" style="display: none; margin-bottom: 0.85rem;">
+              <label class="form-label" style="font-size: 0.78rem;">Endpoint URL Layanan AI (Khusus Custom Layanan AI / OpenRouter)</label>
+              <input
+                type="url"
+                id="ai-cfg-endpoint"
+                class="form-control"
+                placeholder="Contoh: https://openrouter.ai/api/v1/chat/completions atau https://api.domain-anda.com/v1/chat/completions"
+              >
+            </div>
+
+            <div style="margin-bottom: 0.85rem;">
+              <label class="form-label" style="font-size: 0.78rem;">Instruksi Sistem (System Prompt Asisten Belajar)</label>
+              <textarea id="ai-cfg-system-prompt" class="form-control" rows="2" placeholder="Anda adalah UTBelajar AI, asisten belajar akademik digital yang ramah, terstruktur, dan jelas..."></textarea>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+              <span id="ai-cfg-last-saved" style="font-size: 0.78rem; color: var(--text-secondary);">
+                API Key disimpan terenkripsi lokal dan langsung aktif untuk seluruh sesi chat.
+              </span>
+              <div style="display: flex; gap: 0.6rem;">
+                <button type="button" id="btn-reset-ai-config" class="btn btn-secondary btn-sm">
+                  Hapus API Key
+                </button>
+                <button type="button" id="btn-test-ai-config" class="btn btn-soft btn-sm">
+                  ⚡ Test Koneksi AI
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm">
+                  Simpan Konfigurasi AI
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
         <!-- Container Chatbot Layout (2 Kolom) -->
         <div class="chatbot-layout">
           <!-- Sidebar Riwayat Percakapan AI -->
@@ -95,6 +185,10 @@
                   <span class="chat-agent-status">● Asisten Belajar Aktif</span>
                 </div>
               </div>
+              <button type="button" id="btn-header-scroll-bottom" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                <span>Scroll ke Bawah</span>
+              </button>
             </div>
 
             <!-- Wadah Pesan Percakapan -->
@@ -124,6 +218,12 @@
               </div>
             </div>
 
+            <!-- Tombol Melayang Scroll ke Bawah -->
+            <button type="button" id="btn-chat-scroll-bottom" class="chat-scroll-bottom-btn" title="Scroll ke Pesan Terbawah">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+              <span>Scroll ke Bawah</span>
+            </button>
+
             <!-- Input Bar Bawah -->
             <div class="chat-input-bar">
               <div class="chat-input-wrapper">
@@ -148,14 +248,8 @@
       <!-- Footer Aplikasi -->
       <footer class="app-footer">
         <div class="footer-inner">
-          <div class="footer-links">
-            <a href="dashboard.html">Beranda</a>
-            <a href="latihan-soal.html">Latihan Soal</a>
-            <a href="utbelajar-ai.html">UTBelajar AI</a>
-            <a href="profile.html">Profil Saya</a>
-          </div>
-          <p class="footer-disclaimer">
-            UTBelajar merupakan platform belajar independen dan bukan situs resmi Universitas Terbuka.
+          <p class="footer-disclaimer" style="font-weight: 600; color: var(--text-secondary);">
+            Copyright HasanAF 2026
           </p>
         </div>
       </footer>
@@ -178,7 +272,12 @@
 
   <div id="toast-container"></div>
 
-  <script type="module" src="js/navigation.js"></script>
-  <script type="module" src="js/chatbot.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/chatbot.js"></script>
 </body>
 </html>

@@ -4,8 +4,11 @@
 
 .chatbot-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  height: calc(100vh - var(--topbar-height) - 4rem);
+  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: calc(100vh - var(--topbar-height) - 2.5rem);
+  min-height: 580px;
+  max-height: 860px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
@@ -18,6 +21,9 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
   background: #FAFBFD;
 }
 
@@ -90,11 +96,16 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  position: relative;
   background: var(--surface);
 }
 
 .chat-top-header {
   height: 64px;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -133,12 +144,63 @@
 
 /* Kotak Pesan Percakapan */
 .chat-messages-container {
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   overflow-y: auto;
-  padding: 1.5rem 2rem;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: 1.5rem 2rem 2.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+}
+
+.chat-messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 999px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-blue);
+}
+
+/* Tombol Melayang Scroll ke Bawah */
+.chat-scroll-bottom-btn {
+  position: absolute;
+  right: 1.75rem;
+  bottom: 6.5rem;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  background: #FFFFFF;
+  color: var(--primary-navy);
+  border: 1.5px solid var(--primary-blue);
+  border-radius: var(--radius-full);
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(23, 37, 84, 0.16);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chat-scroll-bottom-btn.visible {
+  display: inline-flex;
+}
+
+.chat-scroll-bottom-btn:hover {
+  background: var(--primary-blue);
+  color: #FFFFFF;
 }
 
 /* Welcome Hero Box di Chat */
@@ -344,19 +406,23 @@
 
 /* Input Area Bawah */
 .chat-input-bar {
-  padding: 1.25rem 1.5rem;
+  flex-shrink: 0;
+  padding: 1.1rem 1.75rem;
   border-top: 1px solid var(--border);
   background: var(--surface);
+  position: relative;
+  z-index: 10;
 }
 
 .chat-input-wrapper {
   display: flex;
-  align-items: flex-end;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.85rem;
   background: var(--bg);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 0.6rem 0.85rem;
+  padding: 0.75rem 1.1rem;
+  min-height: 58px;
   transition: all var(--transition-fast);
 }
 
@@ -368,15 +434,18 @@
 
 .chat-textarea {
   flex: 1;
+  width: 100%;
   background: transparent;
   border: none;
   outline: none;
   resize: none;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   color: var(--text-main);
-  max-height: 120px;
-  min-height: 24px;
-  line-height: 1.5;
+  max-height: 150px;
+  min-height: 32px;
+  padding: 4px 0;
+  line-height: 1.55;
+  overflow-y: auto;
 }
 
 .chat-send-btn {
@@ -405,15 +474,35 @@
   text-align: right;
 }
 
-/* Responsivitas Chatbot */
+/* Responsivitas Chatbot (Tablet & HP) */
+@media (max-width: 1024px) {
+  .chatbot-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 850px) {
   .chatbot-layout {
     grid-template-columns: 1fr;
     height: calc(100vh - var(--topbar-height) - 2rem);
+    min-height: 480px;
   }
 
   .chatbot-sidebar {
     display: none;
+  }
+
+  .chat-top-header {
+    padding: 0 1rem;
+  }
+
+  .chat-messages-container {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .chat-welcome-box {
+    margin: 0.75rem auto;
+    padding: 1rem 0.5rem;
   }
 
   .prompt-chips-grid {
@@ -421,6 +510,26 @@
   }
 
   .message-row {
-    max-width: 95%;
+    max-width: 96%;
+    gap: 0.65rem;
+  }
+
+  .message-bubble {
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+  }
+
+  .chat-input-bar {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .chat-input-wrapper {
+    padding: 0.55rem 0.85rem;
+    min-height: 50px;
+  }
+
+  .chat-scroll-bottom-btn {
+    right: 1rem;
+    bottom: 5.5rem;
   }
 }

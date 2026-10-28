@@ -505,7 +505,7 @@
   line-height: 1.5;
 }
 
-/* Responsivitas Latihan */
+/* Responsivitas Latihan (Tablet & HP) */
 @media (max-width: 900px) {
   .quiz-runner-container {
     grid-template-columns: 1fr;
@@ -517,5 +517,71 @@
 
   .result-stats-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .latihan-stepper {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qset-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.15rem;
+  }
+
+  .qset-card .btn-start-quiz {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quiz-main-area {
+    padding: 1.25rem;
+  }
+
+  .quiz-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .quiz-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .quiz-action-bar > button,
+  .quiz-action-bar > div {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quiz-action-bar > div > button {
+    flex: 1;
+  }
+
+  .result-card {
+    padding: 1.5rem 1.15rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .palette-grid {
+    grid-template-columns: repeat(5, 1fr);
   }
 }

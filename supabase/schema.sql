@@ -258,6 +258,25 @@ CREATE POLICY "Users can insert own ai messages"
 -- DATABASE FUNCTIONS & TRIGGERS
 -- ==============================================================================
 
+-- 0. Trigger otomatis konfirmasi akun saat daftar menggunakan Nama & Password
+CREATE OR REPLACE FUNCTION public.auto_confirm_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.email_confirmed_at IS NULL THEN
+        NEW.email_confirmed_at := NOW();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_auto_confirm ON auth.users;
+CREATE TRIGGER on_auth_user_auto_confirm
+    BEFORE INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE public.auto_confirm_user();
+
+-- Konfirmasi seluruh akun yang sudah terdaftar sebelumnya (termasuk user hasan)
+UPDATE auth.users SET email_confirmed_at = NOW() WHERE email_confirmed_at IS NULL;
+
 -- 1. Trigger untuk sinkronisasi profil baru saat user mendaftar di auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -585,3 +604,13 @@ INSERT INTO question_answers (question_id, correct_option) VALUES
 ('e8888888-8888-8888-8888-888888888888', 'B'),
 ('e9999999-9999-9999-9999-999999999999', 'C')
 ON CONFLICT (question_id) DO NOTHING;
+
+-- Sinkronisasi profil untuk user yang telah terdaftar (termasuk user hasan)
+INSERT INTO public.profiles (id, full_name, program_studi_id)
+SELECT 
+    u.id,
+    COALESCE(u.raw_user_meta_data->>'full_name', 'hasan'),
+    COALESCE((u.raw_user_meta_data->>'program_studi_id')::UUID, 'b1111111-1111-1111-1111-111111111111'::UUID)
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;
+

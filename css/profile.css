@@ -179,10 +179,18 @@
   color: var(--text-secondary);
 }
 
-/* Responsivitas Profile */
+/* Responsivitas Profile (Tablet & HP) */
 @media (max-width: 768px) {
+  .profile-body {
+    padding: 0 1.25rem 1.5rem;
+  }
+
   .profile-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-stats-card {
+    padding: 1.25rem;
   }
 
   .profile-stats-grid {
@@ -197,5 +205,16 @@
     width: 80px;
     height: 80px;
     font-size: 1.85rem;
+  }
+
+  .profile-action-card {
+    padding: 1.25rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-action-card .btn {
+    width: 100%;
+    justify-content: center;
   }
 }

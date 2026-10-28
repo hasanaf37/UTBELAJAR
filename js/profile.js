@@ -1,64 +1,166 @@
 // ==============================================================================
-// UTBELAJAR - USER PROFILE & ACCOUNT MANAGEMENT
+// UTBELAJAR - USER PROFILE & ACCOUNT MANAGEMENT (FILE:// & HTTP:// READY)
 // ==============================================================================
 
-import { supabase } from "./supabase.js";
-import { requireAuth } from "./auth.js";
-import { showToast, formatDate, formatDuration, escapeHtml, openModal, closeModal, setButtonLoading } from "./utils.js";
-import { handleLogout } from "./navigation.js";
+(function () {
+  let currentUser = null;
+  let currentProfile = null;
 
-let currentUser = null;
-let currentProfile = null;
+  document.addEventListener("DOMContentLoaded", async () => {
+    currentUser = await window.requireAuth();
+    if (!currentUser) return;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  currentUser = await requireAuth();
-  if (!currentUser) return;
+    await loadUserProfileData();
+    await loadProfileStats();
 
-  await loadUserProfileData();
-  await loadProfileStats();
-  setupEditProfileModal();
-  setupLogoutModal();
-});
+    const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
+    const supaCard = document.getElementById("supabase-status-card");
+    const secStatusEl = document.getElementById("profile-security-status");
 
-/**
- * Memuat detail data profil pengguna
- */
-async function loadUserProfileData() {
-  try {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, program_studi_id, avatar_url, created_at, study_programs(id, name, code)")
-      .eq("id", currentUser.id)
-      .single();
+    if (isAdmin) {
+      if (supaCard) supaCard.style.display = "flex";
+      if (secStatusEl) secStatusEl.textContent = "Administrator (Akses Database Supabase)";
+      setupSupabaseConfigCard();
+    } else {
+      if (supaCard) supaCard.remove();
+      if (secStatusEl) secStatusEl.textContent = "Terlindungi & Terenkripsi";
+    }
 
-    if (error && error.code !== "PGRST116") throw error;
+    setupEditProfileModal();
+    setupLogoutModal();
+  });
 
-    currentProfile = profile;
+  function setupSupabaseConfigCard() {
+    const urlInput = document.getElementById("input-supabase-url");
+    const keyInput = document.getElementById("input-supabase-key");
+    const toggleKeyBtn = document.getElementById("btn-toggle-supa-key-vis");
+    const refreshBtn = document.getElementById("btn-refresh-supabase-status");
+    const resetBtn = document.getElementById("btn-reset-supabase-config");
+    const form = document.getElementById("supabase-config-form");
 
-    const fullName = profile?.full_name || currentUser.user_metadata?.full_name || "Siswa UTBelajar";
-    const email = currentUser.email || "-";
-    const prodiName = profile?.study_programs?.name || "Belum Dipilih";
-    const prodiCode = profile?.study_programs?.code ? ` (${profile.study_programs.code})` : "";
-    const joinDate = formatDate(profile?.created_at || currentUser.created_at);
+    if (urlInput) urlInput.value = window.APP_CONFIG?.SUPABASE_URL || "";
+    if (keyInput) keyInput.value = window.APP_CONFIG?.SUPABASE_ANON_KEY || "";
 
-    // Tampilkan di UI
-    const nameEl = document.getElementById("profile-fullname");
-    const emailEl = document.getElementById("profile-email");
-    const prodiTag = document.getElementById("profile-prodi-tag");
-    const avatarEl = document.getElementById("profile-avatar-display");
-    const detailProdi = document.getElementById("profile-detail-prodi");
-    const detailJoined = document.getElementById("profile-detail-joined");
+    toggleKeyBtn?.addEventListener("click", () => {
+      if (!keyInput) return;
+      keyInput.type = keyInput.type === "password" ? "text" : "password";
+    });
 
-    if (nameEl) nameEl.textContent = fullName;
-    if (emailEl) emailEl.textContent = email;
-    if (prodiTag) prodiTag.textContent = prodiName + prodiCode;
-    if (detailProdi) detailProdi.textContent = prodiName + prodiCode;
-    if (detailJoined) detailJoined.textContent = joinDate;
+    refreshBtn?.addEventListener("click", async () => {
+      window.setButtonLoading(refreshBtn, true, "Mengecek...");
+      await runSupabaseStatusCheck(true);
+      window.setButtonLoading(refreshBtn, false);
+    });
 
-    if (avatarEl) {
-      if (profile?.avatar_url) {
-        avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="${fullName}" />`;
-      } else {
+    resetBtn?.addEventListener("click", async () => {
+      if (typeof window.resetSupabaseCredentials === "function") {
+        window.resetSupabaseCredentials();
+      }
+      if (urlInput) urlInput.value = window.APP_CONFIG?.SUPABASE_URL || "";
+      if (keyInput) keyInput.value = window.APP_CONFIG?.SUPABASE_ANON_KEY || "";
+      window.showToast("URL & API Key Supabase dikembalikan ke default.", "info");
+      await runSupabaseStatusCheck(false);
+    });
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newUrl = urlInput?.value.trim() || "";
+      const newKey = keyInput?.value.trim() || "";
+
+      if (!newUrl || !newKey) {
+        window.showToast("URL dan API Key Supabase tidak boleh kosong.", "error");
+        return;
+      }
+
+      const saveBtn = document.getElementById("btn-save-supabase-config");
+      window.setButtonLoading(saveBtn, true, "Menyimpan...");
+      try {
+        if (typeof window.setSupabaseCredentials === "function") {
+          window.setSupabaseCredentials(newUrl, newKey, false);
+        }
+        await runSupabaseStatusCheck(false);
+        window.showToast("Konfigurasi URL & API Key Supabase berhasil disimpan!", "success");
+      } finally {
+        window.setButtonLoading(saveBtn, false);
+      }
+    });
+
+    runSupabaseStatusCheck(false);
+  }
+
+  async function runSupabaseStatusCheck(showNotification) {
+    const badgeEl = document.getElementById("supa-status-badge");
+    const stateEl = document.getElementById("supa-info-state");
+    const detailEl = document.getElementById("supa-info-detail");
+    const latencyEl = document.getElementById("supa-info-latency");
+    const checkedAtEl = document.getElementById("supa-info-checked-at");
+
+    if (badgeEl) {
+      badgeEl.className = "badge badge-warning";
+      badgeEl.textContent = "Memeriksa Koneksi...";
+    }
+
+    if (typeof window.checkSupabaseConnection !== "function") return;
+    const status = await window.checkSupabaseConnection();
+
+    if (badgeEl) {
+      badgeEl.className = status.connected ? "badge badge-success" : "badge badge-danger";
+      badgeEl.textContent = status.connected ? "● Terhubung (Online)" : "● Terputus / Mode Lokal";
+    }
+
+    if (stateEl) {
+      stateEl.textContent = status.statusText;
+      stateEl.style.color = status.connected ? "var(--success)" : "var(--danger)";
+    }
+    if (detailEl) detailEl.textContent = status.detailText;
+    if (latencyEl) latencyEl.textContent = `${status.latencyMs} ms`;
+    if (checkedAtEl) checkedAtEl.textContent = window.formatDateTime(status.checkedAt);
+
+    if (showNotification) {
+      window.showToast(
+        `Status Database: ${status.statusText} (${status.latencyMs} ms)`,
+        status.connected ? "success" : "warning"
+      );
+    }
+  }
+
+  async function loadUserProfileData() {
+    try {
+      let profile = null;
+      if (window.supabaseClient) {
+        try {
+          const { data } = await window.supabaseClient
+            .from("profiles")
+            .select("id, full_name, program_studi_id, avatar_url, created_at, study_programs(id, name, code)")
+            .eq("id", currentUser.id)
+            .single();
+          profile = data;
+        } catch (_) {}
+      }
+
+      currentProfile = profile;
+
+      const fullName = profile?.full_name || currentUser.user_metadata?.full_name || "Siswa UTBelajar";
+      const email = currentUser.email || "-";
+      const prodiName =
+        profile?.study_programs?.name || currentUser.user_metadata?.program_studi_name || "Sistem Informasi (SI)";
+      const prodiCode = profile?.study_programs?.code ? ` (${profile.study_programs.code})` : "";
+      const joinDate = window.formatDate(profile?.created_at || currentUser.created_at);
+
+      const nameEl = document.getElementById("profile-fullname");
+      const emailEl = document.getElementById("profile-email");
+      const prodiTag = document.getElementById("profile-prodi-tag");
+      const avatarEl = document.getElementById("profile-avatar-display");
+      const detailProdi = document.getElementById("profile-detail-prodi");
+      const detailJoined = document.getElementById("profile-detail-joined");
+
+      if (nameEl) nameEl.textContent = fullName;
+      if (emailEl) emailEl.textContent = email;
+      if (prodiTag) prodiTag.textContent = prodiName + prodiCode;
+      if (detailProdi) detailProdi.textContent = prodiName + prodiCode;
+      if (detailJoined) detailJoined.textContent = joinDate;
+
+      if (avatarEl) {
         const initials = fullName
           .split(" ")
           .map((n) => n[0])
@@ -67,156 +169,91 @@ async function loadUserProfileData() {
           .toUpperCase();
         avatarEl.textContent = initials || "U";
       }
-    }
-  } catch (err) {
-    showToast("Gagal memuat profil: " + err.message, "error");
-  }
-}
-
-/**
- * Memuat ringkasan statistik belajar pengguna
- */
-async function loadProfileStats() {
-  try {
-    const { data: attempts } = await supabase
-      .from("quiz_attempts")
-      .select("score, duration_seconds")
-      .eq("user_id", currentUser.id)
-      .not("completed_at", "is", null);
-
-    const totalAttempts = attempts ? attempts.length : 0;
-    let totalScore = 0;
-    let totalSeconds = 0;
-
-    attempts?.forEach((a) => {
-      totalScore += Number(a.score) || 0;
-      totalSeconds += Number(a.duration_seconds) || 0;
-    });
-
-    const avgScore = totalAttempts > 0 ? (totalScore / totalAttempts).toFixed(1) : 0;
-
-    const statAttEl = document.getElementById("pstat-attempts");
-    const statScoreEl = document.getElementById("pstat-avg-score");
-    const statTimeEl = document.getElementById("pstat-time");
-
-    if (statAttEl) statAttEl.textContent = totalAttempts;
-    if (statScoreEl) statScoreEl.textContent = avgScore;
-    if (statTimeEl) statTimeEl.textContent = formatDuration(totalSeconds);
-  } catch (err) {
-    console.warn("Gagal memuat statistik profil:", err.message);
-  }
-}
-
-/**
- * Setup Modal Edit Profil
- */
-async function setupEditProfileModal() {
-  const editBtn = document.getElementById("btn-open-edit-profile");
-  const modalClose = document.getElementById("btn-close-edit-modal");
-  const form = document.getElementById("edit-profile-form");
-  const prodiSelect = document.getElementById("edit-prodi-select");
-
-  if (!editBtn || !form) return;
-
-  // Isi dropdown program studi
-  try {
-    const { data: prodis } = await supabase
-      .from("study_programs")
-      .select("id, name, code")
-      .eq("is_active", true)
-      .order("name", { ascending: true });
-
-    if (prodis && prodiSelect) {
-      prodiSelect.innerHTML = `<option value="">-- Pilih Program Studi --</option>`;
-      prodis.forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = `${p.name} (${p.code})`;
-        prodiSelect.appendChild(opt);
-      });
-    }
-  } catch (err) {
-    console.warn("Gagal dropdown prodi edit:", err.message);
-  }
-
-  editBtn.addEventListener("click", () => {
-    // Isi field dengan nilai saat ini
-    const nameInput = document.getElementById("edit-fullname-input");
-    const avatarInput = document.getElementById("edit-avatar-input");
-
-    if (nameInput) nameInput.value = currentProfile?.full_name || currentUser.user_metadata?.full_name || "";
-    if (avatarInput) avatarInput.value = currentProfile?.avatar_url || "";
-    if (prodiSelect && currentProfile?.program_studi_id) {
-      prodiSelect.value = currentProfile.program_studi_id;
-    }
-
-    openModal("modal-edit-profile");
-  });
-
-  modalClose?.addEventListener("click", () => {
-    closeModal("modal-edit-profile");
-  });
-
-  // Submit update profil
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const saveBtn = document.getElementById("btn-save-profile");
-    setButtonLoading(saveBtn, true, "Menyimpan...");
-
-    const fullName = document.getElementById("edit-fullname-input")?.value.trim();
-    const prodiId = document.getElementById("edit-prodi-select")?.value || null;
-    const avatarUrl = document.getElementById("edit-avatar-input")?.value.trim() || null;
-
-    if (!fullName) {
-      showToast("Nama lengkap wajib diisi.", "error");
-      setButtonLoading(saveBtn, false);
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: currentUser.id,
-          full_name: fullName,
-          program_studi_id: prodiId,
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (error) throw error;
-
-      showToast("Profil berhasil diperbarui!", "success");
-      closeModal("modal-edit-profile");
-      await loadUserProfileData();
     } catch (err) {
-      showToast("Gagal menyimpan profil: " + err.message, "error");
-    } finally {
-      setButtonLoading(saveBtn, false);
+      console.warn("Memuat profil:", err.message);
     }
-  });
-}
+  }
 
-/**
- * Setup Konfirmasi Logout Modal
- */
-function setupLogoutModal() {
-  const triggerBtns = document.querySelectorAll(".btn-open-logout-modal");
-  const cancelBtn = document.getElementById("btn-cancel-logout");
-  const confirmBtn = document.getElementById("btn-confirm-logout");
+  async function loadProfileStats() {
+    try {
+      const localAttempts = JSON.parse(localStorage.getItem(`utb_attempts_${currentUser.id}`) || "[]");
+      const totalAttempts = localAttempts.length;
+      let totalScore = 0;
+      let totalSeconds = 0;
 
-  triggerBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      openModal("modal-logout-confirm");
+      localAttempts.forEach((a) => {
+        totalScore += Number(a.score) || 0;
+        totalSeconds += Number(a.duration_seconds) || 0;
+      });
+
+      const avgScore = totalAttempts > 0 ? (totalScore / totalAttempts).toFixed(1) : 0;
+
+      const statAttEl = document.getElementById("pstat-attempts");
+      const statScoreEl = document.getElementById("pstat-avg-score");
+      const statTimeEl = document.getElementById("pstat-time");
+
+      if (statAttEl) statAttEl.textContent = totalAttempts;
+      if (statScoreEl) statScoreEl.textContent = avgScore;
+      if (statTimeEl) statTimeEl.textContent = window.formatDuration(totalSeconds);
+    } catch (_) {}
+  }
+
+  function setupEditProfileModal() {
+    const editBtn = document.getElementById("btn-open-edit-profile");
+    const modalClose = document.getElementById("btn-close-edit-modal");
+    const form = document.getElementById("edit-profile-form");
+
+    if (!editBtn || !form) return;
+
+    editBtn.addEventListener("click", () => {
+      const nameInput = document.getElementById("edit-fullname-input");
+      if (nameInput) nameInput.value = currentProfile?.full_name || currentUser.user_metadata?.full_name || "";
+      window.openModal("modal-edit-profile");
     });
-  });
 
-  cancelBtn?.addEventListener("click", () => {
-    closeModal("modal-logout-confirm");
-  });
+    modalClose?.addEventListener("click", () => {
+      window.closeModal("modal-edit-profile");
+    });
 
-  confirmBtn?.addEventListener("click", async () => {
-    closeModal("modal-logout-confirm");
-    await handleLogout();
-  });
-}
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById("edit-fullname-input")?.value.trim();
+      if (!fullName) return;
+
+      const localSessionRaw = localStorage.getItem("utb_local_session");
+      if (localSessionRaw) {
+        try {
+          const parsed = JSON.parse(localSessionRaw);
+          parsed.user.user_metadata.full_name = fullName;
+          localStorage.setItem("utb_local_session", JSON.stringify(parsed));
+          currentUser = parsed.user;
+        } catch (_) {}
+      }
+
+      window.showToast("Profil berhasil diperbarui!", "success");
+      window.closeModal("modal-edit-profile");
+      await loadUserProfileData();
+    });
+  }
+
+  function setupLogoutModal() {
+    const triggerBtns = document.querySelectorAll(".btn-open-logout-modal");
+    const cancelBtn = document.getElementById("btn-cancel-logout");
+    const confirmBtn = document.getElementById("btn-confirm-logout");
+
+    triggerBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.openModal("modal-logout-confirm");
+      });
+    });
+
+    cancelBtn?.addEventListener("click", () => {
+      window.closeModal("modal-logout-confirm");
+    });
+
+    confirmBtn?.addEventListener("click", async () => {
+      window.closeModal("modal-logout-confirm");
+      await window.handleLogout();
+    });
+  }
+})();

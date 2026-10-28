@@ -1,376 +1,469 @@
 // ==============================================================================
-// UTBELAJAR - ASISTEN BELAJAR AI CHATBOT LOGIC
+// UTBELAJAR - ASISTEN BELAJAR AI CHATBOT LOGIC (FILE:// & HTTP:// READY)
 // ==============================================================================
 
-import { supabase } from "./supabase.js";
-import { requireAuth } from "./auth.js";
-import { showToast, renderMarkdown, escapeHtml, openModal, closeModal } from "./utils.js";
-import { APP_CONFIG } from "./config.js";
+(function () {
+  const DEFAULT_SYSTEM_PROMPT =
+    "Anda adalah UTBelajar AI, asisten belajar digital independen untuk mahasiswa. Berikan penjelasan materi kuliah, rangkuman modul, dan contoh soal latihan dengan bahasa Indonesia yang terstruktur, ramah, dan mudah dipahami.";
 
-let currentUser = null;
-let activeConversationId = null;
-let conversations = [];
-let isSending = false;
+  let currentUser = null;
+  let activeConversationId = null;
+  let isSending = false;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  currentUser = await requireAuth();
-  if (!currentUser) return;
-
-  setupChatInput();
-  setupPromptChips();
-  await loadConversations();
-});
-
-/**
- * Memuat daftar percakapan sebelumnya milik user
- */
-async function loadConversations() {
-  const listEl = document.getElementById("chat-history-list");
-  if (!listEl) return;
-
-  try {
-    const { data: convs, error } = await supabase
-      .from("ai_conversations")
-      .select("id, title, updated_at")
-      .eq("user_id", currentUser.id)
-      .order("updated_at", { ascending: false });
-
-    if (error) throw error;
-    conversations = convs || [];
-
-    renderConversationsList();
-  } catch (err) {
-    console.warn("Gagal memuat riwayat percakapan:", err.message);
-  }
-}
-
-function renderConversationsList() {
-  const listEl = document.getElementById("chat-history-list");
-  if (!listEl) return;
-
-  if (conversations.length === 0) {
-    listEl.innerHTML = `
-      <div style="padding: 1rem; font-size: 0.8rem; color: #94A3B8; text-align: center;">
-        Belum ada riwayat percakapan.
-      </div>
-    `;
-    return;
+  function getAiConfig() {
+    try {
+      const raw = localStorage.getItem("utb_ai_config");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          provider: parsed.provider || "gemini",
+          model: parsed.model || "gemini-2.0-flash",
+          apiKey: (parsed.apiKey || "").trim(),
+          customEndpoint: (parsed.customEndpoint || "").trim(),
+          systemPrompt: parsed.systemPrompt || DEFAULT_SYSTEM_PROMPT,
+          updatedAt: parsed.updatedAt || null,
+        };
+      }
+    } catch (_) {}
+    return {
+      provider: "gemini",
+      model: "gemini-2.0-flash",
+      apiKey: "",
+      customEndpoint: "",
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      updatedAt: null,
+    };
   }
 
-  listEl.innerHTML = conversations
-    .map(
-      (c) => `
-    <div class="history-item ${c.id === activeConversationId ? "active" : ""}" data-id="${c.id}">
-      <span class="history-title">${escapeHtml(c.title)}</span>
-      <button class="history-delete-btn" data-delete-id="${c.id}" title="Hapus Percakapan">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-      </button>
-    </div>
-  `
-    )
-    .join("");
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Pasang event listener input & tombol Enter seketika agar tidak pernah tertunda
+    setupChatInput();
+    setupPromptChips();
+    updateAiHeaderStatus();
 
-  listEl.querySelectorAll(".history-item").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      if (e.target.closest(".history-delete-btn")) return;
-      selectConversation(item.dataset.id);
-    });
-  });
+    currentUser = await window.requireAuth();
+    if (!currentUser) return;
 
-  listEl.querySelectorAll(".history-delete-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      confirmDeleteConversation(btn.dataset.deleteId);
-    });
-  });
-}
-
-/**
- * Memilih percakapan dan memuat pesan-pesan di dalamnya
- */
-async function selectConversation(convId) {
-  activeConversationId = convId;
-  renderConversationsList();
-
-  const messagesContainer = document.getElementById("chat-messages-container");
-  if (!messagesContainer) return;
-
-  messagesContainer.innerHTML = `<div class="skeleton" style="height: 60px; margin-bottom: 1rem;"></div>`;
-
-  try {
-    const { data: messages, error } = await supabase
-      .from("ai_messages")
-      .select("id, role, content, created_at")
-      .eq("conversation_id", convId)
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-
-    messagesContainer.innerHTML = "";
-
-    if (!messages || messages.length === 0) {
-      showWelcomeBox();
-      return;
+    try {
+      const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
+      if (isAdmin) {
+        initAdminAiConfigPanel();
+      }
+    } catch (err) {
+      console.warn("Info panel admin AI:", err.message);
     }
 
-    messages.forEach((m) => {
-      appendMessageBubble(m.role, m.content, false);
-    });
-
-    scrollToBottom();
-  } catch (err) {
-    showToast("Gagal memuat pesan: " + err.message, "error");
-  }
-}
-
-/**
- * Pengaturan input textarea & tombol kirim
- */
-function setupChatInput() {
-  const textarea = document.getElementById("chat-input-textarea");
-  const sendBtn = document.getElementById("chat-send-btn");
-  const newChatBtn = document.getElementById("btn-new-chat");
-
-  if (!textarea || !sendBtn) return;
-
-  // Auto resize tinggi textarea
-  textarea.addEventListener("input", () => {
-    textarea.style.height = "auto";
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
+    updateAiHeaderStatus();
   });
 
-  // Kirim dengan Enter (Shift + Enter untuk baris baru)
-  textarea.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  function updateAiHeaderStatus() {
+    const cfg = getAiConfig();
+    const statusEl = document.querySelector(".chat-agent-status");
+    const badgeEl = document.getElementById("admin-ai-status-badge");
+
+    if (cfg.apiKey || (cfg.provider === "custom" && cfg.customEndpoint)) {
+      const providerLabel =
+        cfg.provider === "gemini"
+          ? "Google Gemini"
+          : cfg.provider === "openrouter"
+          ? "OpenRouter"
+          : cfg.provider === "openai"
+          ? "OpenAI"
+          : cfg.provider === "groq"
+          ? "Groq Cloud"
+          : cfg.provider === "custom"
+          ? "Custom AI"
+          : "Supabase Edge";
+      if (statusEl) statusEl.textContent = `● Terhubung (${providerLabel} — ${cfg.model})`;
+      if (badgeEl) {
+        badgeEl.className = "badge badge-success";
+        badgeEl.textContent = `API Key Aktif (${providerLabel})`;
+      }
+    } else {
+      if (statusEl) statusEl.textContent = "● Asisten Belajar Aktif";
+      if (badgeEl) {
+        badgeEl.className = "badge badge-warning";
+        badgeEl.textContent = "Mode Asisten Bawaan (API Key Belum Diisi)";
+      }
+    }
+  }
+
+  function initAdminAiConfigPanel() {
+    const panel = document.getElementById("admin-ai-config-panel");
+    if (!panel) return;
+    panel.style.display = "block";
+
+    const pageTitle = document.querySelector(".page-title");
+    if (pageTitle) pageTitle.textContent = "UTBelajar AI — Konfigurasi API Key & Chatbot (Admin)";
+
+    const cfg = getAiConfig();
+    const provEl = document.getElementById("ai-cfg-provider");
+    const modelEl = document.getElementById("ai-cfg-model");
+    const keyEl = document.getElementById("ai-cfg-apikey");
+    const endpointGroupEl = document.getElementById("ai-cfg-endpoint-group");
+    const endpointEl = document.getElementById("ai-cfg-endpoint");
+    const sysEl = document.getElementById("ai-cfg-system-prompt");
+    const savedInfoEl = document.getElementById("ai-cfg-last-saved");
+
+    const toggleEndpointVisibility = (prov) => {
+      if (!endpointGroupEl) return;
+      endpointGroupEl.style.display = prov === "custom" || prov === "openrouter" ? "block" : "none";
+    };
+
+    if (provEl) provEl.value = cfg.provider;
+    if (modelEl) modelEl.value = cfg.model;
+    if (keyEl) keyEl.value = cfg.apiKey;
+    if (endpointEl) {
+      endpointEl.value =
+        cfg.customEndpoint ||
+        (cfg.provider === "openrouter" ? "https://openrouter.ai/api/v1/chat/completions" : "");
+    }
+    if (sysEl) sysEl.value = cfg.systemPrompt;
+    toggleEndpointVisibility(cfg.provider);
+
+    if (savedInfoEl && cfg.updatedAt) {
+      savedInfoEl.textContent = `Terakhir diperbarui: ${window.formatDateTime(cfg.updatedAt)}`;
+    }
+
+    provEl?.addEventListener("change", () => {
+      const p = provEl.value;
+      toggleEndpointVisibility(p);
+      if (!modelEl) return;
+      if (p === "gemini") modelEl.value = "gemini-2.0-flash";
+      else if (p === "openrouter") {
+        modelEl.value = "openrouter/auto";
+        if (endpointEl && !endpointEl.value) {
+          endpointEl.value = "https://openrouter.ai/api/v1/chat/completions";
+        }
+      } else if (p === "openai") modelEl.value = "gpt-4o-mini";
+      else if (p === "groq") modelEl.value = "llama-3.3-70b-versatile";
+      else if (p === "custom") {
+        modelEl.value = "gpt-4o-mini";
+        if (endpointEl && endpointEl.value === "https://openrouter.ai/api/v1/chat/completions") {
+          endpointEl.value = "";
+        }
+      } else modelEl.value = "ai-chat";
+    });
+
+    document.getElementById("btn-toggle-ai-key-vis")?.addEventListener("click", () => {
+      if (!keyEl) return;
+      keyEl.type = keyEl.type === "password" ? "text" : "password";
+    });
+
+    document.getElementById("btn-toggle-ai-config-body")?.addEventListener("click", () => {
+      const formEl = document.getElementById("admin-ai-config-form");
+      if (formEl) {
+        formEl.style.display = formEl.style.display === "none" ? "block" : "none";
+      }
+    });
+
+    document.getElementById("admin-ai-config-form")?.addEventListener("submit", (e) => {
       e.preventDefault();
-      handleSendMessage();
+      const newCfg = {
+        provider: provEl?.value || "gemini",
+        model: modelEl?.value.trim() || "gemini-2.0-flash",
+        apiKey: keyEl?.value.trim() || "",
+        customEndpoint: endpointEl?.value.trim() || "",
+        systemPrompt: sysEl?.value.trim() || DEFAULT_SYSTEM_PROMPT,
+        updatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("utb_ai_config", JSON.stringify(newCfg));
+      if (savedInfoEl) {
+        savedInfoEl.textContent = `Terakhir disimpan: ${window.formatDateTime(newCfg.updatedAt)}`;
+      }
+      updateAiHeaderStatus();
+      window.showToast("Konfigurasi API Key AI Chatbot berhasil disimpan!", "success");
+    });
+
+    document.getElementById("btn-reset-ai-config")?.addEventListener("click", () => {
+      localStorage.removeItem("utb_ai_config");
+      if (keyEl) keyEl.value = "";
+      if (endpointEl) endpointEl.value = "";
+      updateAiHeaderStatus();
+      window.showToast("API Key AI telah direset.", "info");
+    });
+
+    document.getElementById("btn-test-ai-config")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const tempCfg = {
+        provider: provEl?.value || "gemini",
+        model: modelEl?.value.trim() || "gemini-2.0-flash",
+        apiKey: keyEl?.value.trim() || "",
+        customEndpoint: endpointEl?.value.trim() || "",
+        systemPrompt: sysEl?.value.trim() || DEFAULT_SYSTEM_PROMPT,
+      };
+      if (!tempCfg.apiKey && tempCfg.provider !== "supabase" && tempCfg.provider !== "custom") {
+        window.showToast("Masukkan API Key terlebih dahulu untuk menguji koneksi AI.", "warning");
+        return;
+      }
+      if (tempCfg.provider === "custom" && !tempCfg.customEndpoint) {
+        window.showToast("Masukkan Endpoint URL untuk Custom Layanan AI.", "warning");
+        return;
+      }
+      window.setButtonLoading(btn, true, "Menguji...");
+      try {
+        const reply = await requestAiReply("Halo, balas singkat dengan kalimat: Koneksi UTBelajar AI berhasil!", tempCfg);
+        window.showToast("Koneksi berhasil! " + reply.slice(0, 60), "success");
+      } catch (err) {
+        window.showToast("Gagal menguji API Key: " + (err.message || "Periksa kembali konfigurasi Anda"), "error");
+      } finally {
+        window.setButtonLoading(btn, false);
+      }
+    });
+  }
+
+  async function requestAiReply(userMessage, customCfg) {
+    const cfg = customCfg || getAiConfig();
+
+    // 1. Google Gemini REST API
+    if (cfg.provider === "gemini" && cfg.apiKey) {
+      const modelName = cfg.model || "gemini-2.0-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        modelName
+      )}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: cfg.systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: userMessage }] }],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message || `Error Gemini HTTP ${res.status}`);
+      }
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada respons teks dari Gemini.";
     }
-  });
 
-  sendBtn.addEventListener("click", handleSendMessage);
+    // 2. OpenRouter, Custom Layanan AI, OpenAI, atau Groq API
+    if (
+      (cfg.provider === "openrouter" && cfg.apiKey) ||
+      (cfg.provider === "custom" && (cfg.customEndpoint || cfg.apiKey)) ||
+      ((cfg.provider === "openai" || cfg.provider === "groq") && cfg.apiKey)
+    ) {
+      const endpoint =
+        cfg.provider === "openrouter"
+          ? cfg.customEndpoint || "https://openrouter.ai/api/v1/chat/completions"
+          : cfg.provider === "custom"
+          ? cfg.customEndpoint
+          : cfg.provider === "groq"
+          ? "https://api.groq.com/openai/v1/chat/completions"
+          : "https://api.openai.com/v1/chat/completions";
 
-  // Tombol percakapan baru
-  newChatBtn?.addEventListener("click", () => {
-    activeConversationId = null;
-    renderConversationsList();
-    showWelcomeBox();
-  });
-}
+      if (!endpoint) {
+        throw new Error("Endpoint URL untuk Custom Layanan AI belum diisi.");
+      }
 
-/**
- * Chip Saran Prompt Cepat
- */
-function setupPromptChips() {
-  document.addEventListener("click", (e) => {
-    const chip = e.target.closest(".prompt-chip");
-    if (chip) {
-      const prompt = chip.dataset.prompt || chip.textContent.trim();
-      const textarea = document.getElementById("chat-input-textarea");
-      if (textarea) {
-        textarea.value = prompt;
-        textarea.focus();
+      const defaultModel =
+        cfg.provider === "openrouter"
+          ? "openrouter/auto"
+          : cfg.provider === "groq"
+          ? "llama-3.3-70b-versatile"
+          : "gpt-4o-mini";
+
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (cfg.apiKey) {
+        headers.Authorization = `Bearer ${cfg.apiKey}`;
+      }
+      if (cfg.provider === "openrouter") {
+        headers["HTTP-Referer"] = window.location.origin && window.location.origin !== "null" ? window.location.origin : "https://utbelajar.local";
+        headers["X-Title"] = "UTBelajar AI";
+      }
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: cfg.model || defaultModel,
+          messages: [
+            { role: "system", content: cfg.systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message || `Error HTTP ${res.status}`);
+      }
+      return (
+        data?.choices?.[0]?.message?.content ||
+        data?.reply ||
+        data?.response ||
+        data?.output ||
+        "Tidak ada respons dari layanan AI."
+      );
+    }
+
+    // 3. Supabase Edge Function
+    if (cfg.provider === "supabase" && window.supabaseClient) {
+      const { data, error } = await window.supabaseClient.functions.invoke(window.APP_CONFIG.AI_FUNCTION_NAME, {
+        body: { message: userMessage, conversation_id: activeConversationId },
+      });
+      if (!error && data?.reply) return data.reply;
+    }
+
+    // 4. Fallback Asisten Akademik Pintar Bawaan
+    return buildBuiltInAcademicResponse(userMessage);
+  }
+
+  function buildBuiltInAcademicResponse(msg) {
+    const lower = msg.toLowerCase();
+    if (lower.includes("normalisasi") || lower.includes("basis data") || lower.includes("sql")) {
+      return (
+        "### Konsep Basis Data & Normalisasi (1NF – 3NF)\n\n" +
+        "1. **Bentuk Normal Pertama (1NF)**: Setiap atribut bernilai atomik (tunggal) dan tidak ada grup berulang (*repeating group*).\n" +
+        "2. **Bentuk Normal Kedua (2NF)**: Memenuhi 1NF dan seluruh atribut non-kunci bergantung penuh pada **Primary Key** (menghilangkan ketergantungan parsial).\n" +
+        "3. **Bentuk Normal Ketiga (3NF)**: Memenuhi 2NF dan tidak memiliki ketergantungan transitif antar atribut non-kunci.\n\n" +
+        "> 💡 *Tips Ujian*: Ingat rumusnya — **1NF (Atomik)**, **2NF (Bergantung Penuh pada PK)**, **3NF (Tanpa Ketergantungan Transitif)**."
+      );
+    }
+    if (lower.includes("agile") || lower.includes("scrum") || lower.includes("waterfall") || lower.includes("sdlc")) {
+      return (
+        "### Perbandingan Metodologi Waterfall vs Agile Scrum\n\n" +
+        "- **Waterfall**: Bersifat sekuensial/bertahap (Analisis → Desain → Coding → Testing → Maintenance). Cocok untuk proyek dengan kebutuhan yang sudah pasti sejak awal.\n" +
+        "- **Agile Scrum**: Bersifat iteratif dan inkremental menggunakan *Sprint* (1–4 minggu). Sangat fleksibel terhadap perubahan kebutuhan pengguna.\n\n" +
+        "Silakan tanyakan jika ingin dibuatkan contoh soal latihan tentang SDLC!"
+      );
+    }
+    if (lower.includes("soal") || lower.includes("contoh")) {
+      return (
+        "### Contoh Latihan Soal Pilihan Ganda\n\n" +
+        "**Soal 1:** Diagram UML yang menggambarkan interaksi antara *aktor* dengan sistem berdasarkan fungsi bisnis disebut...\n" +
+        "- A. Class Diagram\n- B. Use Case Diagram\n- C. Sequence Diagram\n- D. Activity Diagram\n\n" +
+        "**Jawaban Benar:** **B (Use Case Diagram)**\n" +
+        "**Pembahasan:** Use Case Diagram memetakan kebutuhan fungsional sistem dari sudut pandang pengguna (*actor*)."
+      );
+    }
+    return (
+      `### Penjelasan Materi: "${msg}"\n\n` +
+      "Untuk memahami topik ini secara efektif dalam belajar mandiri:\n" +
+      "1. **Pahami Definisi Inti**: Identifikasi kata kunci dan konsep utama pada modul.\n" +
+      "2. **Buat Peta Konsep**: Hubungkan teori dengan studi kasus praktis.\n" +
+      "3. **Uji Pemahaman**: Kerjakan paket soal pada menu **Latihan Soal** untuk mengukur kesiapan ujian.\n\n" +
+      "*(Catatan Admin: Anda dapat memasukkan API Key Google Gemini / OpenAI / Groq pada panel Konfigurasi AI di atas untuk mengaktifkan jawaban generatif penuh).* "
+    );
+  }
+
+  function setupChatInput() {
+    const textarea = document.getElementById("chat-input-textarea");
+    const sendBtn = document.getElementById("chat-send-btn");
+    const newChatBtn = document.getElementById("btn-new-chat");
+    const container = document.getElementById("chat-messages-container");
+    const scrollBottomBtn = document.getElementById("btn-chat-scroll-bottom");
+    const headerScrollBtn = document.getElementById("btn-header-scroll-bottom");
+
+    if (!textarea || !sendBtn) return;
+
+    const scrollToBottom = () => {
+      if (!container) return;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    };
+
+    const updateScrollButtonVisibility = () => {
+      if (!container || !scrollBottomBtn) return;
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom > 60) {
+        scrollBottomBtn.classList.add("visible");
+      } else {
+        scrollBottomBtn.classList.remove("visible");
+      }
+    };
+
+    container?.addEventListener("scroll", updateScrollButtonVisibility);
+    scrollBottomBtn?.addEventListener("click", scrollToBottom);
+    headerScrollBtn?.addEventListener("click", scrollToBottom);
+
+    const resizeTextarea = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = Math.max(32, Math.min(textarea.scrollHeight, 150)) + "px";
+    };
+
+    textarea.addEventListener("input", resizeTextarea);
+
+    textarea.addEventListener("keydown", (e) => {
+      if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
         handleSendMessage();
       }
-    }
-  });
-}
-
-function showWelcomeBox() {
-  const messagesContainer = document.getElementById("chat-messages-container");
-  if (!messagesContainer) return;
-
-  messagesContainer.innerHTML = `
-    <div class="chat-welcome-box">
-      <div class="welcome-ai-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
-      </div>
-      <h3>Halo! Saya UTBelajar AI</h3>
-      <p>Asisten belajar digital independenmu. Tanyakan konsep mata kuliah, strategi belajar, rangkuman materi, atau latihan soal.</p>
-      
-      <div class="prompt-chips-grid">
-        <div class="prompt-chip" data-prompt="Jelaskan konsep basis data relasional dan bentuk normalisasi (1NF sampai 3NF) dengan sederhana.">
-          💡 Jelaskan konsep basis data & normalisasi
-        </div>
-        <div class="prompt-chip" data-prompt="Bantu saya memahami perbedaan metodologi Agile Scrum dan Waterfall dalam Rekayasa Perangkat Lunak.">
-          📚 Perbedaan Agile Scrum vs Waterfall
-        </div>
-        <div class="prompt-chip" data-prompt="Buatkan 3 contoh latihan soal pilihan ganda tentang Analisis dan Perancangan Sistem beserta jawabannya.">
-          📝 Buatkan latihan soal pilihan ganda
-        </div>
-        <div class="prompt-chip" data-prompt="Bagaimana strategi belajar mandiri yang efektif agar nilai ujian maksimal?">
-          🎯 Strategi belajar mandiri efektif
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * Mengirim pesan ke Supabase Edge Function ai-chat
- */
-async function handleSendMessage() {
-  if (isSending) return;
-
-  const textarea = document.getElementById("chat-input-textarea");
-  const message = textarea.value.trim();
-  if (!message) return;
-
-  // Hapus welcome box jika masih ada
-  const welcomeBox = document.querySelector(".chat-welcome-box");
-  if (welcomeBox) welcomeBox.remove();
-
-  // Reset textarea
-  textarea.value = "";
-  textarea.style.height = "auto";
-  isSending = true;
-
-  // Tampilkan pesan user di UI
-  appendMessageBubble("user", message);
-  scrollToBottom();
-
-  // Tampilkan typing indicator
-  showTypingIndicator();
-
-  try {
-    // Panggil Supabase Edge Function ai-chat
-    const { data, error } = await supabase.functions.invoke(APP_CONFIG.AI_FUNCTION_NAME, {
-      body: {
-        message,
-        conversation_id: activeConversationId,
-      },
     });
 
-    hideTypingIndicator();
+    sendBtn.addEventListener("click", handleSendMessage);
 
-    if (error) {
-      // Periksa apakah layanan AI belum disetel (503)
-      if (error.message?.includes("503") || error.context?.status === 503) {
-        appendMessageBubble(
-          "assistant",
-          "⚠️ **Layanan AI Belum Dikonfigurasi**\n\nFungsi backend siap, namun API Key (`GEMINI_API_KEY` atau `OPENAI_API_KEY`) belum dimasukkan pada Supabase Secrets. Silakan hubungi pengelola sistem untuk mengaktifkannya."
-        );
-      } else {
-        throw error;
-      }
-    } else if (data) {
-      if (data.conversation_id && !activeConversationId) {
-        activeConversationId = data.conversation_id;
-        await loadConversations();
-      }
-      appendMessageBubble("assistant", data.reply || "Maaf, tidak ada respons yang dihasilkan.");
-    }
-  } catch (err) {
-    hideTypingIndicator();
-    appendMessageBubble(
-      "assistant",
-      `⚠️ **Koneksi Asisten AI Gagal:** ${escapeHtml(err.message || "Layanan AI sedang tidak dapat diakses saat ini.")}`
-    );
-  } finally {
-    isSending = false;
-    scrollToBottom();
-  }
-}
-
-/**
- * Menambahkan bubble pesan ke dalam chat
- */
-function appendMessageBubble(role, content, animate = true) {
-  const container = document.getElementById("chat-messages-container");
-  if (!container) return;
-
-  const row = document.createElement("div");
-  row.className = `message-row ${role}`;
-
-  const isUser = role === "user";
-  const avatarText = isUser ? "Anda" : "AI";
-
-  const formattedHtml = isUser ? escapeHtml(content).replace(/\n/g, "<br>") : renderMarkdown(content);
-
-  row.innerHTML = `
-    <div class="message-avatar">${avatarText}</div>
-    <div class="message-bubble">
-      ${!isUser ? '<button class="copy-btn">Salin</button>' : ""}
-      ${formattedHtml}
-    </div>
-  `;
-
-  // Listener tombol salin teks
-  if (!isUser) {
-    const copyBtn = row.querySelector(".copy-btn");
-    copyBtn?.addEventListener("click", () => {
-      navigator.clipboard.writeText(content);
-      copyBtn.textContent = "Tersalin!";
-      setTimeout(() => (copyBtn.textContent = "Salin"), 2000);
-    });
-  }
-
-  container.appendChild(row);
-}
-
-function showTypingIndicator() {
-  const container = document.getElementById("chat-messages-container");
-  if (!container) return;
-
-  const indicator = document.createElement("div");
-  indicator.id = "chat-typing-indicator";
-  indicator.className = "message-row assistant";
-  indicator.innerHTML = `
-    <div class="message-avatar">AI</div>
-    <div class="message-bubble">
-      <div class="typing-dots">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    </div>
-  `;
-  container.appendChild(indicator);
-  scrollToBottom();
-}
-
-function hideTypingIndicator() {
-  const indicator = document.getElementById("chat-typing-indicator");
-  if (indicator) indicator.remove();
-}
-
-function scrollToBottom() {
-  const container = document.getElementById("chat-messages-container");
-  if (container) {
-    container.scrollTop = container.scrollHeight;
-  }
-}
-
-/**
- * Hapus sesi percakapan
- */
-let conversationToDelete = null;
-
-function confirmDeleteConversation(convId) {
-  conversationToDelete = convId;
-  openModal("modal-delete-chat");
-}
-
-document.getElementById("btn-cancel-delete-chat")?.addEventListener("click", () => {
-  closeModal("modal-delete-chat");
-});
-
-document.getElementById("btn-proceed-delete-chat")?.addEventListener("click", async () => {
-  if (!conversationToDelete) return;
-
-  try {
-    const { error } = await supabase.from("ai_conversations").delete().eq("id", conversationToDelete);
-    if (error) throw error;
-
-    showToast("Percakapan berhasil dihapus.", "success");
-    if (activeConversationId === conversationToDelete) {
+    newChatBtn?.addEventListener("click", () => {
       activeConversationId = null;
-      showWelcomeBox();
-    }
-    await loadConversations();
-  } catch (err) {
-    showToast("Gagal menghapus: " + err.message, "error");
-  } finally {
-    closeModal("modal-delete-chat");
-    conversationToDelete = null;
+      if (container) container.innerHTML = "";
+      updateScrollButtonVisibility();
+    });
   }
-});
+
+  function setupPromptChips() {
+    document.addEventListener("click", (e) => {
+      const chip = e.target.closest(".prompt-chip");
+      if (chip) {
+        const prompt = chip.dataset.prompt || chip.textContent.trim();
+        const textarea = document.getElementById("chat-input-textarea");
+        if (textarea) {
+          textarea.value = prompt;
+          handleSendMessage();
+        }
+      }
+    });
+  }
+
+  async function handleSendMessage() {
+    if (isSending) return;
+    const textarea = document.getElementById("chat-input-textarea");
+    const message = textarea?.value.trim();
+    if (!message) return;
+
+    const welcomeBox = document.querySelector(".chat-welcome-box");
+    if (welcomeBox) welcomeBox.remove();
+
+    textarea.value = "";
+    textarea.style.height = "32px";
+    isSending = true;
+
+    appendMessageBubble("user", message);
+
+    try {
+      const reply = await requestAiReply(message);
+      appendMessageBubble("assistant", reply);
+    } catch (err) {
+      appendMessageBubble(
+        "assistant",
+        `**Gagal Menghubungi API AI**\n\nDetail: \`${err.message || "Error tidak diketahui"}\`\n\nSilakan periksa kembali konfigurasi API Key pada panel Administrator.`
+      );
+    } finally {
+      isSending = false;
+    }
+  }
+
+  function appendMessageBubble(role, content) {
+    const container = document.getElementById("chat-messages-container");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = `message-row ${role}`;
+    const isUser = role === "user";
+    const formatted = isUser ? window.escapeHtml(content) : window.renderMarkdown(content);
+
+    row.innerHTML = `
+      <div class="message-avatar">${isUser ? "Anda" : "AI"}</div>
+      <div class="message-bubble">${formatted}</div>
+    `;
+    container.appendChild(row);
+    setTimeout(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 30);
+  }
+})();

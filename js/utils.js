@@ -2,13 +2,7 @@
 // UTBELAJAR - UTILITIES & HELPER FUNCTIONS
 // ==============================================================================
 
-/**
- * Menampilkan pesan Toast notifikasi yang elegan
- * @param {string} message Pesan yang ingin ditampilkan
- * @param {'success'|'error'|'info'} type Jenis notifikasi
- * @param {number} duration Durasi tampil dalam milidetik
- */
-export function showToast(message, type = "info", duration = 4000) {
+window.showToast = function (message, type = "info", duration = 4000) {
   let container = document.getElementById("toast-container");
   if (!container) {
     container = document.createElement("div");
@@ -27,27 +21,22 @@ export function showToast(message, type = "info", duration = 4000) {
 
   toast.innerHTML = `
     <span>${iconMap[type] || iconMap.info}</span>
-    <div style="flex: 1;">${escapeHtml(message)}</div>
+    <div style="flex: 1;">${window.escapeHtml(message)}</div>
   `;
 
   container.appendChild(toast);
 
-  // Animasi masuk
   requestAnimationFrame(() => {
     toast.classList.add("show");
   });
 
-  // Hapus setelah durasi habis
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => toast.remove(), 300);
   }, duration);
-}
+};
 
-/**
- * Escape string HTML untuk mencegah XSS
- */
-export function escapeHtml(str) {
+window.escapeHtml = function (str) {
   if (!str) return "";
   return String(str)
     .replace(/&/g, "&amp;")
@@ -55,70 +44,63 @@ export function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
+};
 
-/**
- * Format tanggal Indonesia ramah pengguna (contoh: 28 Okt 2026, 14:30)
- */
-export function formatDate(dateString) {
+window.formatDate = function (dateString) {
   if (!dateString) return "-";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-}
+};
 
-/**
- * Format durasi detik menjadi menit dan jam (contoh: 45 Menit, 1 Jam 15 Menit)
- */
-export function formatDuration(seconds) {
+window.formatDateTime = function (dateString) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+window.formatDuration = function (seconds) {
   if (!seconds || seconds <= 0) return "0 Menit";
   const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins} Menit`;
+  if (mins < 60) return `${mins || 1} Menit`;
   const hours = Math.floor(mins / 60);
   const remainingMins = mins % 60;
   return remainingMins > 0 ? `${hours} Jam ${remainingMins} Menit` : `${hours} Jam`;
-}
+};
 
-/**
- * Pengubah format Markdown sederhana dan aman untuk asisten AI
- */
-export function renderMarkdown(markdownText) {
+window.renderMarkdown = function (markdownText) {
   if (!markdownText) return "";
 
-  // 1. Amankan teks mentah terlebih dahulu
-  let text = escapeHtml(markdownText);
+  let text = window.escapeHtml(markdownText);
 
-  // 2. Blok kode multi-line: ```lang\ncode\n```
   text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
     return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
   });
 
-  // 3. Inline code: `code`
   text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // 4. Bold: **text** atau __text__
   text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   text = text.replace(/__([^_]+)__/g, "<strong>$1</strong>");
-
-  // 5. Italic: *text* atau _text_
   text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
   text = text.replace(/_([^_]+)_/g, "<em>$1</em>");
 
-  // 6. Header: ### Heading
   text = text.replace(/^### (.*$)/gim, '<h4 style="font-size: 1rem; font-weight:700; margin: 0.6rem 0 0.3rem;">$1</h4>');
   text = text.replace(/^## (.*$)/gim, '<h3 style="font-size: 1.15rem; font-weight:800; margin: 0.8rem 0 0.4rem;">$1</h3>');
 
-  // 7. Bullet lists: - item atau * item
   text = text.replace(/^\s*[-*]\s+(.*)$/gim, "<li>$1</li>");
   text = text.replace(/(<li>.*<\/li>)/gms, '<ul style="padding-left: 1.25rem; margin: 0.5rem 0;">$1</ul>');
-
-  // 8. Numbered lists: 1. item
   text = text.replace(/^\s*\d+\.\s+(.*)$/gim, "<li>$1</li>");
 
-  // 9. Paragraf baru untuk baris ganda
   const paragraphs = text.split(/\n\s*\n/);
   return paragraphs
     .map((p) => {
@@ -130,43 +112,28 @@ export function renderMarkdown(markdownText) {
       return `<p>${p.replace(/\n/g, "<br>")}</p>`;
     })
     .join("");
-}
+};
 
-/**
- * Membuka Modal Dialog berdasarkan ID
- */
-export function openModal(modalId) {
+window.openModal = function (modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add("open");
-}
+};
 
-/**
- * Menutup Modal Dialog berdasarkan ID
- */
-export function closeModal(modalId) {
+window.closeModal = function (modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove("open");
-}
+};
 
-/**
- * Efek tombol loading state
- */
-export function setButtonLoading(button, isLoading, text = "Memproses...") {
+window.setButtonLoading = function (button, isLoading, text = "Memproses...") {
   if (!button) return;
   if (isLoading) {
     button.dataset.originalHtml = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = `
-      <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 0.8s linear infinite;">
-        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
-        <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
-      </svg>
-      <span>${escapeHtml(text)}</span>
-    `;
+    button.innerHTML = `<span>${window.escapeHtml(text)}</span>`;
   } else {
     button.disabled = false;
     if (button.dataset.originalHtml) {
       button.innerHTML = button.dataset.originalHtml;
     }
   }
-}
+};

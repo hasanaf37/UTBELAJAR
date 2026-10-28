@@ -26,21 +26,25 @@
 
       <nav class="sidebar-nav">
         <div class="nav-section-title">Navigasi Utama</div>
-        <a href="dashboard.html" class="nav-item">
+        <a href="dashboard.html" class="nav-item" data-tooltip="Beranda">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
           <span class="nav-text">Beranda</span>
         </a>
-        <a href="latihan-soal.html" class="nav-item active">
+        <a href="soal-modul.html" class="nav-item" data-tooltip="Soal Modul">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span class="nav-text">Soal Modul</span>
+        </a>
+        <a href="latihan-soal.html" class="nav-item active" data-tooltip="Latihan Soal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <span class="nav-text">Latihan Soal</span>
         </a>
-        <a href="utbelajar-ai.html" class="nav-item">
+        <a href="utbelajar-ai.html" class="nav-item" data-tooltip="UTBelajar AI">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
           <span class="nav-text">UTBelajar AI</span>
         </a>
 
         <div class="nav-section-title">Akun &amp; Pengaturan</div>
-        <a href="profile.html" class="nav-item">
+        <a href="profile.html" class="nav-item" data-tooltip="Profil Saya">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="nav-text">Profil Saya</span>
         </a>
@@ -69,6 +73,195 @@
       </header>
 
       <main class="page-content">
+        <!-- ================================================================ -->
+        <!-- PANEL MANAJEMEN & MENU TAMBAH LATIHAN SOAL (KHUSUS ADMIN)        -->
+        <!-- ================================================================ -->
+        <div id="admin-latihan-manager" class="card" style="display: none; margin-bottom: 1.75rem; border: 1.5px solid rgba(65, 105, 245, 0.28); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--soft-blue); color: var(--primary-blue); padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800; margin-bottom: 0.35rem;">
+                <span>⚙️ MENU TAMBAH &amp; PENGATURAN LATIHAN SOAL (ADMIN)</span>
+              </div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-navy);">
+                Kelola Semua Tahapan Latihan Soal
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                Tambah, ubah, atau hapus <strong>1. Program Studi</strong>, <strong>2. Mata Kuliah</strong>, <strong>3. Paket Soal</strong>, dan <strong>4. Pengerjaan (Butir Soal)</strong> secara langsung.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm btn-admin-open-tab" data-admin-tab="prodi">
+                + 1. Program Studi
+              </button>
+              <button type="button" class="btn btn-primary btn-sm btn-admin-open-tab" data-admin-tab="course">
+                + 2. Mata Kuliah
+              </button>
+              <button type="button" class="btn btn-primary btn-sm btn-admin-open-tab" data-admin-tab="set">
+                + 3. Paket Soal
+              </button>
+              <button type="button" class="btn btn-primary btn-sm btn-admin-open-tab" data-admin-tab="question">
+                + 4. Soal Pengerjaan
+              </button>
+              <button type="button" id="btn-toggle-admin-manager-body" class="btn btn-secondary btn-sm">
+                Sembunyikan/Tampilkan Panel
+              </button>
+            </div>
+          </div>
+
+          <div id="admin-latihan-manager-body">
+            <!-- Navigasi Tab 1 - 4 -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+              <button type="button" class="filter-btn active admin-tab-btn" data-tab="prodi" style="padding: 0.5rem 1rem; font-weight: 700;">
+                1. Program Studi (<span id="admin-count-prodi">0</span>)
+              </button>
+              <button type="button" class="filter-btn admin-tab-btn" data-tab="course" style="padding: 0.5rem 1rem; font-weight: 700;">
+                2. Mata Kuliah (<span id="admin-count-course">0</span>)
+              </button>
+              <button type="button" class="filter-btn admin-tab-btn" data-tab="set" style="padding: 0.5rem 1rem; font-weight: 700;">
+                3. Paket Soal (<span id="admin-count-set">0</span>)
+              </button>
+              <button type="button" class="filter-btn admin-tab-btn" data-tab="question" style="padding: 0.5rem 1rem; font-weight: 700;">
+                4. Pengerjaan / Butir Soal (<span id="admin-count-question">0</span>)
+              </button>
+            </div>
+
+            <!-- TAB 1: PROGRAM STUDI -->
+            <div id="admin-tab-prodi" class="admin-tab-pane">
+              <form id="form-admin-prodi" style="display: grid; grid-template-columns: 140px 1fr 1.4fr auto; gap: 0.75rem; align-items: end; background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Kode Prodi</label>
+                  <input type="text" id="input-prodi-code" class="form-control" placeholder="Mis: SI" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Nama Program Studi</label>
+                  <input type="text" id="input-prodi-name" class="form-control" placeholder="Mis: Sistem Informasi" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Deskripsi Singkat</label>
+                  <input type="text" id="input-prodi-desc" class="form-control" placeholder="Deskripsi fokus studi...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="height: 42px;">
+                  + Tambah Prodi
+                </button>
+              </form>
+              <div id="admin-list-prodi" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
+            <!-- TAB 2: MATA KULIAH -->
+            <div id="admin-tab-course" class="admin-tab-pane" style="display: none;">
+              <form id="form-admin-course" style="display: grid; grid-template-columns: 1fr 130px 1.2fr 1.2fr auto; gap: 0.75rem; align-items: end; background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Program Studi</label>
+                  <select id="input-course-prodi" class="form-control" required></select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Kode MK</label>
+                  <input type="text" id="input-course-code" class="form-control" placeholder="MSIM4201" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Nama Mata Kuliah</label>
+                  <input type="text" id="input-course-name" class="form-control" placeholder="Nama Mata Kuliah" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Deskripsi Materi</label>
+                  <input type="text" id="input-course-desc" class="form-control" placeholder="Pokok bahasan...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="height: 42px;">
+                  + Tambah MK
+                </button>
+              </form>
+              <div id="admin-list-course" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
+            <!-- TAB 3: PAKET SOAL -->
+            <div id="admin-tab-set" class="admin-tab-pane" style="display: none;">
+              <form id="form-admin-set" style="display: grid; grid-template-columns: 1fr 1.2fr 130px 110px 1fr auto; gap: 0.75rem; align-items: end; background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Mata Kuliah</label>
+                  <select id="input-set-course" class="form-control" required></select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Judul Paket Soal</label>
+                  <input type="text" id="input-set-title" class="form-control" placeholder="Mis: Latihan Mandiri 02" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Kesulitan</label>
+                  <select id="input-set-diff" class="form-control">
+                    <option value="Mudah">Mudah</option>
+                    <option value="Menengah" selected>Menengah</option>
+                    <option value="Sulit">Sulit</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Durasi (Mnt)</label>
+                  <input type="number" id="input-set-duration" class="form-control" value="20" min="5" max="180" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Deskripsi Paket</label>
+                  <input type="text" id="input-set-desc" class="form-control" placeholder="Keterangan paket...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="height: 42px;">
+                  + Tambah Paket
+                </button>
+              </form>
+              <div id="admin-list-set" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
+            <!-- TAB 4: PENGERJAAN / BUTIR SOAL -->
+            <div id="admin-tab-question" class="admin-tab-pane" style="display: none;">
+              <form id="form-admin-question" style="background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Pilih Paket Soal untuk Pengerjaan</label>
+                    <select id="input-q-set" class="form-control" required></select>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Kunci Jawaban Benar</label>
+                    <select id="input-q-correct" class="form-control" required>
+                      <option value="A">Pilihan A</option>
+                      <option value="B" selected>Pilihan B</option>
+                      <option value="C">Pilihan C</option>
+                      <option value="D">Pilihan D</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                  <label class="form-label" style="font-size: 0.78rem;">Teks Pertanyaan Soal</label>
+                  <textarea id="input-q-text" class="form-control" rows="2" placeholder="Tuliskan pertanyaan pilihan ganda di sini..." required></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.76rem;">Pilihan Jawaban A</label>
+                    <input type="text" id="input-q-opta" class="form-control" placeholder="Teks opsi A" required>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.76rem;">Pilihan Jawaban B</label>
+                    <input type="text" id="input-q-optb" class="form-control" placeholder="Teks opsi B" required>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.76rem;">Pilihan Jawaban C</label>
+                    <input type="text" id="input-q-optc" class="form-control" placeholder="Teks opsi C" required>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.76rem;">Pilihan Jawaban D</label>
+                    <input type="text" id="input-q-optd" class="form-control" placeholder="Teks opsi D" required>
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.76rem;">Pembahasan Jawaban</label>
+                    <input type="text" id="input-q-explanation" class="form-control" placeholder="Penjelasan mengapa jawaban tersebut benar..." required>
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-sm" style="height: 42px;">
+                    + Simpan Butir Soal Pengerjaan
+                  </button>
+                </div>
+              </form>
+              <div id="admin-list-question" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Stepper Indikator Tahap -->
         <div class="latihan-stepper">
           <div class="step-item active" data-step="1">
@@ -276,14 +469,8 @@
       <!-- Footer Aplikasi -->
       <footer class="app-footer">
         <div class="footer-inner">
-          <div class="footer-links">
-            <a href="dashboard.html">Beranda</a>
-            <a href="latihan-soal.html">Latihan Soal</a>
-            <a href="utbelajar-ai.html">UTBelajar AI</a>
-            <a href="profile.html">Profil Saya</a>
-          </div>
-          <p class="footer-disclaimer">
-            UTBelajar merupakan platform belajar independen dan bukan situs resmi Universitas Terbuka.
+          <p class="footer-disclaimer" style="font-weight: 600; color: var(--text-secondary);">
+            Copyright HasanAF 2026
           </p>
         </div>
       </footer>
@@ -306,7 +493,12 @@
 
   <div id="toast-container"></div>
 
-  <script type="module" src="js/navigation.js"></script>
-  <script type="module" src="js/latihan.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/latihan.js"></script>
 </body>
 </html>

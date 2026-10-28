@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soal Modul — UTBelajar</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/latihan.css">
+  <link rel="stylesheet" href="css/modul.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Sidebar Kiri -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard.html" class="brand-link">
+          <img src="assets/icons/logo.svg" alt="UTBelajar" class="brand-logo-img">
+        </a>
+        <button class="sidebar-toggle-btn" title="Kecilkan/Perbesar Sidebar" aria-label="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigasi Utama</div>
+        <a href="dashboard.html" class="nav-item" data-tooltip="Beranda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span class="nav-text">Beranda</span>
+        </a>
+        <a href="soal-modul.html" class="nav-item active" data-tooltip="Soal Modul">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span class="nav-text">Soal Modul</span>
+        </a>
+        <a href="latihan-soal.html" class="nav-item" data-tooltip="Latihan Soal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="nav-text">Latihan Soal</span>
+        </a>
+        <a href="utbelajar-ai.html" class="nav-item" data-tooltip="UTBelajar AI">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
+          <span class="nav-text">UTBelajar AI</span>
+        </a>
+
+        <div class="nav-section-title">Akun &amp; Pengaturan</div>
+        <a href="profile.html" class="nav-item" data-tooltip="Profil Saya">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="nav-text">Profil Saya</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="profile.html" class="user-profile-btn" title="Buka Profil">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Memuat...</div>
+            <div class="user-role">Siswa</div>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Konten Utama Aplikasi -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-toggle" aria-label="Buka Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="page-title">Soal Modul &amp; Buku Digital</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="session-indicator">
+            <div class="session-dot"></div>
+            <span>Sesi Aktif</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <!-- ================================================================ -->
+        <!-- PANEL MANAJEMEN SOAL MODUL & FILE PDF (KHUSUS ADMIN)             -->
+        <!-- ================================================================ -->
+        <div id="admin-modul-manager" class="card" style="display: none; margin-bottom: 1.75rem; border: 1.5px solid rgba(65, 105, 245, 0.28); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--soft-blue); color: var(--primary-blue); padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800; margin-bottom: 0.35rem;">
+                <span>📚 MANAJEMEN SOAL MODUL &amp; PDF (KHUSUS ADMIN)</span>
+              </div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-navy);">
+                Kelola Program Studi, Mata Kuliah &amp; Buku PDF Soal Modul
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                Hanya Administrator yang dapat menambah, mengubah, atau menghapus Prodi, Mata Kuliah, dan File PDF Modul. Pengguna biasa hanya dapat membaca dan mengunduh.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm btn-modul-admin-tab" data-mtab="prodi">+ 1. Program Studi</button>
+              <button type="button" class="btn btn-primary btn-sm btn-modul-admin-tab" data-mtab="course">+ 2. Mata Kuliah</button>
+              <button type="button" class="btn btn-primary btn-sm btn-modul-admin-tab" data-mtab="modul">+ 3. Buku &amp; PDF Modul</button>
+              <button type="button" id="btn-toggle-modul-admin-body" class="btn btn-secondary btn-sm">Sembunyikan/Tampilkan</button>
+            </div>
+          </div>
+
+          <div id="admin-modul-manager-body">
+            <!-- Navigasi Tab Admin -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+              <button type="button" class="filter-btn active modul-admin-tab-btn" data-tab="prodi" style="padding: 0.5rem 1rem; font-weight: 700;">
+                1. Program Studi (<span id="madmin-count-prodi">0</span>)
+              </button>
+              <button type="button" class="filter-btn modul-admin-tab-btn" data-tab="course" style="padding: 0.5rem 1rem; font-weight: 700;">
+                2. Mata Kuliah (<span id="madmin-count-course">0</span>)
+              </button>
+              <button type="button" class="filter-btn modul-admin-tab-btn" data-tab="modul" style="padding: 0.5rem 1rem; font-weight: 700;">
+                3. Buku &amp; File PDF Modul (<span id="madmin-count-modul">0</span>)
+              </button>
+            </div>
+
+            <!-- TAB 1: KELOLA PRODI -->
+            <div id="madmin-tab-prodi" class="madmin-pane">
+              <form id="form-madmin-prodi" style="display: grid; grid-template-columns: 130px 1fr 1.4fr auto auto; gap: 0.75rem; align-items: end; background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <input type="hidden" id="m-prodi-edit-id" value="">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Kode Prodi</label>
+                  <input type="text" id="m-prodi-code" class="form-control" placeholder="Mis: SI" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Nama Program Studi</label>
+                  <input type="text" id="m-prodi-name" class="form-control" placeholder="Mis: Sistem Informasi" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Deskripsi</label>
+                  <input type="text" id="m-prodi-desc" class="form-control" placeholder="Deskripsi fokus studi...">
+                </div>
+                <button type="submit" id="btn-submit-m-prodi" class="btn btn-primary btn-sm" style="height: 42px;">+ Simpan Prodi</button>
+                <button type="button" id="btn-cancel-m-prodi" class="btn btn-secondary btn-sm" style="height: 42px; display: none;">Batal Edit</button>
+              </form>
+              <div id="madmin-list-prodi" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
+            <!-- TAB 2: KELOLA MATA KULIAH -->
+            <div id="madmin-tab-course" class="madmin-pane" style="display: none;">
+              <form id="form-madmin-course" style="display: grid; grid-template-columns: 1fr 130px 1.2fr 1.2fr auto auto; gap: 0.75rem; align-items: end; background: var(--bg); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <input type="hidden" id="m-course-edit-id" value="">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Program Studi</label>
+                  <select id="m-course-prodi" class="form-control" required></select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Kode MK</label>
+                  <input type="text" id="m-course-code" class="form-control" placeholder="MSIM4201" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Nama Mata Kuliah</label>
+                  <input type="text" id="m-course-name" class="form-control" placeholder="Nama Mata Kuliah" required>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Deskripsi</label>
+                  <input type="text" id="m-course-desc" class="form-control" placeholder="Deskripsi mata kuliah...">
+                </div>
+                <button type="submit" id="btn-submit-m-course" class="btn btn-primary btn-sm" style="height: 42px;">+ Simpan MK</button>
+                <button type="button" id="btn-cancel-m-course" class="btn btn-secondary btn-sm" style="height: 42px; display: none;">Batal Edit</button>
+              </form>
+              <div id="madmin-list-course" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
+            <!-- TAB 3: KELOLA BUKU & FILE PDF MODUL -->
+            <div id="madmin-tab-modul" class="madmin-pane" style="display: none;">
+              <form id="form-madmin-modul" style="background: var(--bg); padding: 1.15rem; border-radius: 12px; margin-bottom: 1rem;">
+                <input type="hidden" id="m-book-edit-id" value="">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 0.85rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Mata Kuliah</label>
+                    <select id="m-book-course" class="form-control" required></select>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Judul Buku / Soal Modul</label>
+                    <input type="text" id="m-book-title" class="form-control" placeholder="Mis: Modul 01 — Konsep & Soal Basis Data" required>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Kode / Edisi Modul</label>
+                    <input type="text" id="m-book-edition" class="form-control" placeholder="Mis: Edisi 2026 / Modul 1-3" value="Edisi 2026">
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.85rem; margin-bottom: 0.85rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Unggah File PDF dari Komputer (Opsional, Maks 8MB)</label>
+                    <input type="file" id="m-book-pdf-file" class="form-control" accept="application/pdf,.pdf" style="padding: 0.45rem 0.75rem;">
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Atau Link URL File PDF Eksternal (Opsional)</label>
+                    <input type="url" id="m-book-pdf-url" class="form-control" placeholder="https://contoh.com/modul-kuliah.pdf">
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kiri Buku (Ringkasan Materi &amp; Konsep)</label>
+                    <textarea id="m-book-left-content" class="form-control" rows="3" placeholder="Tuliskan ringkasan materi modul untuk halaman buku..." required></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem;">Isi Halaman Kanan Buku (Daftar Soal Modul &amp; Kunci)</label>
+                    <textarea id="m-book-right-content" class="form-control" rows="3" placeholder="Tuliskan soal-soal modul beserta pembahasan..." required></textarea>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                  <span style="font-size: 0.78rem; color: var(--text-secondary);">
+                    💡 Jika Anda tidak mengunggah file PDF eksternal, sistem otomatis membuatkan dokumen PDF resmi yang dapat dilihat tanpa diunduh &amp; dapat diunduh oleh siswa.
+                  </span>
+                  <div style="display: flex; gap: 0.6rem;">
+                    <button type="button" id="btn-cancel-m-book" class="btn btn-secondary btn-sm" style="display: none;">Batal Edit</button>
+                    <button type="submit" id="btn-submit-m-book" class="btn btn-primary btn-sm">+ Simpan Buku &amp; PDF Modul</button>
+                  </div>
+                </div>
+              </form>
+              <div id="madmin-list-modul" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- STEPPER 3 TAHAP SOAL MODUL                                       -->
+        <!-- ================================================================ -->
+        <div class="latihan-stepper">
+          <div class="step-item active" data-mstep="1" style="cursor: pointer;">
+            <div class="step-number">1</div>
+            <span>Pilih Program Studi</span>
+          </div>
+          <span class="step-separator">/</span>
+          <div class="step-item" data-mstep="2">
+            <div class="step-number">2</div>
+            <span>Pilih Mata Kuliah</span>
+          </div>
+          <span class="step-separator">/</span>
+          <div class="step-item" data-mstep="3">
+            <div class="step-number">3</div>
+            <span>Buku &amp; PDF Soal Modul</span>
+          </div>
+        </div>
+
+        <!-- TAHAP 1: PILIH PROGRAM STUDI -->
+        <div id="step-modul-prodi">
+          <div style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary-navy); margin-bottom: 0.35rem;">
+              Pilih Program Studi
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+              Pilih program studi untuk membuka katalog mata kuliah dan buku PDF Soal Modul.
+            </p>
+          </div>
+          <div id="modul-prodi-grid" class="selection-grid"></div>
+        </div>
+
+        <!-- TAHAP 2: PILIH MATA KULIAH -->
+        <div id="step-modul-course" style="display: none;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <button type="button" id="btn-modul-back-prodi" class="btn btn-secondary btn-sm" style="margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                <span>Ganti Program Studi</span>
+              </button>
+              <h2 id="modul-course-heading" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-navy);">
+                Pilih Mata Kuliah
+              </h2>
+            </div>
+          </div>
+          <div id="modul-course-grid" class="selection-grid"></div>
+        </div>
+
+        <!-- TAHAP 3: HALAMAN BUKU & PENAMPIL PDF TANPA UNDUH + TOMBOL UNDUH -->
+        <div id="step-modul-reader" style="display: none;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <button type="button" id="btn-modul-back-course" class="btn btn-secondary btn-sm" style="margin-bottom: 0.45rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                <span>Kembali ke Daftar Mata Kuliah</span>
+              </button>
+              <h2 id="modul-reader-course-title" style="font-size: 1.4rem; font-weight: 800; color: var(--primary-navy);">
+                Buku &amp; Soal Modul
+              </h2>
+            </div>
+          </div>
+
+          <!-- Rak Pilihan Modul pada Mata Kuliah -->
+          <div class="modul-shelf-bar">
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.4rem;">
+                Daftar Buku / Soal Modul Tersedia:
+              </div>
+              <div id="modul-pills-container" class="modul-tabs-list"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+              <button type="button" id="btn-download-modul-pdf" class="btn btn-primary btn-sm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Unduh File PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Header Toolbar Buku -->
+          <div class="book-reader-toolbar">
+            <div class="book-toolbar-left">
+              <span id="reader-badge-edition" class="book-badge-code">MODUL PDF</span>
+              <span id="reader-active-title" class="book-toolbar-title">Judul Modul</span>
+            </div>
+            <div class="book-toolbar-right">
+              <div class="reader-mode-switch">
+                <button type="button" id="btn-mode-book" class="reader-mode-btn active">
+                  📖 Mode Buku Terbuka
+                </button>
+                <button type="button" id="btn-mode-pdf" class="reader-mode-btn">
+                  📄 Lihat PDF Langsung (Tanpa Unduh)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panggung Utama Buku & PDF -->
+          <div class="book-stage-wrapper">
+            <!-- 1. Tampilan Buku 2 Halaman Terbuka -->
+            <div id="view-open-book">
+              <div class="open-book-frame">
+                <div class="open-book-spread">
+                  <!-- Halaman Kiri -->
+                  <div class="book-page page-left">
+                    <div>
+                      <div class="book-page-header">
+                        <span id="book-left-header-code">MODUL KULIAH</span>
+                        <span>RINGKASAN MATERI &amp; KONSEP</span>
+                      </div>
+                      <div id="book-left-body" class="book-page-content"></div>
+                    </div>
+                    <div class="book-page-footer">
+                      <span>UTBelajar Digital Book</span>
+                      <span id="book-left-page-num">Hal. 1</span>
+                    </div>
+                  </div>
+
+                  <!-- Halaman Kanan -->
+                  <div class="book-page page-right">
+                    <div>
+                      <div class="book-page-header">
+                        <span>LATIHAN &amp; SOAL MODUL</span>
+                        <span id="book-right-header-edition">EDISI 2026</span>
+                      </div>
+                      <div id="book-right-body" class="book-page-content"></div>
+                    </div>
+                    <div class="book-page-footer">
+                      <span id="book-right-page-num">Hal. 2</span>
+                      <span>Baca Tanpa Unduh / Tersedia PDF</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigasi Lembar Halaman Buku -->
+              <div class="book-pagination-bar">
+                <button type="button" id="btn-book-prev-spread" class="btn btn-secondary btn-sm">
+                  ◀ Lembar Sebelumnya
+                </button>
+                <span id="book-spread-indicator" class="book-page-indicator">
+                  Lembar 1 dari 2 (Halaman 1–2)
+                </span>
+                <button type="button" id="btn-book-next-spread" class="btn btn-secondary btn-sm">
+                  Lembar Berikutnya ▶
+                </button>
+                <button type="button" id="btn-book-switch-pdf" class="btn btn-soft btn-sm">
+                  📄 Buka Tampilan PDF Asli
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Tampilan Penampil PDF Langsung di Browser (Tanpa Unduh) -->
+            <div id="view-direct-pdf" style="display: none;">
+              <div class="pdf-direct-container">
+                <iframe id="pdf-inline-iframe" class="pdf-embed-frame" title="Penampil PDF Soal Modul"></iframe>
+              </div>
+              <div style="text-align: center; margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="button" id="btn-back-to-book-mode" class="btn btn-secondary btn-sm">
+                  📖 Kembali ke Mode Buku 2 Halaman
+                </button>
+                <button type="button" id="btn-download-modul-pdf-bottom" class="btn btn-primary btn-sm">
+                  📥 Unduh File PDF Ini
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer Aplikasi -->
+      <footer class="app-footer">
+        <div class="footer-inner">
+          <p class="footer-disclaimer" style="font-weight: 600; color: var(--text-secondary);">
+            Copyright HasanAF 2026
+          </p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/modul.js"></script>
+</body>
+</html>

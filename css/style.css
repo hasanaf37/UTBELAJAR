@@ -159,27 +159,41 @@ button, input, select, textarea {
   color: var(--primary-blue);
 }
 
+.app-sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0;
+}
+
+.app-sidebar.collapsed .brand-link,
 .app-sidebar.collapsed .brand-text {
   display: none;
 }
 
 .sidebar-toggle-btn {
-  background: transparent;
-  border: none;
-  width: 32px;
-  height: 32px;
+  background: var(--soft-blue);
+  border: 1px solid rgba(65, 105, 245, 0.16);
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
+  color: var(--primary-navy);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.sidebar-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .sidebar-toggle-btn:hover {
-  background: var(--soft-blue);
-  color: var(--primary-blue);
+  background: var(--primary-blue);
+  color: #FFFFFF;
+  border-color: var(--primary-blue);
 }
 
 .app-sidebar.collapsed .sidebar-toggle-btn {
@@ -189,11 +203,11 @@ button, input, select, textarea {
 /* Navigasi Sidebar */
 .sidebar-nav {
   flex: 1;
-  padding: 1.25rem 0.85rem;
+  padding: 1.25rem 0.85rem 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .nav-section-title {
@@ -202,13 +216,23 @@ button, input, select, textarea {
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem 0.25rem;
   margin-top: 0.5rem;
   white-space: nowrap;
 }
 
+/* Dorong bagian Akun & Pengaturan (Profil Saya) mepet ke bawah tepat di atas profil pengguna */
+.sidebar-nav .nav-section-title:not(:first-child) {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
 .app-sidebar.collapsed .nav-section-title {
   display: none;
+}
+
+.app-sidebar.collapsed .sidebar-nav .nav-item[href="profile.html"] {
+  margin-top: auto;
 }
 
 .nav-item {
@@ -262,6 +286,36 @@ button, input, select, textarea {
 
 .app-sidebar.collapsed .nav-text {
   display: none;
+}
+
+/* Popup Tooltip Putih pada Navigasi (Hanya Muncul Saat Sidebar Ditutup) */
+.app-sidebar.collapsed .nav-item[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  background: #FFFFFF;
+  color: var(--primary-navy);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-left: 3.5px solid var(--primary-blue);
+  box-shadow: 0 10px 25px rgba(23, 37, 84, 0.14), 0 2px 6px rgba(23, 37, 84, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 999;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+}
+
+.app-sidebar.collapsed .nav-item[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* Sidebar Footer / User Profile */
@@ -338,6 +392,11 @@ button, input, select, textarea {
 
 .app-sidebar.collapsed .user-info {
   display: none;
+}
+
+.app-sidebar.collapsed .user-profile-btn {
+  justify-content: center;
+  padding: 0.4rem 0;
 }
 
 /* Area Konten Utama */
@@ -786,12 +845,20 @@ button, input, select, textarea {
 }
 
 /* ==============================================================================
-   RESPONSIVE DESIGN (TABLET & MOBILE)
+   RESPONSIVE DESIGN (TABLET & MOBILE / HP)
    ============================================================================== */
 
 @media (max-width: 1024px) {
   .page-content {
-    padding: 1.5rem;
+    padding: 1.35rem;
+  }
+
+  #form-admin-prodi,
+  #form-admin-course,
+  #form-admin-set,
+  #form-madmin-prodi,
+  #form-madmin-course {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
@@ -803,23 +870,115 @@ button, input, select, textarea {
 
   .app-sidebar.mobile-open {
     transform: translateX(0);
-    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.2);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Pastikan saat drawer mobile dibuka, semua teks & logo tampil penuh walaupun pernah di-collapse di desktop */
+  .app-sidebar.collapsed .sidebar-header {
+    justify-content: space-between !important;
+    padding: 0 1.25rem !important;
+  }
+
+  .app-sidebar.collapsed .brand-link {
+    display: flex !important;
+  }
+
+  .app-sidebar.collapsed .sidebar-toggle-btn {
+    margin: 0 !important;
+  }
+
+  .app-sidebar.collapsed .nav-section-title {
+    display: block !important;
+  }
+
+  .app-sidebar.collapsed .nav-item {
+    justify-content: flex-start !important;
+    padding: 0.75rem 0.95rem !important;
+  }
+
+  .app-sidebar.collapsed .nav-text {
+    display: inline !important;
+  }
+
+  .app-sidebar.collapsed .nav-item[data-tooltip]::after {
+    display: none !important;
+  }
+
+  .app-sidebar.collapsed .user-info {
+    display: block !important;
+  }
+
+  .app-sidebar.collapsed .user-profile-btn {
+    justify-content: flex-start !important;
+    padding: 0.6rem !important;
   }
 
   .app-main {
     margin-left: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .mobile-menu-toggle {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: var(--soft-blue);
+    color: var(--primary-navy);
+    border: 1px solid rgba(65, 105, 245, 0.16);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
   }
 
   .app-topbar {
     padding: 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .page-title {
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 210px;
+  }
+
+  .session-indicator {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.72rem;
   }
 
   .page-content {
-    padding: 1rem;
+    padding: 1rem !important;
+  }
+
+  .card {
+    padding: 1.15rem;
+  }
+
+  /* Form Admin otomatis 1 kolom di HP */
+  #form-admin-prodi,
+  #form-admin-course,
+  #form-admin-set,
+  #form-madmin-prodi,
+  #form-madmin-course,
+  #form-admin-question > div,
+  #form-madmin-modul > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  #admin-user-search,
+  #admin-user-status-filter {
+    width: 100% !important;
+  }
+
+  .modal-dialog {
+    width: calc(100% - 1.5rem);
+    padding: 1.35rem;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .footer-inner {
@@ -836,6 +995,21 @@ button, input, select, textarea {
   .toast {
     min-width: unset;
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    max-width: 150px;
+    font-size: 0.95rem;
+  }
+
+  .session-indicator span {
+    display: none;
+  }
+
+  .btn {
+    font-size: 0.84rem;
   }
 }
 
