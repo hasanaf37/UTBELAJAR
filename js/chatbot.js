@@ -9,6 +9,7 @@
   let currentUser = null;
   let activeConversationId = null;
   let isSending = false;
+  let chatHistory = [];
 
   function getAiConfig() {
     try {
@@ -39,6 +40,14 @@
     // Pasang event listener input & tombol Enter seketika agar tidak pernah tertunda
     setupChatInput();
     setupPromptChips();
+
+    // 1. Sinkronkan konfigurasi AI dari Supabase terlebih dahulu agar siswa & seluruh perangkat langsung terhubung ke OpenRouter
+    if (typeof window.dbGetAiConfig === "function") {
+      try {
+        await window.dbGetAiConfig();
+      } catch (_) {}
+    }
+
     updateAiHeaderStatus();
 
     currentUser = await window.requireAuth();
@@ -157,8 +166,11 @@
       }
     });
 
-    document.getElementById("admin-ai-config-form")?.addEventListener("submit", (e) => {
+    document.getElementById("admin-ai-config-form")?.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Cloud...");
+
       const newCfg = {
         provider: provEl?.value || "gemini",
         model: modelEl?.value.trim() || "gemini-2.0-flash",
@@ -167,16 +179,33 @@
         systemPrompt: sysEl?.value.trim() || DEFAULT_SYSTEM_PROMPT,
         updatedAt: new Date().toISOString(),
       };
-      localStorage.setItem("utb_ai_config", JSON.stringify(newCfg));
+
+      if (typeof window.dbSaveAiConfig === "function") {
+        await window.dbSaveAiConfig(newCfg);
+      } else {
+        localStorage.setItem("utb_ai_config", JSON.stringify(newCfg));
+      }
+
+      window.setButtonLoading(submitBtn, false);
       if (savedInfoEl) {
-        savedInfoEl.textContent = `Terakhir disimpan: ${window.formatDateTime(newCfg.updatedAt)}`;
+        savedInfoEl.textContent = `Tersimpan & tersinkronisasi ke seluruh siswa: ${window.formatDateTime(newCfg.updatedAt)}`;
       }
       updateAiHeaderStatus();
-      window.showToast("Konfigurasi API Key AI Chatbot berhasil disimpan!", "success");
+      window.showToast("Konfigurasi OpenRouter AI berhasil disimpan & langsung aktif untuk seluruh siswa!", "success");
     });
 
-    document.getElementById("btn-reset-ai-config")?.addEventListener("click", () => {
+    document.getElementById("btn-reset-ai-config")?.addEventListener("click", async () => {
       localStorage.removeItem("utb_ai_config");
+      if (typeof window.dbSaveAiConfig === "function") {
+        await window.dbSaveAiConfig({
+          provider: "gemini",
+          model: "gemini-2.0-flash",
+          apiKey: "",
+          customEndpoint: "",
+          systemPrompt: DEFAULT_SYSTEM_PROMPT,
+          updatedAt: new Date().toISOString(),
+        });
+      }
       if (keyEl) keyEl.value = "";
       if (endpointEl) endpointEl.value = "";
       updateAiHeaderStatus();
@@ -213,7 +242,18 @@
   }
 
   async function requestAiReply(userMessage, customCfg) {
-    const cfg = customCfg || getAiConfig();
+    let cfg = customCfg || getAiConfig();
+
+    // Jika API Key belum tersedia di local (misal siswa di perangkat/HP lain), coba sinkronkan dari Supabase
+    if (!cfg.apiKey && typeof window.dbGetAiConfig === "function") {
+      try {
+        const remoteCfg = await window.dbGetAiConfig();
+        if (remoteCfg && remoteCfg.apiKey) {
+          cfg = remoteCfg;
+          updateAiHeaderStatus();
+        }
+      } catch (_) {}
+    }
 
     // 1. Google Gemini REST API
     if (cfg.provider === "gemini" && cfg.apiKey) {
@@ -225,11 +265,11 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: cfg.systemPrompt }] },
+          systemInstruction: { parts: [{ text: cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT }] },
           contents: [{ role: "user", parts: [{ text: userMessage }] }],
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error?.message || `Error Gemini HTTP ${res.status}`);
       }
@@ -252,7 +292,7 @@
           : "https://api.openai.com/v1/chat/completions";
 
       if (!endpoint) {
-        throw new Error("Endpoint URL untuk Custom Layanan AI belum diisi.");
+        throw new Error("Endpoint URL untuk Layanan AI belum diisi.");
       }
 
       const defaultModel =
@@ -266,11 +306,25 @@
         "Content-Type": "application/json",
       };
       if (cfg.apiKey) {
-        headers.Authorization = `Bearer ${cfg.apiKey}`;
+        headers.Authorization = `Bearer ${cfg.apiKey.trim()}`;
       }
       if (cfg.provider === "openrouter") {
-        headers["HTTP-Referer"] = window.location.origin && window.location.origin !== "null" ? window.location.origin : "https://utbelajar.local";
+        headers["HTTP-Referer"] = "https://utbelajar.local";
         headers["X-Title"] = "UTBelajar AI";
+      }
+
+      // Susun riwayat percakapan (system prompt + konteks obrolan sebelumnya + pertanyaan pengguna saat ini)
+      const messages = [];
+      if (cfg.systemPrompt && cfg.systemPrompt.trim()) {
+        messages.push({ role: "system", content: cfg.systemPrompt.trim() });
+      }
+
+      const prev = chatHistory.slice(-6);
+      for (const m of prev) {
+        messages.push({ role: m.role, content: m.content });
+      }
+      if (messages.length === 0 || messages[messages.length - 1].content !== userMessage) {
+        messages.push({ role: "user", content: userMessage });
       }
 
       const res = await fetch(endpoint, {
@@ -278,23 +332,37 @@
         headers,
         body: JSON.stringify({
           model: cfg.model || defaultModel,
-          messages: [
-            { role: "system", content: cfg.systemPrompt },
-            { role: "user", content: userMessage },
-          ],
+          messages: messages,
         }),
       });
-      const data = await res.json();
+
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data?.error?.message || `Error HTTP ${res.status}`);
+        const errMsg =
+          data?.error?.message ||
+          (typeof data?.error === "string" ? data.error : `Error HTTP ${res.status}`);
+        throw new Error(errMsg);
       }
-      return (
-        data?.choices?.[0]?.message?.content ||
-        data?.reply ||
-        data?.response ||
-        data?.output ||
-        "Tidak ada respons dari layanan AI."
-      );
+      if (data?.error) {
+        throw new Error(data.error.message || JSON.stringify(data.error));
+      }
+
+      let rawReply =
+        data?.choices?.[0]?.message?.content ??
+        data?.reply ??
+        data?.response ??
+        data?.output ??
+        "";
+
+      if (Array.isArray(rawReply)) {
+        rawReply = rawReply
+          .map((item) => (typeof item === "string" ? item : item?.text || ""))
+          .join("\n");
+      } else if (typeof rawReply === "object") {
+        rawReply = JSON.stringify(rawReply, null, 2);
+      }
+
+      return rawReply || "Tidak ada respons teks dari agen AI OpenRouter.";
     }
 
     // 3. Supabase Edge Function
@@ -398,6 +466,7 @@
 
     newChatBtn?.addEventListener("click", () => {
       activeConversationId = null;
+      chatHistory = [];
       if (container) container.innerHTML = "";
       updateScrollButtonVisibility();
     });
@@ -434,11 +503,14 @@
 
     try {
       const reply = await requestAiReply(message);
+      chatHistory.push({ role: "user", content: message });
+      chatHistory.push({ role: "assistant", content: reply });
       appendMessageBubble("assistant", reply);
     } catch (err) {
+      const currentProv = (getAiConfig().provider || "AI").toUpperCase();
       appendMessageBubble(
         "assistant",
-        `**Gagal Menghubungi API AI**\n\nDetail: \`${err.message || "Error tidak diketahui"}\`\n\nSilakan periksa kembali konfigurasi API Key pada panel Administrator.`
+        `**Gagal Menghubungi Agen AI (${currentProv})**\n\nDetail: \`${err.message || "Error tidak diketahui"}\`\n\nSilakan periksa API Key, kuota token, atau model agent pada panel Administrator.`
       );
     } finally {
       isSending = false;

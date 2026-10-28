@@ -175,6 +175,7 @@
       // Masukkan akun admin dari tabel admins
       if (Array.isArray(supaAdmins) && supaAdmins.length > 0) {
         supaAdmins.forEach((a) => {
+          if (a.username === "__system_ai_config__" || a.role === "system") return;
           merged.push({
             id: a.id,
             full_name: a.username || a.full_name || "admin",
@@ -597,5 +598,83 @@
         console.warn("Gagal hapus prodi di Supabase:", err.message);
       }
     }
+  };
+
+  // 7. Simpan Konfigurasi AI (OpenRouter / Gemini / OpenAI) ke Supabase agar siswa & seluruh perangkat bisa terhubung
+  window.dbSaveAiConfig = async function (config) {
+    if (!config) return;
+    try {
+      localStorage.setItem("utb_ai_config", JSON.stringify(config));
+
+      if (window.supabaseClient && window.isSupabaseConfigured()) {
+        const configStr = JSON.stringify(config);
+        const { data } = await window.supabaseClient
+          .from("admins")
+          .select("id")
+          .eq("username", "__system_ai_config__")
+          .limit(1);
+
+        if (data && data.length > 0) {
+          await window.supabaseClient
+            .from("admins")
+            .update({
+              full_name: configStr,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("username", "__system_ai_config__");
+        } else {
+          await window.supabaseClient.from("admins").insert({
+            id: "a0000000-0000-0000-0000-000000000099",
+            username: "__system_ai_config__",
+            full_name: configStr,
+            password: "ai_config_data",
+            role: "system",
+            status: "Aktif",
+            is_super_admin: false,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Gagal menyimpan konfigurasi AI ke Supabase:", err.message);
+    }
+  };
+
+  // 8. Ambil Konfigurasi AI dari Supabase (Memastikan siswa di HP/tablet terhubung ke agent OpenRouter yang sama)
+  window.dbGetAiConfig = async function () {
+    let localCfg = null;
+    try {
+      const raw = localStorage.getItem("utb_ai_config");
+      if (raw) localCfg = JSON.parse(raw);
+    } catch (_) {}
+
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from("admins")
+          .select("full_name")
+          .eq("username", "__system_ai_config__")
+          .limit(1);
+
+        if (!error && data && data.length > 0 && data[0].full_name) {
+          try {
+            const remoteCfg = JSON.parse(data[0].full_name);
+            if (remoteCfg && typeof remoteCfg === "object") {
+              if (remoteCfg.apiKey || remoteCfg.provider === "custom" || remoteCfg.provider === "openrouter") {
+                localStorage.setItem("utb_ai_config", JSON.stringify(remoteCfg));
+                return remoteCfg;
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (localCfg && localCfg.apiKey) {
+          window.dbSaveAiConfig(localCfg);
+        }
+      } catch (e) {
+        console.warn("Gagal mengambil konfigurasi AI dari Supabase:", e.message);
+      }
+    }
+
+    return localCfg;
   };
 })();
