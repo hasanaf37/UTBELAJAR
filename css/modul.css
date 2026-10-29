@@ -194,7 +194,7 @@
   box-shadow: 0 0 10px #38BDF8, 0 0 16px rgba(56, 189, 248, 0.9);
 }
 
-/* Badge angka persentase dibuat transparan & soft agar tidak mengganggu fokus membaca */
+/* Badge angka persentase dibuat transparan & soft, hilang otomatis jika tidak ada scroll */
 .comic-progress-badge {
   position: absolute;
   right: 12px;
@@ -208,12 +208,15 @@
   border-radius: 5px;
   border: 1px solid rgba(56, 189, 248, 0.18);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  opacity: 0.55;
+  opacity: 0;
   pointer-events: none;
   white-space: nowrap;
   user-select: none;
-  display: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
+}
+
+.comic-progress-badge.visible {
+  opacity: 0.55;
 }
 
 /* ==============================================================================

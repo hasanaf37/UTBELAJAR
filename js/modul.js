@@ -278,8 +278,11 @@
     if (s3) s3.style.display = stepNum === 3 ? "block" : "none";
 
     const trackEl = document.querySelector(".comic-progress-track");
+    const badgeEl = document.getElementById("comic-progress-badge");
     if (trackEl && stepNum !== 3) {
       trackEl.style.opacity = "0";
+      if (badgeEl) badgeEl.classList.remove("visible");
+      if (badgeHideTimer) clearTimeout(badgeHideTimer);
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -580,6 +583,8 @@
   // ============================================================================
   // PROGRESS BAR SCROLL PEMBACA KOMIK (VERTIKAL DI KANAN KE BAWAH)
   // ============================================================================
+  let badgeHideTimer = null;
+
   function updateComicScrollProgress() {
     const fillEl = document.getElementById("comic-progress-fill");
     const trackEl = document.querySelector(".comic-progress-track");
@@ -591,6 +596,8 @@
     const readerStep = document.getElementById("step-modul-reader");
     if (readerStep && readerStep.style.display === "none") {
       if (trackEl) trackEl.style.opacity = "0";
+      if (badgeEl) badgeEl.classList.remove("visible");
+      if (badgeHideTimer) clearTimeout(badgeHideTimer);
       return;
     }
 
@@ -624,7 +631,19 @@
     if (badgeEl) {
       badgeEl.textContent = `${pct}%`;
       badgeEl.style.top = `clamp(14px, calc(${pct}vh - 12px), calc(100vh - 34px))`;
-      badgeEl.style.display = inView && pct > 0 ? "block" : "none";
+
+      if (inView && pct > 0) {
+        // Tampilkan saat ada gerakan scroll
+        badgeEl.classList.add("visible");
+        if (badgeHideTimer) clearTimeout(badgeHideTimer);
+        // Otomatis hilang setelah 0.5 detik (500 ms) jika tidak ada gerakan scroll
+        badgeHideTimer = setTimeout(() => {
+          badgeEl.classList.remove("visible");
+        }, 500);
+      } else {
+        badgeEl.classList.remove("visible");
+        if (badgeHideTimer) clearTimeout(badgeHideTimer);
+      }
     }
   }
 
