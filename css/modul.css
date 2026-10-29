@@ -194,22 +194,26 @@
   box-shadow: 0 0 10px #38BDF8, 0 0 16px rgba(56, 189, 248, 0.9);
 }
 
+/* Badge angka persentase dibuat transparan & soft agar tidak mengganggu fokus membaca */
 .comic-progress-badge {
   position: absolute;
-  bottom: -11px;
   right: 12px;
-  background: rgba(15, 23, 42, 0.92);
-  color: #38BDF8;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.15rem 0.45rem;
-  border-radius: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: rgba(224, 242, 254, 0.65);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.12rem 0.38rem;
+  border-radius: 5px;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  opacity: 0.55;
   pointer-events: none;
   white-space: nowrap;
   user-select: none;
   display: none;
+  transition: opacity 0.2s ease;
 }
 
 /* ==============================================================================

@@ -596,20 +596,34 @@
 
     const rect = wrapperEl.getBoundingClientRect();
     const viewH = window.innerHeight || document.documentElement.clientHeight;
+    const docScrollH = document.documentElement.scrollHeight || document.body.scrollHeight;
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
 
-    // Tampilkan progress bar saat container komik berada dalam layar
-    const inView = rect.bottom > 80 && rect.top < viewH - 80;
+    // Deteksi mentok ke bawah (ujung akhir modul atau sudah mencapai footer)
+    const isAtPageBottom = (viewH + scrollY) >= (docScrollH - 20);
+    const isReaderBottomReached = rect.bottom <= (viewH + 40);
+
+    // Tampilkan progress bar saat modul sedang dibaca atau saat mentok di footer
+    const inView = rect.top < viewH && (rect.bottom > 20 || isAtPageBottom);
     if (trackEl) {
       trackEl.style.opacity = inView ? "1" : "0";
     }
 
-    const totalScrollable = Math.max(1, rect.height - viewH * 0.5);
-    const scrolled = Math.max(0, -rect.top + viewH * 0.2);
-    const pct = Math.min(100, Math.max(0, Math.round((scrolled / totalScrollable) * 100)));
+    // Kalkulasi persentase pembacaan modul
+    let pct = 0;
+    if (isAtPageBottom || isReaderBottomReached) {
+      // Pastikan selalu 100% saat mentok ke bawah meskipun ada elemen footer
+      pct = 100;
+    } else {
+      const maxScrollable = Math.max(1, rect.height - viewH);
+      const scrolled = Math.max(0, -rect.top);
+      pct = Math.min(100, Math.max(0, Math.round((scrolled / maxScrollable) * 100)));
+    }
 
     fillEl.style.height = `${pct}%`;
     if (badgeEl) {
       badgeEl.textContent = `${pct}%`;
+      badgeEl.style.top = `clamp(14px, calc(${pct}vh - 12px), calc(100vh - 34px))`;
       badgeEl.style.display = inView && pct > 0 ? "block" : "none";
     }
   }
