@@ -277,7 +277,15 @@
     if (s2) s2.style.display = stepNum === 2 ? "block" : "none";
     if (s3) s3.style.display = stepNum === 3 ? "block" : "none";
 
+    const trackEl = document.querySelector(".comic-progress-track");
+    if (trackEl && stepNum !== 3) {
+      trackEl.style.opacity = "0";
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (stepNum === 3) {
+      setTimeout(updateComicScrollProgress, 100);
+    }
   }
 
   // TAHAP 1: PILIH PROGRAM STUDI
@@ -566,25 +574,48 @@
     document.querySelectorAll(".comic-page-frame").forEach((frame) => {
       frame.style.maxWidth = `${targetWidth}px`;
     });
+    updateComicScrollProgress();
   }
 
   // ============================================================================
-  // PROGRESS BAR SCROLL PEMBACA KOMIK
+  // PROGRESS BAR SCROLL PEMBACA KOMIK (VERTIKAL DI KANAN KE BAWAH)
   // ============================================================================
   function updateComicScrollProgress() {
     const fillEl = document.getElementById("comic-progress-fill");
+    const trackEl = document.querySelector(".comic-progress-track");
+    const badgeEl = document.getElementById("comic-progress-badge");
     const wrapperEl = document.getElementById("comic-reader-wrapper");
     if (!fillEl || !wrapperEl) return;
 
+    // Pastikan tahap baca modul sedang aktif
+    const readerStep = document.getElementById("step-modul-reader");
+    if (readerStep && readerStep.style.display === "none") {
+      if (trackEl) trackEl.style.opacity = "0";
+      return;
+    }
+
     const rect = wrapperEl.getBoundingClientRect();
     const viewH = window.innerHeight || document.documentElement.clientHeight;
+
+    // Tampilkan progress bar saat container komik berada dalam layar
+    const inView = rect.bottom > 80 && rect.top < viewH - 80;
+    if (trackEl) {
+      trackEl.style.opacity = inView ? "1" : "0";
+    }
+
     const totalScrollable = Math.max(1, rect.height - viewH * 0.5);
-    const scrolled = Math.max(0, -rect.top + viewH * 0.35);
-    const pct = Math.min(100, Math.max(12, Math.round((scrolled / totalScrollable) * 100)));
-    fillEl.style.width = `${pct}%`;
+    const scrolled = Math.max(0, -rect.top + viewH * 0.2);
+    const pct = Math.min(100, Math.max(0, Math.round((scrolled / totalScrollable) * 100)));
+
+    fillEl.style.height = `${pct}%`;
+    if (badgeEl) {
+      badgeEl.textContent = `${pct}%`;
+      badgeEl.style.display = inView && pct > 0 ? "block" : "none";
+    }
   }
 
   window.addEventListener("scroll", updateComicScrollProgress, { passive: true });
+  window.addEventListener("resize", updateComicScrollProgress, { passive: true });
 
   // ============================================================================
   // UNDUH FILE PDF ASLI
