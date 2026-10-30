@@ -455,8 +455,26 @@
     if (titleEl) titleEl.textContent = modul.title;
     if (zoomText) zoomText.textContent = "100%";
 
+    // Perbarui visibilitas tombol aksi admin pada bar pembaca modul
+    updateAdminReaderActions();
+
     await renderComicVerticalPages(modul);
     updateComicScrollProgress();
+  }
+
+  function updateAdminReaderActions() {
+    const uploadBtn = document.getElementById("btn-admin-reader-upload");
+    const deleteBtn = document.getElementById("btn-admin-reader-delete");
+
+    if (uploadBtn) {
+      uploadBtn.style.display = isAdmin ? "inline-flex" : "none";
+    }
+
+    if (deleteBtn) {
+      // Tombol hapus hanya muncul untuk admin jika modul aktif adalah modul valid (bukan placeholder kosong)
+      const isValidModul = activeModul && !String(activeModul.id || "").startsWith("mod-empty-");
+      deleteBtn.style.display = isAdmin && isValidModul ? "inline-flex" : "none";
+    }
   }
 
   async function renderComicVerticalPages(modul) {
@@ -752,6 +770,149 @@
     // Tombol Unduh PDF
     document.getElementById("btn-download-modul-pdf")?.addEventListener("click", downloadActivePdf);
     document.getElementById("btn-download-modul-pdf-bottom")?.addEventListener("click", downloadActivePdf);
+
+    // Tombol Admin Quick Upload & Hapus Langsung di Layar Baca
+    setupAdminReaderControls();
+  }
+
+  function setupAdminReaderControls() {
+    const uploadBtn = document.getElementById("btn-admin-reader-upload");
+    const deleteBtn = document.getElementById("btn-admin-reader-delete");
+    const modalUpload = "modal-admin-quick-upload-modul";
+    const formUpload = document.getElementById("form-quick-upload-modul");
+
+    uploadBtn?.addEventListener("click", () => {
+      if (!selectedCourse) {
+        window.showToast("Mata kuliah belum dipilih.", "warning");
+        return;
+      }
+      const courseNameInput = document.getElementById("quick-upload-course-name");
+      const courseIdInput = document.getElementById("quick-upload-course-id");
+      const titleInput = document.getElementById("quick-upload-title");
+      const editionInput = document.getElementById("quick-upload-edition");
+      const fileInput = document.getElementById("quick-upload-file");
+      const urlInput = document.getElementById("quick-upload-url");
+
+      if (courseNameInput) courseNameInput.value = `${selectedCourse.code} - ${selectedCourse.name}`;
+      if (courseIdInput) courseIdInput.value = selectedCourse.id;
+
+      // Hitung urutan modul berikutnya secara otomatis
+      const existingModuls = getModuls().filter((m) => m.course_id === selectedCourse.id);
+      const nextNum = existingModuls.length + 1;
+      const numStr = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
+
+      if (titleInput) titleInput.value = `Modul ${numStr}: ${selectedCourse.name}`;
+      if (editionInput) editionInput.value = `Modul ${numStr}`;
+      if (fileInput) fileInput.value = "";
+      if (urlInput) urlInput.value = "";
+
+      window.openModal(modalUpload);
+    });
+
+    document.getElementById("btn-close-quick-upload-modal-x")?.addEventListener("click", () => {
+      window.closeModal(modalUpload);
+    });
+
+    document.getElementById("btn-cancel-quick-upload")?.addEventListener("click", () => {
+      window.closeModal(modalUpload);
+    });
+
+    formUpload?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const course_id = document.getElementById("quick-upload-course-id")?.value;
+      const title = document.getElementById("quick-upload-title")?.value.trim();
+      const edition = document.getElementById("quick-upload-edition")?.value.trim() || "Modul 01";
+      const fileInput = document.getElementById("quick-upload-file");
+      const pdf_external_url = document.getElementById("quick-upload-url")?.value.trim() || "";
+      const submitBtn = document.getElementById("btn-submit-quick-upload");
+
+      const files = fileInput?.files || [];
+      if (!course_id || !title) return;
+      if (files.length === 0 && !pdf_external_url) {
+        window.showToast("Silakan pilih file PDF/gambar atau isi tautan PDF.", "warning");
+        return;
+      }
+
+      window.setButtonLoading(submitBtn, true, "Mengunggah & Memproses PDF...");
+
+      try {
+        const newId = "mod-" + Date.now();
+        let idbKey = null;
+        let uploadedImages = [];
+
+        if (files.length > 0) {
+          const firstFile = files[0];
+          if (firstFile.type === "application/pdf" || firstFile.name.toLowerCase().endsWith(".pdf")) {
+            idbKey = "modul_pdf_" + newId;
+            await saveFileToIdb(idbKey, firstFile);
+          } else {
+            for (let i = 0; i < files.length; i++) {
+              const dataUrl = await new Promise((res) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.readAsDataURL(files[i]);
+              });
+              uploadedImages.push(dataUrl);
+            }
+          }
+        }
+
+        const newModulObj = {
+          id: newId,
+          course_id,
+          title,
+          edition,
+          pdf_external_url,
+          idb_key: idbKey,
+          images: uploadedImages,
+        };
+
+        const list = getModuls();
+        list.push(newModulObj);
+        localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
+
+        window.closeModal(modalUpload);
+        window.showToast(`File PDF "${title}" berhasil diunggah!`, "success");
+
+        // Perbarui daftar dan langsung buka modul baru yang diunggah
+        renderAdminModulLists();
+        if (selectedCourse && selectedCourse.id === course_id) {
+          openCourseReader(selectedCourse);
+          loadActiveModul(newModulObj);
+        }
+      } catch (err) {
+        console.error("Gagal mengunggah file:", err);
+        window.showToast("Gagal memproses file PDF: " + err.message, "danger");
+      } finally {
+        window.setButtonLoading(submitBtn, false);
+      }
+    });
+
+    deleteBtn?.addEventListener("click", async () => {
+      if (!activeModul || String(activeModul.id || "").startsWith("mod-empty-")) {
+        window.showToast("Tidak ada file modul yang dipilih untuk dihapus.", "warning");
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Apakah Anda yakin ingin menghapus file PDF/Modul "${activeModul.title}"? Tindakan ini tidak dapat dibatalkan.`
+      );
+      if (!confirmed) return;
+
+      if (activeModul.idb_key) {
+        await deleteFileFromIdb(activeModul.idb_key);
+      }
+
+      const updated = getModuls().filter((m) => m.id !== activeModul.id);
+      localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));
+
+      window.showToast(`Modul "${activeModul.title}" telah dihapus.`, "info");
+      renderAdminModulLists();
+
+      if (selectedCourse) {
+        openCourseReader(selectedCourse);
+      }
+    });
   }
 
   // ============================================================================

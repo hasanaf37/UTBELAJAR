@@ -287,6 +287,15 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>Unduh File PDF</span>
               </button>
+              <!-- Tombol Khusus Admin Langsung di Layar Baca Modul -->
+              <button type="button" id="btn-admin-reader-upload" class="btn btn-secondary btn-sm" style="display: none; background: #EEF2FF; color: var(--primary-blue); border-color: #C7D2FE;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>+ Upload PDF Modul</span>
+              </button>
+              <button type="button" id="btn-admin-reader-delete" class="btn btn-danger btn-sm" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Hapus PDF Ini</span>
+              </button>
             </div>
           </div>
 
@@ -348,6 +357,61 @@
   </div>
 
   <div id="toast-container"></div>
+
+  <!-- Modal Admin: Quick Upload PDF Modul Langsung Dari Layar Baca -->
+  <div id="modal-admin-quick-upload-modul" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 580px; width: 95%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 class="modal-title" style="margin-bottom: 0; font-size: 1.15rem; color: var(--primary-navy);">
+          Unggah File PDF Soal Modul
+        </h3>
+        <button type="button" id="btn-close-quick-upload-modal-x" style="background: none; border: none; font-size: 1.35rem; color: var(--text-secondary); cursor: pointer; line-height: 1; padding: 0.25rem 0.5rem;" title="Tutup">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.15rem;">
+        Unggah file PDF hasil scan modul untuk mata kuliah yang sedang aktif. Sistem akan langsung memproses dan menyusun halamannya untuk dibaca.
+      </p>
+
+      <form id="form-quick-upload-modul">
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">Mata Kuliah</label>
+          <input type="text" id="quick-upload-course-name" class="form-control" readonly style="background: var(--bg); font-weight: 700; color: var(--primary-navy);">
+          <input type="hidden" id="quick-upload-course-id">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 140px; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <div>
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">Judul Modul / Chapter</label>
+            <input type="text" id="quick-upload-title" class="form-control" placeholder="Misal: Modul 02: Analisis Kebutuhan" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">Kode / Edisi</label>
+            <input type="text" id="quick-upload-edition" class="form-control" placeholder="Modul 02" value="Modul 02" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">Pilih File Dokumen PDF atau Gambar Scan (JPG/PNG)</label>
+          <input type="file" id="quick-upload-file" class="form-control" accept="application/pdf,.pdf,image/jpeg,image/png,.jpg,.jpeg,.png" multiple required style="padding: 0.45rem 0.75rem;">
+          <small style="display: block; margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.75rem;">
+            Format yang didukung: Dokumen PDF (termasuk scan CamScanner) atau multiple file gambar JPG/PNG.
+          </small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">Atau Link URL PDF Eksternal (Opsional)</label>
+          <input type="url" id="quick-upload-url" class="form-control" placeholder="https://domain.com/file-modul.pdf">
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.65rem;">
+          <button type="button" id="btn-cancel-quick-upload" class="btn btn-secondary btn-sm">Batal</button>
+          <button type="submit" id="btn-submit-quick-upload" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Unggah &amp; Buka Sekarang</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
