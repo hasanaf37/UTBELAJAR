@@ -11,9 +11,12 @@
   ];
 
   const SEED_COURSES = [
+    { id: "c-msim4207-01", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4207", name: "Sistem Informasi dalam Bisnis", description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), dan infrastruktur TI dalam organisasi bisnis." },
     { id: "c1111111-1111-1111-1111-111111111111", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4201", name: "Analisis dan Perancangan Sistem", description: "Konsep siklus hidup pengembangan sistem (SDLC), pemodelan UML, dan use case diagram." },
     { id: "c2222222-2222-2222-2222-222222222222", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4202", name: "Sistem Basis Data", description: "Normalisasi data, Entity-Relationship Diagram (ERD), sintaks SQL, dan transaksi database." },
     { id: "c4444444-4444-4444-4444-444444444444", study_program_id: "b2222222-2222-2222-2222-222222222222", code: "EKMA4116", name: "Manajemen Strategik", description: "Analisis lingkungan bisnis, keunggulan bersaing, visi-misi korporasi, dan implementasi strategi." },
+    { id: "c5555555-5555-5555-5555-555555555555", study_program_id: "b3333333-3333-3333-3333-333333333333", code: "SKOM4101", name: "Pengantar Ilmu Komunikasi", description: "Model komunikasi linear, transaksional, komunikasi massa, dan etika media digital." },
+    { id: "c6666666-6666-6666-6666-666666666666", study_program_id: "b4444444-4444-4444-4444-444444444444", code: "EKMA4115", name: "Pengantar Akuntansi", description: "Persamaan dasar akuntansi, siklus jurnal umum, buku besar, neraca saldo, dan laporan keuangan." },
   ];
 
   const SEED_SETS = [
@@ -85,10 +88,10 @@
 
   function getCatalogProdis() {
     const raw = localStorage.getItem("utb_catalog_prodis");
-    if (raw) {
+    if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (_) {}
     }
     localStorage.setItem("utb_catalog_prodis", JSON.stringify(SEED_PRODIS));
@@ -97,10 +100,10 @@
 
   function getCatalogCourses() {
     const raw = localStorage.getItem("utb_catalog_courses");
-    if (raw) {
+    if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (_) {}
     }
     localStorage.setItem("utb_catalog_courses", JSON.stringify(SEED_COURSES));
@@ -109,10 +112,10 @@
 
   function getCatalogSets() {
     const raw = localStorage.getItem("utb_catalog_sets");
-    if (raw) {
+    if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (_) {}
     }
     localStorage.setItem("utb_catalog_sets", JSON.stringify(SEED_SETS));
@@ -121,30 +124,50 @@
 
   function getCatalogQuestions() {
     const raw = localStorage.getItem("utb_catalog_questions");
-    if (raw) {
+    if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (_) {}
     }
     localStorage.setItem("utb_catalog_questions", JSON.stringify(SEED_QUESTIONS));
     return [...SEED_QUESTIONS];
   }
 
+  let lastLatihanSyncAt = 0;
+  async function syncLatihanCatalogFromCloud(forceRender = false) {
+    const now = Date.now();
+    if (!forceRender && now - lastLatihanSyncAt < 3000) return;
+    lastLatihanSyncAt = now;
+
+    try {
+      await Promise.all([
+        typeof window.dbGetCatalogProdis === "function" ? window.dbGetCatalogProdis() : Promise.resolve(),
+        typeof window.dbGetCatalogCourses === "function" ? window.dbGetCatalogCourses() : Promise.resolve(),
+        typeof window.dbGetCatalogSets === "function" ? window.dbGetCatalogSets() : Promise.resolve(),
+        typeof window.dbGetCatalogQuestions === "function" ? window.dbGetCatalogQuestions() : Promise.resolve(),
+      ]);
+    } catch (_) {}
+
+    if (forceRender) {
+      const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
+      if (isAdmin) renderAdminCatalogAll();
+
+      const s1 = document.getElementById("step-prodi-container");
+      const s2 = document.getElementById("step-course-container");
+      if (s1 && s1.style.display !== "none") {
+        await loadStudyPrograms();
+      } else if (s2 && s2.style.display !== "none" && selectedProdi) {
+        await loadCoursesForProdi(selectedProdi);
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
 
-    if (typeof window.dbGetCatalogProdis === "function") {
-      try {
-        await window.dbGetCatalogProdis();
-      } catch (_) {}
-    }
-    if (typeof window.dbGetCatalogCourses === "function") {
-      try {
-        await window.dbGetCatalogCourses();
-      } catch (_) {}
-    }
+    await syncLatihanCatalogFromCloud(false);
 
     const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     if (isAdmin) {
@@ -154,6 +177,12 @@
     updateStepperUI(1);
     await loadStudyPrograms();
     setupQuizControls();
+
+    // Auto-sinkronisasi ketika tab di HP / perangkat lain dibuka kembali
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") syncLatihanCatalogFromCloud(true);
+    });
+    window.addEventListener("focus", () => syncLatihanCatalogFromCloud(true));
   });
 
   function initAdminLatihanManager() {
@@ -258,7 +287,7 @@
     });
 
     // Form 3: Tambah Paket Soal
-    document.getElementById("form-admin-set")?.addEventListener("submit", (e) => {
+    document.getElementById("form-admin-set")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const course_id = document.getElementById("input-set-course")?.value;
       const title = document.getElementById("input-set-title")?.value.trim();
@@ -277,8 +306,11 @@
         description,
       });
       localStorage.setItem("utb_catalog_sets", JSON.stringify(list));
+      if (typeof window.dbSaveCatalogSets === "function") {
+        await window.dbSaveCatalogSets(list);
+      }
       e.target.reset();
-      window.showToast(`Paket Soal "${title}" berhasil ditambahkan!`, "success");
+      window.showToast(`Paket Soal "${title}" berhasil disimpan ke Supabase!`, "success");
       renderAdminCatalogAll();
       if (selectedCourse && selectedCourse.id === course_id) {
         loadQuestionSets(selectedCourse);
@@ -286,7 +318,7 @@
     });
 
     // Form 4: Tambah Butir Soal Pengerjaan
-    document.getElementById("form-admin-question")?.addEventListener("submit", (e) => {
+    document.getElementById("form-admin-question")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const question_set_id = document.getElementById("input-q-set")?.value;
       const correct_option = document.getElementById("input-q-correct")?.value || "B";
@@ -312,8 +344,11 @@
         explanation: explanation || "Jawaban sesuai konsep materi modul.",
       });
       localStorage.setItem("utb_catalog_questions", JSON.stringify(list));
+      if (typeof window.dbSaveCatalogQuestions === "function") {
+        await window.dbSaveCatalogQuestions(list);
+      }
       e.target.reset();
-      window.showToast("Butir soal pengerjaan berhasil disimpan ke paket!", "success");
+      window.showToast("Butir soal pengerjaan berhasil disimpan ke Supabase!", "success");
       renderAdminCatalogAll();
     });
 
@@ -501,10 +536,23 @@
       });
 
       setListEl.querySelectorAll(".btn-del-set").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
+          const target = sets.find((item) => item.id === btn.dataset.id);
+          const confirmed = typeof window.showConfirmDialog === "function"
+            ? await window.showConfirmDialog({
+                title: "Hapus Paket Soal",
+                message: `Apakah Anda yakin ingin menghapus paket soal <strong>"${window.escapeHtml(target?.title || "Paket Soal")}"</strong> dari Supabase?`,
+                confirmText: "Hapus Paket",
+              })
+            : window.confirm("Hapus paket soal ini?");
+          if (!confirmed) return;
+
           const updated = getCatalogSets().filter((item) => item.id !== btn.dataset.id);
           localStorage.setItem("utb_catalog_sets", JSON.stringify(updated));
-          window.showToast("Paket soal dihapus.", "info");
+          if (typeof window.dbSaveCatalogSets === "function") {
+            await window.dbSaveCatalogSets(updated);
+          }
+          window.showToast("Paket soal dihapus dari Supabase.", "info");
           renderAdminCatalogAll();
         });
       });
@@ -540,10 +588,22 @@
         .join("");
 
       qListEl.querySelectorAll(".btn-del-question").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
+          const confirmed = typeof window.showConfirmDialog === "function"
+            ? await window.showConfirmDialog({
+                title: "Hapus Butir Soal",
+                message: "Apakah Anda yakin ingin menghapus butir soal ini secara permanen dari Supabase?",
+                confirmText: "Hapus Soal",
+              })
+            : window.confirm("Hapus butir soal ini?");
+          if (!confirmed) return;
+
           const updated = getCatalogQuestions().filter((item) => item.id !== btn.dataset.id);
           localStorage.setItem("utb_catalog_questions", JSON.stringify(updated));
-          window.showToast("Butir soal dihapus.", "info");
+          if (typeof window.dbSaveCatalogQuestions === "function") {
+            await window.dbSaveCatalogQuestions(updated);
+          }
+          window.showToast("Butir soal dihapus dari Supabase.", "info");
           renderAdminCatalogAll();
         });
       });
@@ -569,16 +629,25 @@
     const grid = document.getElementById("prodi-grid");
     if (!grid) return;
 
-    let prodis = getCatalogProdis();
-    if (window.supabaseClient) {
+    let prodis = [];
+    if (typeof window.dbGetCatalogProdis === "function") {
       try {
-        const { data } = await window.supabaseClient
-          .from("study_programs")
-          .select("id, code, name, description")
-          .eq("is_active", true)
-          .order("name", { ascending: true });
-        if (data && data.length > 0) prodis = data;
-      } catch (_) {}
+        const cloudProdis = await window.dbGetCatalogProdis();
+        if (Array.isArray(cloudProdis)) prodis = cloudProdis;
+      } catch (_) {
+        prodis = getCatalogProdis();
+      }
+    } else {
+      prodis = getCatalogProdis();
+    }
+
+    if (prodis.length === 0) {
+      grid.innerHTML = `
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <p style="color: var(--text-secondary);">Belum ada program studi yang tersedia.</p>
+        </div>
+      `;
+      return;
     }
 
     grid.innerHTML = prodis
@@ -618,24 +687,36 @@
   async function loadCoursesForProdi(prodi) {
     updateStepperUI(2);
     const titleEl = document.getElementById("course-step-title");
-    if (titleEl) titleEl.textContent = `Mata Kuliah — ${prodi.name}`;
+    if (titleEl) {
+      const hasCode = prodi.name && prodi.code && prodi.name.includes(`(${prodi.code})`);
+      const label = hasCode ? prodi.name : `${prodi.name}${prodi.code ? ` (${prodi.code})` : ""}`;
+      titleEl.textContent = `Mata Kuliah — ${label}`;
+    }
 
     const grid = document.getElementById("course-grid");
     if (!grid) return;
 
-    let courses = [];
+    let allCourses = [];
     if (typeof window.dbGetCatalogCourses === "function") {
       try {
         const cloudCourses = await window.dbGetCatalogCourses();
-        if (Array.isArray(cloudCourses)) {
-          courses = cloudCourses.filter((c) => c.study_program_id === prodi.id);
-        }
-      } catch (_) {}
+        allCourses = Array.isArray(cloudCourses) ? cloudCourses : getCatalogCourses();
+      } catch (_) {
+        allCourses = getCatalogCourses();
+      }
+    } else {
+      allCourses = getCatalogCourses();
     }
 
+    const courses = allCourses.filter((c) => c.study_program_id === prodi.id);
+
     if (courses.length === 0) {
-      const allCourses = getCatalogCourses();
-      courses = allCourses.filter((c) => c.study_program_id === prodi.id);
+      grid.innerHTML = `
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Belum ada mata kuliah yang terdaftar untuk program studi ini.</p>
+        </div>
+      `;
+      return;
     }
 
     grid.innerHTML = courses
@@ -677,19 +758,33 @@
     const listEl = document.getElementById("qset-list");
     if (!listEl) return;
 
+    if (typeof window.dbGetCatalogSets === "function") {
+      try {
+        await window.dbGetCatalogSets();
+      } catch (_) {}
+    }
+
     const allSets = getCatalogSets();
     let sets = allSets.filter((s) => s.course_id === course.id);
-    if (sets.length === 0) sets = allSets;
 
     if (window.supabaseClient) {
       try {
-        const { data } = await window.supabaseClient
+        const { data, error } = await window.supabaseClient
           .from("question_sets")
           .select("id, title, description, difficulty, duration_minutes")
           .eq("course_id", course.id)
           .eq("is_published", true);
-        if (data && data.length > 0) sets = data;
+        if (!error && Array.isArray(data) && data.length > 0) sets = data;
       } catch (_) {}
+    }
+
+    if (sets.length === 0) {
+      listEl.innerHTML = `
+        <div class="card" style="text-align: center; padding: 2.5rem;">
+          <p style="color: var(--text-secondary);">Belum ada paket latihan soal untuk mata kuliah <strong>${window.escapeHtml(course.name)}</strong>.</p>
+        </div>
+      `;
+      return;
     }
 
     listEl.innerHTML = sets

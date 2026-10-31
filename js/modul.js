@@ -174,9 +174,9 @@
   function getProdis() {
     try {
       const raw = localStorage.getItem("utb_catalog_prodis");
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (_) {}
     localStorage.setItem("utb_catalog_prodis", JSON.stringify(DEFAULT_PRODIS));
@@ -186,15 +186,9 @@
   function getCourses() {
     try {
       const raw = localStorage.getItem("utb_catalog_courses");
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-        // Jika array kosong (misalnya karena admin telah menghapus semua), jangan kembalikan default
-        if (Array.isArray(parsed) && parsed.length === 0) {
-          return [];
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (_) {}
     localStorage.setItem("utb_catalog_courses", JSON.stringify(DEFAULT_COURSES));
@@ -204,24 +198,22 @@
   function getModuls() {
     try {
       const raw = localStorage.getItem("utb_catalog_moduls");
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Pastikan modul MSIM4207 selalu tersedia dengan file scan CamScanner asli
-          const msimIdx = parsed.findIndex(
-            (m) => m.id === "mod-msim4207-01" || (m.title && m.title.includes("MSIM4207"))
-          );
-          if (msimIdx === -1) {
-            parsed.unshift(DEFAULT_MODULS[0]);
-            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
-          } else {
-            parsed[msimIdx] = {
-              ...DEFAULT_MODULS[0],
-              ...parsed[msimIdx],
-              images: DEFAULT_MODULS[0].images,
-              pdf_file_url: DEFAULT_MODULS[0].pdf_file_url,
-            };
-            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+        if (Array.isArray(parsed)) {
+          // Jika modul bawaan MSIM4207 masih ada dan belum diganti file baru, pastikan path halaman scan default tetap utuh
+          const msimIdx = parsed.findIndex((m) => m.id === "mod-msim4207-01");
+          if (msimIdx !== -1 && !parsed[msimIdx].idb_key) {
+            const hasImgs = Array.isArray(parsed[msimIdx].images) && parsed[msimIdx].images.length > 0;
+            if (!hasImgs) {
+              parsed[msimIdx] = {
+                ...DEFAULT_MODULS[0],
+                ...parsed[msimIdx],
+                images: DEFAULT_MODULS[0].images,
+                pdf_file_url: parsed[msimIdx].pdf_file_url || DEFAULT_MODULS[0].pdf_file_url,
+              };
+              localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+            }
           }
           return parsed;
         }
@@ -234,21 +226,37 @@
   // ============================================================================
   // INISIALISASI HALAMAN
   // ============================================================================
+  let lastCloudSyncAt = 0;
+  async function syncCatalogFromSupabase(forceRender = false) {
+    const now = Date.now();
+    if (!forceRender && now - lastCloudSyncAt < 3000) return;
+    lastCloudSyncAt = now;
+
+    try {
+      await Promise.all([
+        typeof window.dbGetCatalogProdis === "function" ? window.dbGetCatalogProdis() : Promise.resolve(),
+        typeof window.dbGetCatalogCourses === "function" ? window.dbGetCatalogCourses() : Promise.resolve(),
+        typeof window.dbGetCatalogModuls === "function" ? window.dbGetCatalogModuls() : Promise.resolve(),
+      ]);
+    } catch (_) {}
+
+    if (forceRender) {
+      if (isAdmin) renderAdminModulLists();
+      const s1 = document.getElementById("step-modul-prodi");
+      const s2 = document.getElementById("step-modul-course");
+      if (s1 && s1.style.display !== "none") {
+        renderProdiStep();
+      } else if (s2 && s2.style.display !== "none" && selectedProdi) {
+        renderCourseStep(selectedProdi);
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
 
-    if (typeof window.dbGetCatalogProdis === "function") {
-      try {
-        await window.dbGetCatalogProdis();
-      } catch (_) {}
-    }
-
-    if (typeof window.dbGetCatalogCourses === "function") {
-      try {
-        await window.dbGetCatalogCourses();
-      } catch (_) {}
-    }
+    await syncCatalogFromSupabase(false);
 
     isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     const adminPanel = document.getElementById("admin-modul-manager");
@@ -263,6 +271,12 @@
     setupReaderNavigation();
     setStep(1);
     renderProdiStep();
+
+    // Auto-sinkronisasi ketika tab di HP / perangkat lain dibuka kembali
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") syncCatalogFromSupabase(true);
+    });
+    window.addEventListener("focus", () => syncCatalogFromSupabase(true));
   });
 
   // ============================================================================
@@ -886,6 +900,9 @@
         const list = getModuls();
         list.push(newModulObj);
         localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
+        if (typeof window.dbSaveCatalogModuls === "function") {
+          await window.dbSaveCatalogModuls(list);
+        }
 
         window.closeModal(modalUpload);
         window.showToast(`File PDF "${title}" berhasil diunggah!`, "success");
@@ -927,6 +944,9 @@
 
       const updated = getModuls().filter((m) => m.id !== activeModul.id);
       localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));
+      if (typeof window.dbSaveCatalogModuls === "function") {
+        await window.dbSaveCatalogModuls(updated);
+      }
 
       window.showToast(`Modul "${activeModul.title}" telah dihapus.`, "info");
       renderAdminModulLists();
@@ -1138,6 +1158,9 @@
       }
 
       localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
+      if (typeof window.dbSaveCatalogModuls === "function") {
+        await window.dbSaveCatalogModuls(list);
+      }
       cancelBookBtn?.click();
       renderAdminModulLists();
 
@@ -1383,6 +1406,9 @@
           }
           const updated = getModuls().filter((m) => m.id !== btn.dataset.id);
           localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));
+          if (typeof window.dbSaveCatalogModuls === "function") {
+            await window.dbSaveCatalogModuls(updated);
+          }
           window.showToast("Modul berhasil dihapus.", "info");
           renderAdminModulLists();
           if (selectedCourse) openCourseReader(selectedCourse);
