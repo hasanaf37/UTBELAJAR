@@ -639,7 +639,8 @@
           .select("id, study_program_id, code, name, description, created_at")
           .order("code", { ascending: true });
 
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
+          // Sinkronkan hasil database Supabase langsung ke local storage (termasuk jika data dihapus)
           localStorage.setItem("utb_catalog_courses", JSON.stringify(data));
           return data;
         }

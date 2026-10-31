@@ -135,11 +135,19 @@
     currentUser = await window.requireAuth();
     if (!currentUser) return;
 
+    if (typeof window.dbGetCatalogProdis === "function") {
+      try {
+        await window.dbGetCatalogProdis();
+      } catch (_) {}
+    }
+    if (typeof window.dbGetCatalogCourses === "function") {
+      try {
+        await window.dbGetCatalogCourses();
+      } catch (_) {}
+    }
+
     const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     if (isAdmin) {
-      if (typeof window.dbGetCatalogProdis === "function") {
-        await window.dbGetCatalogProdis();
-      }
       initAdminLatihanManager();
     }
 
@@ -615,18 +623,19 @@
     const grid = document.getElementById("course-grid");
     if (!grid) return;
 
-    const allCourses = getCatalogCourses();
-    let courses = allCourses.filter((c) => c.study_program_id === prodi.id);
-    if (courses.length === 0) courses = allCourses;
-
-    if (window.supabaseClient) {
+    let courses = [];
+    if (typeof window.dbGetCatalogCourses === "function") {
       try {
-        const { data } = await window.supabaseClient
-          .from("courses")
-          .select("id, code, name, description")
-          .eq("study_program_id", prodi.id);
-        if (data && data.length > 0) courses = data;
+        const cloudCourses = await window.dbGetCatalogCourses();
+        if (Array.isArray(cloudCourses)) {
+          courses = cloudCourses.filter((c) => c.study_program_id === prodi.id);
+        }
       } catch (_) {}
+    }
+
+    if (courses.length === 0) {
+      const allCourses = getCatalogCourses();
+      courses = allCourses.filter((c) => c.study_program_id === prodi.id);
     }
 
     grid.innerHTML = courses

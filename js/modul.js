@@ -244,6 +244,12 @@
       } catch (_) {}
     }
 
+    if (typeof window.dbGetCatalogCourses === "function") {
+      try {
+        await window.dbGetCatalogCourses();
+      } catch (_) {}
+    }
+
     isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     const adminPanel = document.getElementById("admin-modul-manager");
 
@@ -333,7 +339,7 @@
   }
 
   // TAHAP 2: PILIH MATA KULIAH
-  function renderCourseStep(prodi) {
+  async function renderCourseStep(prodi) {
     setStep(2);
     const heading = document.getElementById("modul-course-heading");
     if (heading) {
@@ -345,6 +351,13 @@
 
     const grid = document.getElementById("modul-course-grid");
     if (!grid) return;
+
+    // Ambil data mata kuliah terupdate dari Supabase
+    if (typeof window.dbGetCatalogCourses === "function") {
+      try {
+        await window.dbGetCatalogCourses();
+      } catch (_) {}
+    }
 
     const allCourses = getCourses();
     const courses = allCourses.filter((c) => c.study_program_id === prodi.id);
