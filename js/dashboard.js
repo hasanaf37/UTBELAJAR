@@ -368,43 +368,49 @@
             <td style="padding: 0.9rem 0.75rem;">
               ${
                 u.isOnline
-                  ? `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 999px;">
-                      <span class="online-indicator-dot"></span>
-                      <span>Aktif</span>
-                    </span>`
-                  : `<span class="badge" style="background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 999px;">
-                      <span style="width: 8px; height: 8px; border-radius: 50%; background: #94A3B8;"></span>
-                      <span>Tidak Aktif</span>
-                    </span>`
+                  ? `<div>
+                      <span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 0.78rem;">
+                        <span class="online-indicator-dot"></span>
+                        <span>Aktif</span>
+                      </span>
+                      <div style="font-size: 0.74rem; color: var(--success); font-weight: 600; margin-top: 0.25rem;">
+                        Sedang online di web
+                      </div>
+                    </div>`
+                  : `<div>
+                      <span class="badge" style="background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 0.78rem;">
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #94A3B8;"></span>
+                        <span>Tidak Aktif</span>
+                      </span>
+                      <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 0.25rem; white-space: nowrap;">
+                        Terakhir: <strong style="color: var(--primary-navy);">${window.formatRelativeTime ? window.formatRelativeTime(u.lastActive) : window.formatDateTime(u.lastActive)}</strong>
+                      </div>
+                    </div>`
               }
               ${
                 u.accountStatus === "Nonaktif"
-                  ? `<div style="font-size: 0.68rem; color: var(--danger); font-weight: 600; margin-top: 0.2rem;">(Akun Dinonaktifkan)</div>`
+                  ? `<div style="font-size: 0.68rem; color: var(--danger); font-weight: 600; margin-top: 0.25rem;">(Akun Dinonaktifkan)</div>`
                   : ""
               }
             </td>
             <td style="padding: 0.9rem 0.75rem;">
-              <div style="font-weight: 700; color: var(--primary-navy);">${u.soalCount} Butir Soal</div>
-              <div style="font-size: 0.76rem; color: var(--text-secondary);">${u.paketCount} Paket Diselesaikan</div>
+              <div style="font-weight: 700; color: var(--primary-navy);">${u.soalCount} Soal</div>
+              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.15rem;">${u.paketCount} Paket Selesai</div>
             </td>
             <td style="padding: 0.9rem 0.75rem;">
-              <span class="badge ${scoreBadgeClass}" style="font-size: 0.82rem;">
+              <span class="badge ${scoreBadgeClass}" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">
                 ${u.paketCount > 0 ? `${u.avgScore} / 100` : "Belum Latihan"}
               </span>
-              <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 0.25rem;">
                 Durasi: ${window.formatDuration(u.durationSum)}
               </div>
             </td>
-            <td style="padding: 0.9rem 0.75rem; font-size: 0.8rem;">
-              <div style="font-weight: 700; color: ${u.isOnline ? "var(--success)" : "var(--text-main)"}; display: flex; align-items: center; gap: 0.35rem;">
-                ${
-                  u.isOnline
-                    ? `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--success);"></span> Sedang Aktif di Web`
-                    : `Terakhir: ${window.formatRelativeTime ? window.formatRelativeTime(u.lastActive) : window.formatDateTime(u.lastActive)}`
-                }
+            <td style="padding: 0.9rem 0.75rem;">
+              <div style="font-weight: 600; color: var(--primary-navy); font-size: 0.82rem;">
+                ${window.formatDate(u.created_at)}
               </div>
-              <div style="color: var(--text-secondary); font-size: 0.74rem; margin-top: 0.15rem;">
-                Daftar: ${window.formatDate(u.created_at)}
+              <div style="color: var(--text-secondary); font-size: 0.72rem; margin-top: 0.15rem;">
+                Akun Terdaftar
               </div>
             </td>
             <td style="padding: 0.9rem 0.75rem; text-align: right; white-space: nowrap;">
@@ -622,7 +628,10 @@
           <small style="color: var(--text-secondary); display: block; font-size: 0.75rem; font-weight: 500;">Status &amp; Keaktifan</small>
           <div style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isOnline ? "#10b981" : "#94a3b8"};"></span>
-            ${realTimeStatus} (${window.formatDateTime(lastActive)})
+            ${realTimeStatus === "Aktif" ? "Aktif Sekarang di Web" : "Tidak Aktif"}
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            ${isOnline ? "Sedang membuka halaman web" : `Terakhir aktif: ${window.formatDateTime(lastActive)} (${window.formatRelativeTime ? window.formatRelativeTime(lastActive) : ""})`}
           </div>
         </div>
         <div>

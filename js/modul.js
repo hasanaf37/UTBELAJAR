@@ -337,7 +337,12 @@
   function renderCourseStep(prodi) {
     setStep(2);
     const heading = document.getElementById("modul-course-heading");
-    if (heading) heading.textContent = `Pilih Mata Kuliah — ${prodi.name} (${prodi.code})`;
+    if (heading) {
+      // Cegah duplikasi kode prodi jika prodi.name sudah mengandung "(SI)" atau kode lainnya
+      const hasCodeInName = prodi.name && prodi.code && prodi.name.includes(`(${prodi.code})`);
+      const prodiLabel = hasCodeInName ? prodi.name : `${prodi.name}${prodi.code ? ` (${prodi.code})` : ""}`;
+      heading.textContent = `Pilih Mata Kuliah — ${prodiLabel}`;
+    }
 
     const grid = document.getElementById("modul-course-grid");
     if (!grid) return;
@@ -358,21 +363,20 @@
     grid.innerHTML = courses
       .map((c) => {
         const mCount = moduls.filter((m) => m.course_id === c.id).length;
-        const isMsim = c.code === "MSIM4207";
         return `
-          <div class="selection-card" data-course-id="${c.id}" style="${isMsim ? 'border: 2px solid var(--primary-blue); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);' : ''}">
+          <div class="selection-card" data-course-id="${c.id}">
             <div>
               <div class="selection-card-header">
                 <div class="selection-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
-                <span class="badge ${isMsim ? 'badge-primary' : 'badge-primary'}">${window.escapeHtml(c.code)}</span>
+                <span class="badge badge-primary">${window.escapeHtml(c.code)}</span>
               </div>
               <h3 class="selection-title">${window.escapeHtml(c.name)}</h3>
               <p class="selection-desc">${window.escapeHtml(c.description || "Mata kuliah program sarjana.")}</p>
             </div>
             <div class="selection-meta">
-              <span style="${isMsim ? 'color: var(--primary-blue); font-weight: 700;' : ''}">${mCount > 0 ? `${mCount} Modul Scan PDF Siap Baca` : "Tersedia Modul"}</span>
+              <span>${mCount > 0 ? `${mCount} Modul Scan PDF Siap Baca` : "Tersedia Modul"}</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>

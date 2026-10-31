@@ -39,9 +39,9 @@
   --shadow-hover: 0 16px 32px -4px rgba(65, 105, 245, 0.12), 0 6px 12px -2px rgba(23, 37, 84, 0.05);
 
   /* Layout Dimensions */
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 80px;
-  --topbar-height: 72px;
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 76px;
+  --topbar-height: 64px;
 
   /* Transitions */
   --transition-fast: 0.15s ease;
@@ -483,8 +483,8 @@ button, input, select, textarea {
 /* Page Content Container */
 .page-content {
   flex: 1;
-  padding: 2rem;
-  max-width: 1400px;
+  padding: 1.5rem 2rem;
+  max-width: 1600px;
   width: 100%;
   margin: 0 auto;
 }
@@ -494,13 +494,13 @@ button, input, select, textarea {
   margin-top: auto;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   font-size: 0.825rem;
   color: var(--text-secondary);
 }
 
 .footer-inner {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
