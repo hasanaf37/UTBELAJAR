@@ -516,7 +516,13 @@
         const target = allUsers.find((item) => item.id === uid);
         if (!target) return;
 
-        const confirmed = window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${target.full_name}" dari database Supabase?`);
+        const confirmed = typeof window.showConfirmDialog === "function"
+          ? await window.showConfirmDialog({
+              title: "Hapus Pengguna",
+              message: `Apakah Anda yakin ingin menghapus pengguna <strong>"${window.escapeHtml(target.full_name)}"</strong> dari database Supabase? Semua riwayat latihan akun ini juga akan dihapus.`,
+              confirmText: "Hapus Pengguna",
+            })
+          : window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${target.full_name}" dari database Supabase?`);
         if (!confirmed) return;
 
         window.setButtonLoading(btn, true, "...");
@@ -763,7 +769,14 @@
         e.stopPropagation();
         const attId = btn.dataset.attId;
         if (!attId) return;
-        const confirmed = window.confirm("Apakah Anda yakin ingin menghapus 1 riwayat pengerjaan soal ini?");
+
+        const confirmed = typeof window.showConfirmDialog === "function"
+          ? await window.showConfirmDialog({
+              title: "Hapus Riwayat Latihan",
+              message: "Apakah Anda yakin ingin menghapus 1 riwayat pengerjaan soal ini? Skor dan waktu pengerjaan akan dihitung ulang secara otomatis.",
+              confirmText: "Hapus Riwayat",
+            })
+          : window.confirm("Apakah Anda yakin ingin menghapus 1 riwayat pengerjaan soal ini?");
         if (!confirmed) return;
 
         btn.disabled = true;
@@ -792,9 +805,15 @@
           .filter(Boolean);
         if (idsToDelete.length === 0) return;
 
-        const confirmed = window.confirm(
-          `Apakah Anda yakin ingin menghapus ${idsToDelete.length} riwayat pengerjaan soal yang dipilih? Tindakan ini tidak dapat dibatalkan.`
-        );
+        const confirmed = typeof window.showConfirmDialog === "function"
+          ? await window.showConfirmDialog({
+              title: "Hapus Riwayat Massal",
+              message: `Apakah Anda yakin ingin menghapus <strong>${idsToDelete.length} riwayat pengerjaan soal</strong> yang dipilih? Tindakan ini tidak dapat dibatalkan.`,
+              confirmText: `Hapus ${idsToDelete.length} Riwayat`,
+            })
+          : window.confirm(
+              `Apakah Anda yakin ingin menghapus ${idsToDelete.length} riwayat pengerjaan soal yang dipilih? Tindakan ini tidak dapat dibatalkan.`
+            );
         if (!confirmed) return;
 
         deleteSelectedBtn.disabled = true;

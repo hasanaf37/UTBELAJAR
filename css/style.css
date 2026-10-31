@@ -708,8 +708,9 @@ button, input, select, textarea {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -731,13 +732,171 @@ button, input, select, textarea {
   max-width: 500px;
   width: 100%;
   padding: 2rem;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.05);
   transform: scale(0.95);
   transition: transform var(--transition-normal);
 }
 
 .modal-backdrop.open .modal-dialog {
   transform: scale(1);
+}
+
+/* ==============================================================================
+   PROFESSIONAL CONFIRMATION DIALOG (POPUP PERINGATAN PENGHAPUSAN ELEGAN)
+   ============================================================================== */
+.confirm-dialog-wrapper {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.confirm-dialog-wrapper.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirm-dialog-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  max-width: 460px;
+  width: 100%;
+  padding: 1.75rem 1.85rem;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-dialog-wrapper.open .confirm-dialog-card {
+  transform: scale(1) translateY(0);
+}
+
+.confirm-dialog-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #EF4444 0%, #F97316 100%);
+}
+
+.confirm-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.confirm-dialog-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+
+.confirm-dialog-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.confirm-dialog-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.confirm-dialog-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.confirm-dialog-body {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.35rem;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.confirm-dialog-body strong {
+  color: var(--primary-navy);
+  font-weight: 700;
+}
+
+.confirm-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.confirm-dialog-btn-cancel {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.confirm-dialog-btn-cancel:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.confirm-dialog-btn-danger {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 0.55rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  transition: all var(--transition-fast);
+}
+
+.confirm-dialog-btn-danger:hover {
+  background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+}
+
+.confirm-dialog-btn-danger:active {
+  transform: translateY(0);
 }
 
 .modal-title {

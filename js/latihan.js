@@ -215,7 +215,7 @@
     });
 
     // Form 2: Tambah Mata Kuliah
-    document.getElementById("form-admin-course")?.addEventListener("submit", (e) => {
+    document.getElementById("form-admin-course")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const study_program_id = document.getElementById("input-course-prodi")?.value;
       const code = document.getElementById("input-course-code")?.value.trim().toUpperCase();
@@ -223,17 +223,26 @@
       const description = document.getElementById("input-course-desc")?.value.trim() || "Mata kuliah program sarjana.";
       if (!study_program_id || !code || !name) return;
 
-      const list = getCatalogCourses();
-      list.push({
-        id: "course-" + Date.now(),
-        study_program_id,
-        code,
-        name,
-        description,
-      });
-      localStorage.setItem("utb_catalog_courses", JSON.stringify(list));
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
+      if (typeof window.dbInsertCourse === "function") {
+        await window.dbInsertCourse({ study_program_id, code, name, description });
+      } else {
+        const list = getCatalogCourses();
+        list.push({
+          id: "course-" + Date.now(),
+          study_program_id,
+          code,
+          name,
+          description,
+        });
+        localStorage.setItem("utb_catalog_courses", JSON.stringify(list));
+      }
+
+      window.setButtonLoading(submitBtn, false);
       e.target.reset();
-      window.showToast(`Mata Kuliah "${name}" (${code}) berhasil ditambahkan!`, "success");
+      window.showToast(`Mata Kuliah "${name}" (${code}) berhasil disimpan ke Supabase!`, "success");
       renderAdminCatalogAll();
       if (selectedProdi && selectedProdi.id === study_program_id) {
         loadCoursesForProdi(selectedProdi);
@@ -364,7 +373,16 @@
       prodiListEl.querySelectorAll(".btn-del-prodi").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const prodiId = btn.dataset.id;
-          const confirmed = window.confirm("Apakah Anda yakin ingin menghapus program studi ini dari database Supabase?");
+          const target = prodis.find((p) => p.id === prodiId);
+          const pName = target ? target.name : "Program Studi";
+
+          const confirmed = typeof window.showConfirmDialog === "function"
+            ? await window.showConfirmDialog({
+                title: "Hapus Program Studi",
+                message: `Apakah Anda yakin ingin menghapus program studi <strong>"${window.escapeHtml(pName)}"</strong> dari database Supabase? Semua mata kuliah dan paket latihan terkait akan dihapus.`,
+                confirmText: "Hapus Program Studi",
+              })
+            : window.confirm("Apakah Anda yakin ingin menghapus program studi ini dari database Supabase?");
           if (!confirmed) return;
 
           window.setButtonLoading(btn, true, "...");
@@ -403,11 +421,36 @@
         .join("");
 
       courseListEl.querySelectorAll(".btn-del-course").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const updated = getCatalogCourses().filter((item) => item.id !== btn.dataset.id);
-          localStorage.setItem("utb_catalog_courses", JSON.stringify(updated));
-          window.showToast("Mata kuliah dihapus.", "info");
+        btn.addEventListener("click", async () => {
+          const courseId = btn.dataset.id;
+          const target = courses.find((c) => c.id === courseId);
+          const cName = target ? target.name : "Mata Kuliah";
+          const cCode = target ? target.code : "";
+
+          const confirmed = typeof window.showConfirmDialog === "function"
+            ? await window.showConfirmDialog({
+                title: "Hapus Mata Kuliah",
+                message: `Apakah Anda yakin ingin menghapus mata kuliah <strong>"${window.escapeHtml(cName)}" (${window.escapeHtml(cCode)})</strong> dari database Supabase? Semua paket latihan di dalamnya akan dihapus.`,
+                confirmText: "Hapus Mata Kuliah",
+              })
+            : window.confirm(
+                `Apakah Anda yakin ingin menghapus mata kuliah "${cName}" (${cCode})? Tindakan ini akan menghapus data di Supabase dan paket latihan terkait.`
+              );
+          if (!confirmed) return;
+
+          btn.disabled = true;
+          btn.textContent = "...";
+
+          if (typeof window.dbDeleteCourse === "function") {
+            await window.dbDeleteCourse(courseId, cCode);
+          } else {
+            const updated = getCatalogCourses().filter((item) => item.id !== courseId && (!cCode || item.code !== cCode));
+            localStorage.setItem("utb_catalog_courses", JSON.stringify(updated));
+          }
+
+          window.showToast(`Mata kuliah "${cName}" berhasil dihapus dari Supabase.`, "info");
           renderAdminCatalogAll();
+          if (selectedProdi) loadCoursesForProdi(selectedProdi);
         });
       });
     }

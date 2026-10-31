@@ -624,6 +624,144 @@
     }
   };
 
+  // 8. SINKRONISASI MATA KULIAH (courses) SECARA LANGSUNG KE SUPABASE & LOCAL
+  window.dbGetCatalogCourses = async function () {
+    const localRaw = localStorage.getItem("utb_catalog_courses");
+    let localList = [];
+    try {
+      localList = JSON.parse(localRaw || "[]");
+    } catch (_) {}
+
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from("courses")
+          .select("id, study_program_id, code, name, description, created_at")
+          .order("code", { ascending: true });
+
+        if (!error && Array.isArray(data) && data.length > 0) {
+          localStorage.setItem("utb_catalog_courses", JSON.stringify(data));
+          return data;
+        }
+      } catch (err) {
+        console.warn("Gagal mengambil courses dari Supabase:", err.message);
+      }
+    }
+    return localList;
+  };
+
+  window.dbInsertCourse = async function (courseData) {
+    const uuid = courseData.id && !courseData.id.startsWith("course-") && !courseData.id.startsWith("c-")
+      ? courseData.id
+      : generateUuid();
+
+    const item = {
+      id: uuid,
+      study_program_id: courseData.study_program_id,
+      code: String(courseData.code || "").trim().toUpperCase(),
+      name: String(courseData.name || "").trim(),
+      description: courseData.description || "Mata kuliah program sarjana.",
+      created_at: new Date().toISOString(),
+    };
+
+    // Update penyimpanan lokal
+    const localList = JSON.parse(localStorage.getItem("utb_catalog_courses") || "[]");
+    const existingIdx = localList.findIndex((c) => c.code.toLowerCase() === item.code.toLowerCase());
+    if (existingIdx !== -1) {
+      localList[existingIdx] = { ...localList[existingIdx], ...item };
+    } else {
+      localList.push(item);
+    }
+    localStorage.setItem("utb_catalog_courses", JSON.stringify(localList));
+
+    // Kirim ke Supabase
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        const { error } = await window.supabaseClient.from("courses").upsert({
+          id: item.id,
+          study_program_id: item.study_program_id,
+          code: item.code,
+          name: item.name,
+          description: item.description,
+        }, { onConflict: "study_program_id,code" });
+
+        if (error) {
+          console.warn("Supabase upsert courses:", error.message);
+          await window.supabaseClient.from("courses").insert({
+            id: item.id,
+            study_program_id: item.study_program_id,
+            code: item.code,
+            name: item.name,
+            description: item.description,
+          });
+        }
+      } catch (err) {
+        console.warn("Gagal mengirim mata kuliah baru ke Supabase:", err.message);
+      }
+    }
+    return item;
+  };
+
+  window.dbUpdateCourse = async function (courseId, updateData) {
+    const localList = JSON.parse(localStorage.getItem("utb_catalog_courses") || "[]");
+    const idx = localList.findIndex((c) => c.id === courseId);
+    if (idx !== -1) {
+      localList[idx] = { ...localList[idx], ...updateData };
+      localStorage.setItem("utb_catalog_courses", JSON.stringify(localList));
+    }
+
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        await window.supabaseClient
+          .from("courses")
+          .update({
+            study_program_id: updateData.study_program_id,
+            code: updateData.code,
+            name: updateData.name,
+            description: updateData.description,
+          })
+          .eq("id", courseId);
+      } catch (err) {
+        console.warn("Gagal update mata kuliah di Supabase:", err.message);
+      }
+    }
+  };
+
+  window.dbDeleteCourse = async function (courseId, courseCode) {
+    // 1. Bersihkan dari local storage
+    const localList = JSON.parse(localStorage.getItem("utb_catalog_courses") || "[]");
+    const updated = localList.filter((c) => c.id !== courseId && (!courseCode || c.code !== courseCode));
+    localStorage.setItem("utb_catalog_courses", JSON.stringify(updated));
+
+    // Bersihkan juga modul atau paket latihan yang merujuk pada course ini dari local storage
+    try {
+      const localModuls = JSON.parse(localStorage.getItem("utb_catalog_moduls") || "[]");
+      const filteredModuls = localModuls.filter((m) => m.course_id !== courseId);
+      localStorage.setItem("utb_catalog_moduls", JSON.stringify(filteredModuls));
+
+      const localSets = JSON.parse(localStorage.getItem("utb_catalog_sets") || "[]");
+      const filteredSets = localSets.filter((s) => s.course_id !== courseId);
+      localStorage.setItem("utb_catalog_sets", JSON.stringify(filteredSets));
+    } catch (_) {}
+
+    // 2. Hapus langsung dari Supabase
+    if (window.supabaseClient && window.isSupabaseConfigured()) {
+      try {
+        let query = window.supabaseClient.from("courses").delete();
+        if (courseId && !courseId.startsWith("course-") && !courseId.startsWith("c-")) {
+          // UUID standar
+          await query.eq("id", courseId);
+        } else if (courseCode) {
+          await query.eq("code", courseCode);
+        } else {
+          await query.eq("id", courseId);
+        }
+      } catch (err) {
+        console.warn("Gagal hapus mata kuliah di Supabase:", err.message);
+      }
+    }
+  };
+
   // 7. Simpan Konfigurasi AI (OpenRouter / Gemini / OpenAI) ke Supabase agar siswa & seluruh perangkat bisa terhubung
   window.dbSaveAiConfig = async function (config) {
     if (!config) return;
