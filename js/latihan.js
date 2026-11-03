@@ -616,6 +616,13 @@
       const sNum = Number(s.dataset.step);
       if (sNum <= step) s.classList.add("active");
       else s.classList.remove("active");
+
+      s.classList.toggle("is-completed", sNum < step);
+      s.classList.toggle("is-current", sNum === step);
+
+      if (sNum === step) {
+        s.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
     });
 
     document.getElementById("step-prodi-container")?.style.setProperty("display", step === 1 ? "block" : "none");
@@ -990,6 +997,23 @@
 
     document.getElementById("crumb-back-prodi")?.addEventListener("click", () => updateStepperUI(1));
     document.getElementById("crumb-back-course")?.addEventListener("click", () => updateStepperUI(2));
+
+    // Navigasi Klik Langsung pada Stepper
+    document.querySelectorAll(".latihan-stepper .step-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const targetStep = Number(item.dataset.step);
+        // Izinkan klik jika tahap sudah selesai atau sedang aktif
+        if (item.classList.contains("is-completed") || item.classList.contains("is-current")) {
+          if (targetStep === 1) {
+            updateStepperUI(1);
+          } else if (targetStep === 2 && selectedProdi) {
+            updateStepperUI(2);
+          } else if (targetStep === 3 && selectedCourse) {
+            updateStepperUI(3);
+          }
+        }
+      });
+    });
   }
 
   async function submitQuizAttempt() {

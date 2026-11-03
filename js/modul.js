@@ -338,6 +338,11 @@
     document.querySelectorAll("[data-mstep]").forEach((el) => {
       const n = Number(el.dataset.mstep);
       el.classList.toggle("active", n <= stepNum);
+      el.classList.toggle("is-completed", n < stepNum);
+      el.classList.toggle("is-current", n === stepNum);
+      if (n === stepNum) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
     });
 
     const s1 = document.getElementById("step-modul-prodi");
@@ -1029,6 +1034,18 @@
     document.querySelector('[data-mstep="1"]')?.addEventListener("click", () => {
       setStep(1);
       renderProdiStep();
+    });
+
+    document.querySelector('[data-mstep="2"]')?.addEventListener("click", () => {
+      if (selectedProdi) {
+        renderCourseStep(selectedProdi);
+      }
+    });
+
+    document.querySelector('[data-mstep="3"]')?.addEventListener("click", () => {
+      if (selectedCourse) {
+        openCourseReader(selectedCourse);
+      }
     });
 
     // Kontrol Zoom
