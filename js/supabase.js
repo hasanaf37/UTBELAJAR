@@ -1100,22 +1100,47 @@
   };
 
   // 9. SINKRONISASI METADATA MODUL, PAKET LATIHAN, & BUTIR SOAL LINTAS PERANGKAT
+  function isDummySampleModul(m) {
+    if (!m || typeof m !== "object") return true;
+    const id = String(m.id || "");
+    const url = String(m.pdf_file_url || "");
+    if (
+      id.startsWith("d0111111") ||
+      id.startsWith("d0222222") ||
+      id.startsWith("d0333333") ||
+      id.startsWith("d0444444") ||
+      id.startsWith("d0555555") ||
+      id.startsWith("d0999999") ||
+      id.startsWith("mod-msim4207") ||
+      id.startsWith("mod-empty-")
+    ) {
+      return true;
+    }
+    if (url.includes("assets/modul/")) return true;
+    if (Array.isArray(m.images) && m.images.some((img) => typeof img === "string" && img.includes("assets/modul/"))) {
+      return true;
+    }
+    return false;
+  }
+
   function sanitizeModulsForCloud(modulsList) {
     if (!Array.isArray(modulsList)) return [];
-    return modulsList.map((m) => {
-      const copy = { ...m };
-      // Hindari menyimpan dataURL PDF base64 raksasa (>80KB) di indeks katalog ringan
-      if (typeof copy.pdf_data_url === "string" && copy.pdf_data_url.length > 80000) {
-        delete copy.pdf_data_url;
-      }
-      if (Array.isArray(copy.images)) {
-        const totalImgLen = copy.images.reduce((acc, s) => acc + (typeof s === "string" ? s.length : 0), 0);
-        if (totalImgLen > 450000) {
-          copy.images = copy.images.filter((s) => typeof s === "string" && !s.startsWith("data:"));
+    return modulsList
+      .filter((m) => !isDummySampleModul(m))
+      .map((m) => {
+        const copy = { ...m };
+        // Hindari menyimpan dataURL PDF base64 raksasa (>80KB) di indeks katalog ringan
+        if (typeof copy.pdf_data_url === "string" && copy.pdf_data_url.length > 80000) {
+          delete copy.pdf_data_url;
         }
-      }
-      return copy;
-    });
+        if (Array.isArray(copy.images)) {
+          const totalImgLen = copy.images.reduce((acc, s) => acc + (typeof s === "string" ? s.length : 0), 0);
+          if (totalImgLen > 450000) {
+            copy.images = copy.images.filter((s) => typeof s === "string" && !s.startsWith("data:"));
+          }
+        }
+        return copy;
+      });
   }
 
   window.dbGetCatalogModuls = async function () {
@@ -1125,7 +1150,9 @@
     if (hasLocal) {
       try {
         const parsed = JSON.parse(localRaw);
-        if (Array.isArray(parsed)) localList = parsed;
+        if (Array.isArray(parsed)) {
+          localList = parsed.filter((m) => !isDummySampleModul(m));
+        }
       } catch (_) {}
     }
 
@@ -1138,7 +1165,8 @@
           .order("created_at", { ascending: true });
 
         if (!tableErr && Array.isArray(tableModuls)) {
-          const mergedTable = tableModuls.map((tm) => {
+          const validTableModuls = tableModuls.filter((tm) => !isDummySampleModul(tm));
+          const mergedTable = validTableModuls.map((tm) => {
             const localMatch = Array.isArray(localList) ? localList.find((lm) => lm.id === tm.id) : null;
             return {
               ...tm,
@@ -1151,7 +1179,7 @@
           if (Array.isArray(localList)) {
             const tableIds = new Set(mergedTable.map((m) => m.id));
             localList.forEach((lm) => {
-              if (lm && lm.id && !tableIds.has(lm.id)) {
+              if (lm && lm.id && !tableIds.has(lm.id) && !isDummySampleModul(lm)) {
                 mergedTable.push(lm);
               }
             });
@@ -1167,7 +1195,8 @@
       // 2. FALLBACK CLOUD OTOMATIS (_SYS_MOD_): Dipakai bila tabel `moduls` belum dibuat
       const cloudStore = await dbReadSysStore(SYS_MOD_CODE);
       if (cloudStore.exists === true && Array.isArray(cloudStore.value)) {
-        const merged = cloudStore.value.map((cm) => {
+        const validCloudModuls = cloudStore.value.filter((cm) => !isDummySampleModul(cm));
+        const merged = validCloudModuls.map((cm) => {
           const localMatch = Array.isArray(localList) ? localList.find((lm) => lm.id === cm.id) : null;
           if (localMatch) {
             return {
@@ -1187,18 +1216,18 @@
         if (Array.isArray(localList)) {
           const cloudIds = new Set(merged.map((m) => m.id));
           localList.forEach((lm) => {
-            if (lm && lm.id && !cloudIds.has(lm.id)) {
+            if (lm && lm.id && !cloudIds.has(lm.id) && !isDummySampleModul(lm)) {
               merged.push(lm);
             }
           });
         }
         localStorage.setItem("utb_catalog_moduls", JSON.stringify(merged));
         return merged;
-      } else if (cloudStore.exists === false && isCurrentSessionAdminSync() && Array.isArray(localList)) {
-        await dbWriteSysStore(SYS_MOD_ID, SYS_MOD_CODE, sanitizeModulsForCloud(localList));
       }
     }
-    return localList;
+    const cleanList = Array.isArray(localList) ? localList.filter((m) => !isDummySampleModul(m)) : [];
+    localStorage.setItem("utb_catalog_moduls", JSON.stringify(cleanList));
+    return cleanList;
   };
 
   window.dbSaveCatalogModuls = async function (modulsList) {

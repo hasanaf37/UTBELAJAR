@@ -83,73 +83,31 @@
     },
   ];
 
-      // 3. DATA MASTER MODUL (Memuat UUID yang Sinkron dengan Supabase Table public.moduls)
-  const DEFAULT_MODULS = [
-    {
-      id: "d0111111-1111-4111-8111-111111111111",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "STSI4207 Modul 01 - 03: Sistem Informasi Manajemen",
-      edition: "Modul 01 - 03 (18 Halaman)",
-      pdf_file_url: "assets/modul/MSIM4207-Modul-01-03.pdf",
-      pdf_data_url: "",
-      images: [],
-      page_count: 18,
-    },
-    {
-      id: "d0222222-2222-4222-8222-222222222222",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "STSI4207 Modul 04 - 06: Sistem Informasi Manajemen",
-      edition: "Modul 04 - 06 (17 Halaman)",
-      pdf_file_url: "assets/modul/MSIM4207-Modul-04-06.pdf",
-      pdf_data_url: "",
-      images: [],
-      page_count: 17,
-    },
-    {
-      id: "d0333333-3333-4333-8333-333333333333",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "STSI4207 Modul 07 - 09: Sistem Informasi Manajemen",
-      edition: "Modul 07 - 09 (15 Halaman)",
-      pdf_file_url: "assets/modul/MSIM4207-Modul-07-09.pdf",
-      pdf_data_url: "",
-      images: [],
-      page_count: 15,
-    },
-    {
-      id: "d0444444-4444-4444-8444-444444444444",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "STSI4207 Modul Lengkap (Modul 01 - 09)",
-      edition: "Modul Lengkap (60 Halaman)",
-      pdf_file_url: "assets/modul/Sistem-Informasi-Manajemen.pdf",
-      pdf_data_url: "",
-      images: [],
-      page_count: 60,
-    },
-    {
-      id: "d0999999-9999-4999-8999-999999999999",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "Sistem Informasi Manajemen (Upload Admin)",
-      edition: "Modul 1 - 9",
-      pdf_file_url: "https://dfpyizwmzqmlbyapgrpg.supabase.co/storage/v1/object/public/modul-pdfs/soal-modul/1793700336530-agu6hp.pdf",
-      pdf_data_url: "",
-      images: [],
-      page_count: 60,
-    },
-    {
-      id: "d0555555-5555-4555-8555-555555555555",
-      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
-      title: "STSI4207 Modul 01: Sistem Informasi dalam Bisnis (Scan CamScanner)",
-      edition: "Modul 01 (Tes Formatif 1)",
-      pdf_file_url: "assets/modul/MSIM4207-Modul-01.pdf",
-      pdf_data_url: (typeof window !== "undefined" && window.DEFAULT_CAMSCANNER_PDF_DATA_URL) || "",
-      images: [
-        "assets/modul/page-1.jpg",
-        "assets/modul/page-2.jpg",
-        "assets/modul/page-3.jpg",
-      ],
-      page_count: 3,
-    },
-  ];
+  // 3. DATA MASTER MODUL (Hanya memuat modul riil yang diunggah langsung oleh pengguna / admin)
+  const DEFAULT_MODULS = [];
+
+  function isDummySampleModul(m) {
+    if (!m || typeof m !== "object") return true;
+    const id = String(m.id || "");
+    const url = String(m.pdf_file_url || "");
+    if (
+      id.startsWith("d0111111") ||
+      id.startsWith("d0222222") ||
+      id.startsWith("d0333333") ||
+      id.startsWith("d0444444") ||
+      id.startsWith("d0555555") ||
+      id.startsWith("d0999999") ||
+      id.startsWith("mod-msim4207") ||
+      id.startsWith("mod-empty-")
+    ) {
+      return true;
+    }
+    if (url.includes("assets/modul/")) return true;
+    if (Array.isArray(m.images) && m.images.some((img) => typeof img === "string" && img.includes("assets/modul/"))) {
+      return true;
+    }
+    return false;
+  }
 
   // ============================================================================
   // INDEXEDDB STORAGE (Untuk Menyimpan File PDF Scan / Gambar Berukuran Besar)
@@ -251,44 +209,24 @@
     return [...DEFAULT_COURSES];
   }
 
-    function getModuls() {
+  function getModuls() {
     try {
       const raw = localStorage.getItem("utb_catalog_moduls");
       if (raw !== null) {
         let parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          let updated = false;
-          // Pastikan seluruh DEFAULT_MODULS terdaftar jika belum ada
-          DEFAULT_MODULS.forEach((defMod) => {
-            const existingIdx = parsed.findIndex((m) => m && m.id === defMod.id);
-            if (existingIdx === -1) {
-              parsed.push({ ...defMod });
-              updated = true;
-            } else if (!parsed[existingIdx].pdf_file_url && defMod.pdf_file_url) {
-              parsed[existingIdx].pdf_file_url = defMod.pdf_file_url;
-              updated = true;
-            }
-          });
-
-          // Urutan modul agar teratur: 01-03, 04-06, 07-09, Lengkap, 01 Scan
-          const sortOrder = {
-            "mod-msim4207-01-03": 1,
-            "mod-msim4207-04-06": 2,
-            "mod-msim4207-07-09": 3,
-            "mod-msim4207-full": 4,
-            "mod-msim4207-01": 5,
-          };
-          parsed.sort((a, b) => (sortOrder[a.id] || 99) - (sortOrder[b.id] || 99));
-
-          if (updated) {
-            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          // Bersihkan seluruh modul sampel / dummy dari memori lokal
+          const filtered = parsed.filter((m) => !isDummySampleModul(m));
+          filtered.sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { numeric: true }));
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem("utb_catalog_moduls", JSON.stringify(filtered));
           }
-          return parsed;
+          return filtered;
         }
       }
     } catch (_) {}
-    localStorage.setItem("utb_catalog_moduls", JSON.stringify(DEFAULT_MODULS));
-    return [...DEFAULT_MODULS];
+    localStorage.setItem("utb_catalog_moduls", JSON.stringify([]));
+    return [];
   }
 
   // ============================================================================
@@ -319,53 +257,6 @@
       }
     }
   }
-
-  // Unggah otomatis file PDF lokal milik Admin yang belum tersinkron ke Cloud Supabase
-  async function syncPendingAdminFilesToCloud() {
-    if (!isAdmin || typeof window.dbUploadModulFile !== "function") return;
-    try {
-      const list = getModuls();
-      let anySynced = false;
-
-      for (let i = 0; i < list.length; i++) {
-        const m = list[i];
-        if (!m || m.cloud_file_id || m.storage_path) continue;
-
-        if (m.idb_key) {
-          const localBlob = await getFileFromIdb(m.idb_key);
-          if (localBlob instanceof Blob) {
-            window.showToast(`Menyinkronkan PDF "${m.title}" ke Cloud Supabase...`, "info");
-            const cloudMeta = await window.dbUploadModulFile(localBlob, "application/pdf");
-            if (cloudMeta) {
-              list[i] = { ...m, ...cloudMeta };
-              anySynced = true;
-            }
-          }
-        } else if (
-          Array.isArray(m.images) &&
-          m.images.some((src) => typeof src === "string" && src.startsWith("data:"))
-        ) {
-          const cloudMeta = await window.dbUploadModulFile(JSON.stringify(m.images), "application/x-utb-images");
-          if (cloudMeta) {
-            list[i] = { ...m, ...cloudMeta };
-            anySynced = true;
-          }
-        }
-      }
-
-      if (anySynced) {
-        localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
-        if (typeof window.dbSaveCatalogModuls === "function") {
-          await window.dbSaveCatalogModuls(list);
-        }
-        renderAdminModulLists();
-        window.showToast("File PDF modul berhasil disinkronkan ke semua pengguna!", "success");
-      }
-    } catch (err) {
-      console.warn("Gagal sinkronisasi otomatis PDF lokal ke Cloud:", err);
-    }
-  }
-
 
   // ============================================================================
   // SINKRONISASI REALTIME SUPABASE (study_programs, courses, moduls)
@@ -437,8 +328,6 @@
     if (isAdmin) {
       if (adminPanel) adminPanel.style.display = "block";
       initAdminModulController();
-      // Sinkronkan otomatis bila ada PDF yang sebelumnya hanya tersimpan di browser Admin
-      syncPendingAdminFilesToCloud();
     } else {
       if (adminPanel) adminPanel.remove();
     }
@@ -644,43 +533,65 @@
     }
 
     const allModuls = getModuls();
-    let courseModuls = allModuls.filter((m) => {
-      if (!m) return false;
-      if (m.course_id === course.id) return true;
-      if (course.code && m.course_code && m.course_code.toUpperCase() === course.code.toUpperCase()) return true;
-      if (course.code && m.edition && m.edition.toUpperCase().includes(course.code.toUpperCase())) return true;
-      if (course.code && m.title && m.title.toUpperCase().includes(course.code.toUpperCase())) return true;
+    // Hanya tampilkan modul yang valid dan sesuai dengan course_id mata kuliah ini
+    const courseModuls = allModuls.filter((m) => m && m.course_id === course.id && !isDummySampleModul(m));
 
-      // Pencocokan fleksibel untuk mata kuliah Sistem Informasi Manajemen (STSI4207 / MSIM4207)
-      const isSIM = (course.code && (course.code.includes("4207") || course.code.toUpperCase() === "STSI4207" || course.code.toUpperCase() === "MSIM4207")) ||
-                    (course.name && course.name.toLowerCase().includes("sistem informasi manajemen"));
-      if (isSIM) {
-        const titleStr = (m.title || "").toLowerCase();
-        const editionStr = (m.edition || "").toLowerCase();
-        if (titleStr.includes("4207") || titleStr.includes("sistem informasi manajemen") || titleStr.includes("modul")) return true;
-        if (editionStr.includes("4207") || editionStr.includes("sistem informasi manajemen") || editionStr.includes("modul")) return true;
-      }
-      return false;
-    });
+    const pillsContainer = document.getElementById("modul-pills-container");
+    const streamEl = document.getElementById("comic-vertical-stream");
+    const counterEl = document.getElementById("comic-panel-counter");
+    const badgeEl = document.getElementById("reader-badge-edition");
+    const activeTitleEl = document.getElementById("reader-active-title");
+    const zoomText = document.getElementById("comic-zoom-label");
+    const endCard = document.querySelector(".comic-end-card");
 
-    // Fallback jika belum ada modul pada mata kuliah ini
+    // Jika mata kuliah belum memiliki modul yang diunggah
     if (courseModuls.length === 0) {
-      courseModuls = [
-        {
-          id: "mod-empty-" + course.id,
-          course_id: course.id,
-          title: `Modul 01: ${course.name}`,
-          edition: `${course.code} | Modul 01`,
-          images: [],
-          page_count: 0,
-        },
-      ];
+      activeModul = null;
+      if (pillsContainer) {
+        pillsContainer.innerHTML = '<span style="color: #94A3B8; font-size: 0.85rem; font-style: italic; padding: 0.4rem 0;">Belum ada chapter / modul yang diunggah untuk mata kuliah ini.</span>';
+      }
+      if (badgeEl) badgeEl.textContent = "MODUL";
+      if (activeTitleEl) activeTitleEl.textContent = course.name;
+      if (counterEl) counterEl.textContent = "0 Modul";
+      if (zoomText) zoomText.textContent = "100%";
+      if (endCard) endCard.style.display = "none";
+      updateAdminReaderActions();
+
+      if (streamEl) {
+        streamEl.innerHTML = `
+          <div style="background: #1E293B; color: #E2E8F0; padding: 3rem 1.5rem; border-radius: 14px; text-align: center; max-width: 620px; margin: 2rem auto; border: 1px dashed rgba(255,255,255,0.2);">
+            <div style="font-size: 3rem; margin-bottom: 0.75rem;">📚</div>
+            <h3 style="color: #FFFFFF; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Belum Ada File Modul</h3>
+            <p style="color: #94A3B8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+              Mata kuliah <strong>${window.escapeHtml(course.code)} - ${window.escapeHtml(course.name)}</strong> belum memiliki file modul PDF yang diunggah.
+            </p>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-primary" id="btn-empty-state-upload" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>+ Unggah File PDF Modul Sekarang</span>
+              </button>
+            ` : `
+              <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,255,255,0.06); border-radius: 8px; color: #94A3B8; font-size: 0.85rem;">
+                Modul akan muncul di sini setelah diunggah oleh Admin.
+              </div>
+            `}
+          </div>
+        `;
+
+        if (isAdmin) {
+          document.getElementById("btn-empty-state-upload")?.addEventListener("click", () => {
+            document.getElementById("btn-admin-reader-upload")?.click();
+          });
+        }
+      }
+      return;
     }
+
+    if (endCard) endCard.style.display = "block";
 
     const initialTarget =
       (preferredModulId && courseModuls.find((m) => m.id === preferredModulId)) || courseModuls[0];
 
-    const pillsContainer = document.getElementById("modul-pills-container");
     if (pillsContainer) {
       pillsContainer.innerHTML = courseModuls
         .map(
@@ -1160,7 +1071,10 @@
   // UNDUH FILE PDF ASLI
   // ============================================================================
   async function downloadActivePdf() {
-    if (!activeModul) return;
+    if (!activeModul || !activeModul.id || isDummySampleModul(activeModul)) {
+      window.showToast("Belum ada file modul untuk diunduh.", "warning");
+      return;
+    }
     const safeName =
       (activeModul.title || "Soal-Modul-UTBelajar")
         .replace(/[^a-zA-Z0-9_-]+/g, "-")
@@ -1465,7 +1379,7 @@
     });
 
     deleteBtn?.addEventListener("click", async () => {
-      if (!activeModul || String(activeModul.id || "").startsWith("mod-empty-")) {
+      if (!activeModul || !activeModul.id || isDummySampleModul(activeModul)) {
         window.showToast("Tidak ada file modul yang dipilih untuk dihapus.", "warning");
         return;
       }
