@@ -262,6 +262,7 @@
           </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Stepper Indikator Tahap -->
         <div class="latihan-stepper">
           <div class="step-item active is-current" data-step="1" title="Langkah 1: Program Studi">
@@ -295,6 +296,53 @@
           <div class="step-item" data-step="5" title="Langkah 5: Hasil &amp; Pembahasan">
             <div class="step-number">5</div>
             <span>Hasil &amp; Pembahasan</span>
+=======
+        <!-- Stepper Indikator Tahap Responsif (Laptop & Handphone) -->
+        <div class="latihan-stepper-wrapper">
+          <!-- Header Status Mobile (Khusus Tampilan Layar HP) -->
+          <div class="mobile-stepper-header">
+            <span id="mobile-stepper-badge" class="mobile-stepper-badge">Tahap 1 dari 5</span>
+            <span id="mobile-stepper-title" class="mobile-stepper-title">Program Studi</span>
+          </div>
+          <div class="mobile-stepper-track">
+            <div id="stepper-progress-fill" class="mobile-stepper-fill" style="width: 20%;"></div>
+          </div>
+
+          <!-- Deretan Pill Stepper -->
+          <div class="latihan-stepper" role="navigation" aria-label="Tahapan Latihan Soal">
+            <div class="step-item active" data-step="1" title="Tahap 1: Program Studi">
+              <div class="step-number">1</div>
+              <span class="step-label">Program Studi</span>
+            </div>
+            <div class="step-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="step-item" data-step="2" title="Tahap 2: Mata Kuliah">
+              <div class="step-number">2</div>
+              <span class="step-label">Mata Kuliah</span>
+            </div>
+            <div class="step-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="step-item" data-step="3" title="Tahap 3: Paket Soal">
+              <div class="step-number">3</div>
+              <span class="step-label">Paket Soal</span>
+            </div>
+            <div class="step-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="step-item" data-step="4" title="Tahap 4: Pengerjaan">
+              <div class="step-number">4</div>
+              <span class="step-label">Pengerjaan</span>
+            </div>
+            <div class="step-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="step-item" data-step="5" title="Tahap 5: Hasil &amp; Pembahasan">
+              <div class="step-number">5</div>
+              <span class="step-label">Hasil &amp; Pembahasan</span>
+            </div>
+>>>>>>> 250c0e2 (revisi sikngronisasi)
           </div>
         </div>
 
@@ -499,6 +547,120 @@
     </div>
   </div>
 
+  <!-- Modal Edit Program Studi (Admin) -->
+  <div id="modal-edit-prodi" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 class="modal-title" style="margin: 0; font-size: 1.15rem; color: var(--primary-navy);">Edit Program Studi (Admin)</h3>
+        <button type="button" class="btn-close-modal" onclick="window.closeModal('modal-edit-prodi')" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); line-height: 1;">&times;</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Perubahan data Program Studi akan tersinkronisasi langsung ke database Supabase secara real-time.
+      </p>
+      <form id="form-edit-prodi">
+        <input type="hidden" id="edit-prodi-id">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-prodi-code" class="form-label" style="font-weight: 600;">Kode Program Studi <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <input type="text" id="edit-prodi-code" class="form-input" style="font-size: 16px;" required placeholder="Contoh: SI">
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-prodi-name" class="form-label" style="font-weight: 600;">Nama Program Studi <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <input type="text" id="edit-prodi-name" class="form-input" style="font-size: 16px;" required placeholder="Contoh: Sistem Informasi">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="edit-prodi-desc" class="form-label" style="font-weight: 600;">Deskripsi</label>
+          <textarea id="edit-prodi-desc" class="form-input" style="font-size: 16px; min-height: 80px;" placeholder="Deskripsi singkat program studi..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeModal('modal-edit-prodi')">Batal</button>
+          <button type="submit" id="btn-save-edit-prodi" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edit Mata Kuliah (Admin) -->
+  <div id="modal-edit-course" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 540px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 class="modal-title" style="margin: 0; font-size: 1.15rem; color: var(--primary-navy);">Edit Mata Kuliah (Admin)</h3>
+        <button type="button" class="btn-close-modal" onclick="window.closeModal('modal-edit-course')" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); line-height: 1;">&times;</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Perubahan data Mata Kuliah akan tersinkronisasi langsung ke database Supabase secara real-time.
+      </p>
+      <form id="form-edit-course">
+        <input type="hidden" id="edit-course-id">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-course-prodi" class="form-label" style="font-weight: 600;">Program Studi <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <select id="edit-course-prodi" class="form-input" style="font-size: 16px;" required></select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-course-code" class="form-label" style="font-weight: 600;">Kode Mata Kuliah <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <input type="text" id="edit-course-code" class="form-input" style="font-size: 16px;" required placeholder="Contoh: MSIM4207">
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-course-name" class="form-label" style="font-weight: 600;">Nama Mata Kuliah <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <input type="text" id="edit-course-name" class="form-input" style="font-size: 16px;" required placeholder="Contoh: Sistem Informasi Manajemen">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="edit-course-desc" class="form-label" style="font-weight: 600;">Deskripsi</label>
+          <textarea id="edit-course-desc" class="form-input" style="font-size: 16px; min-height: 80px;" placeholder="Deskripsi ringkas mata kuliah..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeModal('modal-edit-course')">Batal</button>
+          <button type="submit" id="btn-save-edit-course" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edit Paket Soal (Admin) -->
+  <div id="modal-edit-set" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 540px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 class="modal-title" style="margin: 0; font-size: 1.15rem; color: var(--primary-navy);">Edit Paket Soal Latihan (Admin)</h3>
+        <button type="button" class="btn-close-modal" onclick="window.closeModal('modal-edit-set')" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); line-height: 1;">&times;</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Perubahan data paket soal akan tersinkronisasi langsung ke Supabase secara real-time ke semua pengguna.
+      </p>
+      <form id="form-edit-set">
+        <input type="hidden" id="edit-set-id">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-set-course" class="form-label" style="font-weight: 600;">Mata Kuliah Terkait <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <select id="edit-set-course" class="form-input" style="font-size: 16px;" required></select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-set-title" class="form-label" style="font-weight: 600;">Judul Paket Soal <span style="color: var(--danger); font-size: 16px;">*</span></label>
+          <input type="text" id="edit-set-title" class="form-input" style="font-size: 16px;" required placeholder="Contoh: Latihan Mandiri Modul 1 - 3">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label for="edit-set-diff" class="form-label" style="font-weight: 600;">Tingkat Kesulitan</label>
+            <select id="edit-set-diff" class="form-input" style="font-size: 16px;">
+              <option value="Mudah">Mudah</option>
+              <option value="Menengah">Menengah</option>
+              <option value="Sulit">Sulit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-set-duration" class="form-label" style="font-weight: 600;">Durasi (Menit)</label>
+            <input type="number" id="edit-set-duration" class="form-input" style="font-size: 16px;" min="5" max="180" value="40">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="edit-set-desc" class="form-label" style="font-weight: 600;">Deskripsi Paket</label>
+          <textarea id="edit-set-desc" class="form-input" style="font-size: 16px; min-height: 80px;" placeholder="Deskripsi ringkas materi modul yang diujikan..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeModal('modal-edit-set')">Batal</button>
+          <button type="submit" id="btn-save-edit-set" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -507,6 +669,7 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/navigation.js"></script>
+  <script src="js/stsi4207_questions.js"></script>
   <script src="js/latihan.js"></script>
 </body>
 </html>

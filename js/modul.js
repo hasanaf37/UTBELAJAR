@@ -169,6 +169,7 @@
   // ============================================================================
   let currentUser = null;
   let isAdmin = false;
+  let currentModulStep = 1;
   let selectedProdi = null;
   let selectedCourse = null;
   let activeModul = null;
@@ -335,15 +336,42 @@
   // STEPPER TAHAPAN (1. Prodi -> 2. Mata Kuliah -> 3. Baca Soal Modul)
   // ============================================================================
   function setStep(stepNum) {
+    currentModulStep = stepNum;
     document.querySelectorAll("[data-mstep]").forEach((el) => {
       const n = Number(el.dataset.mstep);
+<<<<<<< HEAD
       el.classList.toggle("active", n <= stepNum);
       el.classList.toggle("is-completed", n < stepNum);
       el.classList.toggle("is-current", n === stepNum);
       if (n === stepNum) {
         el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+=======
+      const numEl = el.querySelector(".step-number");
+      if (numEl) numEl.textContent = n; // Selalu nomor, tanpa tanda ceklis
+
+      if (n === stepNum) {
+        el.classList.add("active");
+        el.classList.remove("completed");
+      } else if (n < stepNum) {
+        el.classList.add("completed");
+        el.classList.remove("active");
+      } else {
+        el.classList.remove("active", "completed");
+>>>>>>> 250c0e2 (revisi sikngronisasi)
       }
     });
+
+    // Update Mobile Status Bar & Progress Track
+    const progressFill = document.getElementById("modul-progress-fill");
+    if (progressFill) progressFill.style.width = `${(stepNum / 3) * 100}%`;
+    const mobileBadge = document.getElementById("modul-mobile-badge");
+    if (mobileBadge) mobileBadge.textContent = `Tahap ${stepNum} dari 3`;
+    const stepLabels = ["Pilih Program Studi", "Pilih Mata Kuliah", "Baca Soal Modul"];
+    const mobileTitle = document.getElementById("modul-mobile-title");
+    if (mobileTitle) mobileTitle.textContent = stepLabels[stepNum - 1] || "";
+
+    const activeItem = document.querySelector(`[data-mstep="${stepNum}"]`);
+    activeItem?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
 
     const s1 = document.getElementById("step-modul-prodi");
     const s2 = document.getElementById("step-modul-course");
@@ -1031,9 +1059,32 @@
       else setStep(1);
     });
 
-    document.querySelector('[data-mstep="1"]')?.addEventListener("click", () => {
-      setStep(1);
-      renderProdiStep();
+    // Handler navigasi tahapan: HANYA BISA LANGSUNG KE KIRI, JIKA KE KANAN MUNCULKAN POPUP
+    document.querySelectorAll(".latihan-stepper [data-mstep]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const targetStep = Number(el.dataset.mstep);
+        if (!targetStep || targetStep === currentModulStep) return;
+
+        // 1. HANYA BISA LANGSUNG KE KIRI
+        if (targetStep < currentModulStep) {
+          if (targetStep === 1) {
+            setStep(1);
+            renderProdiStep();
+          } else if (targetStep === 2) {
+            setStep(2);
+            if (selectedProdi) renderCourseStep(selectedProdi);
+            else renderProdiStep();
+          }
+          return;
+        }
+
+        // 2. JIKA KLIK KE KANAN (MAJU): BLOKIR & MUNCULKAN POPUP PERINGATAN
+        if (currentModulStep === 1) {
+          window.showToast("Pilih program studi dahulu", "info");
+        } else if (currentModulStep === 2) {
+          window.showToast("Pilih mata kuliah dahulu", "info");
+        }
+      });
     });
 
     document.querySelector('[data-mstep="2"]')?.addEventListener("click", () => {

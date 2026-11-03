@@ -11,7 +11,7 @@
   ];
 
   const SEED_COURSES = [
-    { id: "c-msim4207-01", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4207", name: "Sistem Informasi dalam Bisnis", description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), dan infrastruktur TI dalam organisasi bisnis." },
+    { id: "c-msim4207-01", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4207", name: "Sistem Informasi Manajemen", description: "Membahas konsep sistem informasi, model bisnis digital, infrastruktur TI, keamanan, basis data, DSS, dan perancangan sistem informasi." },
     { id: "c1111111-1111-1111-1111-111111111111", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4201", name: "Analisis dan Perancangan Sistem", description: "Konsep siklus hidup pengembangan sistem (SDLC), pemodelan UML, dan use case diagram." },
     { id: "c2222222-2222-2222-2222-222222222222", study_program_id: "b1111111-1111-1111-1111-111111111111", code: "MSIM4202", name: "Sistem Basis Data", description: "Normalisasi data, Entity-Relationship Diagram (ERD), sintaks SQL, dan transaksi database." },
     { id: "c4444444-4444-4444-4444-444444444444", study_program_id: "b2222222-2222-2222-2222-222222222222", code: "EKMA4116", name: "Manajemen Strategik", description: "Analisis lingkungan bisnis, keunggulan bersaing, visi-misi korporasi, dan implementasi strategi." },
@@ -20,6 +20,33 @@
   ];
 
   const SEED_SETS = [
+    {
+      id: "set-stsi4207-m1-3",
+      course_id: "c-msim4207-01",
+      title: "Latihan Mandiri Modul 1 - 3",
+      description: "Paket latihan mandiri Modul 1 sampai 3 (Konsep SI dalam Bisnis, Kolaborasi & Keunggulan Strategis, serta Isu Sosial & Etika).",
+      difficulty: "Menengah",
+      duration_minutes: 45,
+      question_count: 70
+    },
+    {
+      id: "set-stsi4207-m4-6",
+      course_id: "c-msim4207-01",
+      title: "Latihan Mandiri Modul 4 - 6",
+      description: "Paket latihan mandiri Modul 4 sampai 6 (Infrastruktur TI & Jaringan, Keamanan SI, serta Manajemen Data & Pengetahuan).",
+      difficulty: "Menengah",
+      duration_minutes: 40,
+      question_count: 60
+    },
+    {
+      id: "set-stsi4207-m7-9",
+      course_id: "c-msim4207-01",
+      title: "Latihan Mandiri Modul 7 - 9",
+      description: "Paket latihan mandiri Modul 7 sampai 9 (Aplikasi Perusahaan & E-Commerce, DSS & Intelijen Bisnis, serta Pengembangan SI & Manajemen Proyek).",
+      difficulty: "Menengah",
+      duration_minutes: 40,
+      question_count: 60
+    },
     { id: "d1111111-1111-1111-1111-111111111111", course_id: "c2222222-2222-2222-2222-222222222222", title: "Latihan Mandiri 01: Dasar SQL & Normalisasi", description: "Paket latihan soal komprehensif konsep dasar basis data relasional dan SQL.", difficulty: "Menengah", duration_minutes: 20 },
     { id: "d2222222-2222-2222-2222-222222222222", course_id: "c1111111-1111-1111-1111-111111111111", title: "Latihan Mandiri 01: SDLC & Diagram UML", description: "Uji pemahaman tentang metodologi Waterfall, Agile, Use Case, dan Class Diagram.", difficulty: "Mudah", duration_minutes: 15 },
     { id: "d3333333-3333-3333-3333-333333333333", course_id: "c4444444-4444-4444-4444-444444444444", title: "Latihan Mandiri 01: Analisis SWOT & Strategi", description: "Evaluasi pemahaman analisis SWOT dan strategi bisnis.", difficulty: "Menengah", duration_minutes: 20 },
@@ -73,6 +100,7 @@
   ];
 
   let currentUser = null;
+  let currentStep = 1;
   let selectedProdi = null;
   let selectedCourse = null;
   let selectedSet = null;
@@ -111,27 +139,122 @@
   }
 
   function getCatalogSets() {
+    let list = [];
     const raw = localStorage.getItem("utb_catalog_sets");
     if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) list = parsed;
       } catch (_) {}
     }
-    localStorage.setItem("utb_catalog_sets", JSON.stringify(SEED_SETS));
-    return [...SEED_SETS];
+    if (list.length === 0) {
+      list = [...SEED_SETS];
+    }
+
+    // Bersihkan paket gabungan lama (Modul 1 - 8) yang berpotensi tersisa di cache pengguna
+    list = list.filter((s) => s.id !== "d-stsi4207-m1-8" && !((s.title || "").includes("Modul 1 - 8")));
+
+    // Pastikan 3 paket soal STSI4207 selalu terdaftar
+    const packageSource = Array.isArray(window.STSI4207_PACKAGES) && window.STSI4207_PACKAGES.length > 0
+      ? window.STSI4207_PACKAGES
+      : SEED_SETS.filter((s) => s.id.startsWith("set-stsi4207-"));
+
+    packageSource.forEach((pkg) => {
+      const idx = list.findIndex((item) => item.id === pkg.id);
+      if (idx === -1) {
+        list.push(pkg);
+      } else {
+        list[idx] = { ...list[idx], ...pkg };
+      }
+    });
+
+    list.sort((a, b) => getSetSortOrder(a) - getSetSortOrder(b));
+    localStorage.setItem("utb_catalog_sets", JSON.stringify(list));
+    return list;
   }
 
   function getCatalogQuestions() {
+    let list = [];
     const raw = localStorage.getItem("utb_catalog_questions");
     if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) list = parsed;
       } catch (_) {}
     }
-    localStorage.setItem("utb_catalog_questions", JSON.stringify(SEED_QUESTIONS));
-    return [...SEED_QUESTIONS];
+    if (list.length === 0) {
+      list = [...SEED_QUESTIONS];
+    }
+
+    // Perbarui question_set_id jika ada soal yang masih membawa ID paket gabungan lama
+    list.forEach((q) => {
+      if (q.question_set_id === "d-stsi4207-m1-8") {
+        if (/-m[1-3]-/.test(q.id)) q.question_set_id = "set-stsi4207-m1-3";
+        else if (/-m[4-6]-/.test(q.id)) q.question_set_id = "set-stsi4207-m4-6";
+        else if (/-m[7-9]-/.test(q.id)) q.question_set_id = "set-stsi4207-m7-9";
+      }
+    });
+
+    // Merge seluruh 190 butir soal STSI4207 jika ada
+    if (Array.isArray(window.STSI4207_QUESTIONS) && window.STSI4207_QUESTIONS.length > 0) {
+      const existingMap = new Map(list.map((q) => [q.id, q]));
+      window.STSI4207_QUESTIONS.forEach((q) => {
+        existingMap.set(q.id, q);
+      });
+      list = Array.from(existingMap.values());
+    }
+    localStorage.setItem("utb_catalog_questions", JSON.stringify(list));
+    return list;
+  }
+
+  // Urutan paket latihan mandiri: Modul 1-3 di atas, 4-6 di bawahnya, 7-9 di bawahnya lagi
+  function getSetSortOrder(setObj) {
+    if (!setObj) return 99;
+    const id = (setObj.id || "").toLowerCase();
+    const title = (setObj.title || "").toLowerCase();
+
+    if (id.includes("m1-3") || id.includes("m1_3") || title.includes("modul 1 - 3") || title.includes("modul 1-3") || title.includes("modul 1 s.d. 3") || title.includes("modul 1 s/d 3")) {
+      return 1;
+    }
+    if (id.includes("m4-6") || id.includes("m4_6") || title.includes("modul 4 - 6") || title.includes("modul 4-6") || title.includes("modul 4 s.d. 6") || title.includes("modul 4 s/d 6")) {
+      return 2;
+    }
+    if (id.includes("m7-9") || id.includes("m7_9") || title.includes("modul 7 - 9") || title.includes("modul 7-9") || title.includes("modul 7 s.d. 9") || title.includes("modul 7 s/d 9")) {
+      return 3;
+    }
+    return 99;
+  }
+
+  // Helper resolusi butir soal per paket secara presisi & akurat
+  function getQuestionsForSet(setObj) {
+    if (!setObj) return [];
+    const id = (setObj.id || "").toLowerCase();
+    const title = (setObj.title || "").toLowerCase();
+
+    const isM13 = id === "set-stsi4207-m1-3" || id.includes("m1-3") || id.includes("m1_3") ||
+                  title.includes("modul 1 - 3") || title.includes("modul 1-3") || title.includes("modul 1 s.d. 3") || title.includes("modul 1 s/d 3");
+
+    const isM46 = id === "set-stsi4207-m4-6" || id.includes("m4-6") || id.includes("m4_6") ||
+                  title.includes("modul 4 - 6") || title.includes("modul 4-6") || title.includes("modul 4 s.d. 6") || title.includes("modul 4 s/d 6");
+
+    const isM79 = id === "set-stsi4207-m7-9" || id.includes("m7-9") || id.includes("m7_9") ||
+                  title.includes("modul 7 - 9") || title.includes("modul 7-9") || title.includes("modul 7 s.d. 9") || title.includes("modul 7 s/d 9");
+
+    const pool = (Array.isArray(window.STSI4207_QUESTIONS) && window.STSI4207_QUESTIONS.length > 0)
+      ? window.STSI4207_QUESTIONS
+      : getCatalogQuestions();
+
+    if (isM13) {
+      return pool.filter((q) => q.question_set_id === "set-stsi4207-m1-3" || /-m[1-3]-/.test(q.id));
+    }
+    if (isM46) {
+      return pool.filter((q) => q.question_set_id === "set-stsi4207-m4-6" || /-m[4-6]-/.test(q.id));
+    }
+    if (isM79) {
+      return pool.filter((q) => q.question_set_id === "set-stsi4207-m7-9" || /-m[7-9]-/.test(q.id));
+    }
+
+    return pool.filter((q) => q.question_set_id === setObj.id);
   }
 
   let lastLatihanSyncAt = 0;
@@ -155,17 +278,310 @@
 
       const s1 = document.getElementById("step-prodi-container");
       const s2 = document.getElementById("step-course-container");
+      const s3 = document.getElementById("step-set-container");
       if (s1 && s1.style.display !== "none") {
         await loadStudyPrograms();
       } else if (s2 && s2.style.display !== "none" && selectedProdi) {
         await loadCoursesForProdi(selectedProdi);
+      } else if (s3 && s3.style.display !== "none" && selectedCourse) {
+        await loadQuestionSets(selectedCourse);
       }
     }
+  }
+
+  // ============================================================================
+  // ADMIN REALTIME EDIT MODALS & HANDLERS (PRODI, MATA KULIAH, PAKET SOAL)
+  // ============================================================================
+  function openEditProdiModal(prodiId) {
+    const prodis = getCatalogProdis();
+    const p = prodis.find((item) => item.id === prodiId);
+    if (!p) return;
+
+    const idEl = document.getElementById("edit-prodi-id");
+    const codeEl = document.getElementById("edit-prodi-code");
+    const nameEl = document.getElementById("edit-prodi-name");
+    const descEl = document.getElementById("edit-prodi-desc");
+
+    if (idEl) idEl.value = p.id;
+    if (codeEl) codeEl.value = p.code || "";
+    if (nameEl) nameEl.value = p.name || "";
+    if (descEl) descEl.value = p.description || "";
+
+    window.openModal("modal-edit-prodi");
+  }
+
+  function openEditCourseModal(courseId) {
+    const courses = getCatalogCourses();
+    const c = courses.find((item) => item.id === courseId);
+    if (!c) return;
+
+    const prodis = getCatalogProdis();
+    const prodiSelect = document.getElementById("edit-course-prodi");
+    if (prodiSelect) {
+      prodiSelect.innerHTML = prodis
+        .map((p) => `<option value="${p.id}" ${p.id === c.study_program_id ? "selected" : ""}>${window.escapeHtml(p.name)} (${window.escapeHtml(p.code)})</option>`)
+        .join("");
+    }
+
+    const idEl = document.getElementById("edit-course-id");
+    const codeEl = document.getElementById("edit-course-code");
+    const nameEl = document.getElementById("edit-course-name");
+    const descEl = document.getElementById("edit-course-desc");
+
+    if (idEl) idEl.value = c.id;
+    if (codeEl) codeEl.value = c.code || "";
+    if (nameEl) nameEl.value = c.name || "";
+    if (descEl) descEl.value = c.description || "";
+
+    window.openModal("modal-edit-course");
+  }
+
+  function openEditSetModal(setId) {
+    const sets = getCatalogSets();
+    const s = sets.find((item) => item.id === setId);
+    if (!s) return;
+
+    const courses = getCatalogCourses();
+    const courseSelect = document.getElementById("edit-set-course");
+    if (courseSelect) {
+      courseSelect.innerHTML = courses
+        .map((c) => `<option value="${c.id}" ${c.id === s.course_id ? "selected" : ""}>${window.escapeHtml(c.code)} — ${window.escapeHtml(c.name)}</option>`)
+        .join("");
+    }
+
+    const idEl = document.getElementById("edit-set-id");
+    const titleEl = document.getElementById("edit-set-title");
+    const diffEl = document.getElementById("edit-set-diff");
+    const durEl = document.getElementById("edit-set-duration");
+    const descEl = document.getElementById("edit-set-desc");
+
+    if (idEl) idEl.value = s.id;
+    if (titleEl) titleEl.value = s.title || "";
+    if (diffEl) diffEl.value = s.difficulty || "Menengah";
+    if (durEl) durEl.value = s.duration_minutes || 20;
+    if (descEl) descEl.value = s.description || "";
+
+    window.openModal("modal-edit-set");
+  }
+
+  function setupAdminEditFormListeners() {
+    // 1. Submit Edit Program Studi
+    document.getElementById("form-edit-prodi")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("edit-prodi-id")?.value;
+      const code = document.getElementById("edit-prodi-code")?.value.trim().toUpperCase();
+      const name = document.getElementById("edit-prodi-name")?.value.trim();
+      const description = document.getElementById("edit-prodi-desc")?.value.trim() || "";
+
+      if (!id || !code || !name) return;
+
+      const submitBtn = document.getElementById("btn-save-edit-prodi");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
+      try {
+        if (window.supabaseClient) {
+          const { error } = await window.supabaseClient
+            .from("study_programs")
+            .update({ code, name, description, updated_at: new Date().toISOString() })
+            .eq("id", id);
+          if (error) console.warn("Supabase direct update study_programs:", error.message);
+        }
+
+        if (typeof window.dbUpdateProdi === "function") {
+          await window.dbUpdateProdi(id, { code, name, description });
+        } else {
+          const list = getCatalogProdis();
+          const idx = list.findIndex((item) => item.id === id);
+          if (idx !== -1) {
+            list[idx] = { ...list[idx], code, name, description };
+            localStorage.setItem("utb_catalog_prodis", JSON.stringify(list));
+          }
+        }
+
+        if (selectedProdi && selectedProdi.id === id) {
+          selectedProdi = { ...selectedProdi, code, name, description };
+        }
+
+        window.closeModal("modal-edit-prodi");
+        window.showToast(`Program Studi "${name}" berhasil diperbarui secara real-time!`, "success");
+
+        renderAdminCatalogAll();
+        await loadStudyPrograms();
+      } catch (err) {
+        window.showToast("Gagal menyimpan perubahan: " + err.message, "danger");
+      } finally {
+        window.setButtonLoading(submitBtn, false);
+      }
+    });
+
+    // 2. Submit Edit Mata Kuliah
+    document.getElementById("form-edit-course")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("edit-course-id")?.value;
+      const study_program_id = document.getElementById("edit-course-prodi")?.value;
+      const code = document.getElementById("edit-course-code")?.value.trim().toUpperCase();
+      const name = document.getElementById("edit-course-name")?.value.trim();
+      const description = document.getElementById("edit-course-desc")?.value.trim() || "";
+
+      if (!id || !study_program_id || !code || !name) return;
+
+      const submitBtn = document.getElementById("btn-save-edit-course");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
+      try {
+        if (window.supabaseClient) {
+          const { error } = await window.supabaseClient
+            .from("courses")
+            .update({ study_program_id, code, name, description, updated_at: new Date().toISOString() })
+            .eq("id", id);
+          if (error) console.warn("Supabase direct update courses:", error.message);
+        }
+
+        if (typeof window.dbUpdateCourse === "function") {
+          await window.dbUpdateCourse(id, { study_program_id, code, name, description });
+        } else {
+          const list = getCatalogCourses();
+          const idx = list.findIndex((item) => item.id === id);
+          if (idx !== -1) {
+            list[idx] = { ...list[idx], study_program_id, code, name, description };
+            localStorage.setItem("utb_catalog_courses", JSON.stringify(list));
+          }
+        }
+
+        if (selectedCourse && selectedCourse.id === id) {
+          selectedCourse = { ...selectedCourse, study_program_id, code, name, description };
+        }
+
+        window.closeModal("modal-edit-course");
+        window.showToast(`Mata Kuliah "${name}" berhasil diperbarui secara real-time!`, "success");
+
+        renderAdminCatalogAll();
+        if (selectedProdi) await loadCoursesForProdi(selectedProdi);
+        else await loadStudyPrograms();
+      } catch (err) {
+        window.showToast("Gagal menyimpan perubahan: " + err.message, "danger");
+      } finally {
+        window.setButtonLoading(submitBtn, false);
+      }
+    });
+
+    // 3. Submit Edit Paket Soal
+    document.getElementById("form-edit-set")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("edit-set-id")?.value;
+      const course_id = document.getElementById("edit-set-course")?.value;
+      const title = document.getElementById("edit-set-title")?.value.trim();
+      const difficulty = document.getElementById("edit-set-diff")?.value;
+      const duration_minutes = Number(document.getElementById("edit-set-duration")?.value) || 20;
+      const description = document.getElementById("edit-set-desc")?.value.trim() || "";
+
+      if (!id || !course_id || !title) return;
+
+      const submitBtn = document.getElementById("btn-save-edit-set");
+      window.setButtonLoading(submitBtn, true, "Menyimpan ke Supabase...");
+
+      try {
+        if (window.supabaseClient) {
+          const { error } = await window.supabaseClient
+            .from("question_sets")
+            .upsert({
+              id,
+              course_id,
+              title,
+              description,
+              difficulty,
+              duration_minutes,
+              is_published: true,
+              updated_at: new Date().toISOString()
+            });
+          if (error) console.warn("Supabase upsert question_sets:", error.message);
+        }
+
+        const setsList = getCatalogSets();
+        const idx = setsList.findIndex((item) => item.id === id);
+        if (idx !== -1) {
+          setsList[idx] = { ...setsList[idx], course_id, title, description, difficulty, duration_minutes };
+        } else {
+          setsList.push({ id, course_id, title, description, difficulty, duration_minutes });
+        }
+        localStorage.setItem("utb_catalog_sets", JSON.stringify(setsList));
+
+        if (typeof window.dbSaveCatalogSets === "function") {
+          await window.dbSaveCatalogSets(setsList);
+        }
+
+        if (Array.isArray(window.STSI4207_PACKAGES)) {
+          const pkg = window.STSI4207_PACKAGES.find((p) => p.id === id);
+          if (pkg) {
+            pkg.title = title;
+            pkg.description = description;
+            pkg.difficulty = difficulty;
+            pkg.duration_minutes = duration_minutes;
+          }
+        }
+
+        if (selectedSet && selectedSet.id === id) {
+          selectedSet = { ...selectedSet, course_id, title, description, difficulty, duration_minutes };
+        }
+
+        window.closeModal("modal-edit-set");
+        window.showToast(`Paket Soal "${title}" berhasil diperbarui secara real-time!`, "success");
+
+        renderAdminCatalogAll();
+        if (selectedCourse) await loadQuestionSets(selectedCourse);
+      } catch (err) {
+        window.showToast("Gagal menyimpan perubahan: " + err.message, "danger");
+      } finally {
+        window.setButtonLoading(submitBtn, false);
+      }
+    });
+  }
+
+  // ============================================================================
+  // INISIALISASI REALTIME SUPABASE UNTUK PERUBAHAN INSTAN DI SEMUA CLIENT
+  // ============================================================================
+  function initLatihanRealtimeSync() {
+    if (!window.supabaseClient || typeof window.supabaseClient.channel !== "function") return;
+
+    try {
+      const channel = window.supabaseClient.channel("utb_latihan_realtime_channel");
+
+      channel
+        .on("postgres_changes", { event: "*", schema: "public", table: "study_programs" }, async () => {
+          console.log("Supabase Realtime: study_programs berubah");
+          await syncLatihanCatalogFromCloud(true);
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, async () => {
+          console.log("Supabase Realtime: courses berubah");
+          await syncLatihanCatalogFromCloud(true);
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "question_sets" }, async () => {
+          console.log("Supabase Realtime: question_sets berubah");
+          await syncLatihanCatalogFromCloud(true);
+        })
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            console.log("Supabase Realtime: Terhubung ke channel latihan soal.");
+          }
+        });
+    } catch (err) {
+      console.warn("Realtime subscription warning:", err);
+    }
+
+    // Dengarkan event storage untuk sinkronisasi antar-tab dalam browser yang sama
+    window.addEventListener("storage", (e) => {
+      if (e.key && e.key.startsWith("utb_catalog_")) {
+        syncLatihanCatalogFromCloud(true);
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
+
+    setupAdminEditFormListeners();
+    initLatihanRealtimeSync();
 
     await syncLatihanCatalogFromCloud(false);
 
@@ -407,11 +823,18 @@
                 p.description || ""
               )}</span>
             </div>
-            <button type="button" class="btn btn-danger btn-sm btn-del-prodi" data-id="${p.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
+            <div style="display: flex; gap: 0.4rem;">
+              <button type="button" class="btn btn-secondary btn-sm btn-edit-prodi-admin" data-id="${p.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm btn-del-prodi" data-id="${p.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
+            </div>
           </div>
         `
         )
         .join("");
+
+      prodiListEl.querySelectorAll(".btn-edit-prodi-admin").forEach((btn) => {
+        btn.addEventListener("click", () => openEditProdiModal(btn.dataset.id));
+      });
 
       prodiListEl.querySelectorAll(".btn-del-prodi").forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -457,11 +880,18 @@
                   parentProdi?.name || "-"
                 )})</span>
               </div>
-              <button type="button" class="btn btn-danger btn-sm btn-del-course" data-id="${c.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn btn-secondary btn-sm btn-edit-course-admin" data-id="${c.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Edit</button>
+                <button type="button" class="btn btn-danger btn-sm btn-del-course" data-id="${c.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
+              </div>
             </div>
           `;
         })
         .join("");
+
+      courseListEl.querySelectorAll(".btn-edit-course-admin").forEach((btn) => {
+        btn.addEventListener("click", () => openEditCourseModal(btn.dataset.id));
+      });
 
       courseListEl.querySelectorAll(".btn-del-course").forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -516,6 +946,7 @@
                 </div>
               </div>
               <div style="display: flex; gap: 0.45rem;">
+                <button type="button" class="btn btn-secondary btn-sm btn-edit-set-admin" data-id="${s.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Edit</button>
                 <button type="button" class="btn btn-secondary btn-sm btn-test-set" data-id="${s.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Uji Pengerjaan</button>
                 <button type="button" class="btn btn-danger btn-sm btn-del-set" data-id="${s.id}" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Hapus</button>
               </div>
@@ -523,6 +954,10 @@
           `;
         })
         .join("");
+
+      setListEl.querySelectorAll(".btn-edit-set-admin").forEach((btn) => {
+        btn.addEventListener("click", () => openEditSetModal(btn.dataset.id));
+      });
 
       setListEl.querySelectorAll(".btn-test-set").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -611,9 +1046,11 @@
   }
 
   function updateStepperUI(step) {
-    const steps = document.querySelectorAll(".step-item");
+    currentStep = step;
+    const steps = document.querySelectorAll(".latihan-stepper .step-item");
     steps.forEach((s) => {
       const sNum = Number(s.dataset.step);
+<<<<<<< HEAD
       if (sNum <= step) s.classList.add("active");
       else s.classList.remove("active");
 
@@ -622,8 +1059,34 @@
 
       if (sNum === step) {
         s.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+=======
+      const numEl = s.querySelector(".step-number");
+      if (numEl) numEl.textContent = sNum; // Selalu nomor, tanpa tanda ceklis
+
+      if (sNum === step) {
+        s.classList.add("active");
+        s.classList.remove("completed");
+      } else if (sNum < step) {
+        s.classList.add("completed");
+        s.classList.remove("active");
+      } else {
+        s.classList.remove("active", "completed");
+>>>>>>> 250c0e2 (revisi sikngronisasi)
       }
     });
+
+    // Update Mobile Status Bar & Progress Track
+    const progressFill = document.getElementById("stepper-progress-fill");
+    if (progressFill) progressFill.style.width = `${(step / 5) * 100}%`;
+    const mobileBadge = document.getElementById("mobile-stepper-badge");
+    if (mobileBadge) mobileBadge.textContent = `Tahap ${step} dari 5`;
+    const stepLabels = ["Program Studi", "Mata Kuliah", "Paket Soal", "Pengerjaan", "Hasil & Pembahasan"];
+    const mobileTitle = document.getElementById("mobile-stepper-title");
+    if (mobileTitle) mobileTitle.textContent = stepLabels[step - 1] || "";
+
+    // Smooth scroll active item into view on mobile
+    const currentActiveItem = document.querySelector(`.latihan-stepper .step-item[data-step="${step}"]`);
+    currentActiveItem?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
 
     document.getElementById("step-prodi-container")?.style.setProperty("display", step === 1 ? "block" : "none");
     document.getElementById("step-course-container")?.style.setProperty("display", step === 2 ? "block" : "none");
@@ -657,6 +1120,7 @@
       return;
     }
 
+    const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     grid.innerHTML = prodis
       .map(
         (p) => `
@@ -666,7 +1130,17 @@
             <div class="selection-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             </div>
-            <span class="badge badge-primary">${window.escapeHtml(p.code)}</span>
+            <div style="display: flex; align-items: center; gap: 0.45rem;">
+              <span class="badge badge-primary">${window.escapeHtml(p.code)}</span>
+              ${
+                isAdmin
+                  ? `<button type="button" class="btn btn-secondary btn-sm btn-edit-prodi-nav" data-prodi-id="${p.id}" title="Edit Program Studi" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 600;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Edit
+                    </button>`
+                  : ""
+              }
+            </div>
           </div>
           <h3 class="selection-title">${window.escapeHtml(p.name)}</h3>
           <p class="selection-desc">${window.escapeHtml(p.description || "Program studi digital.")}</p>
@@ -679,6 +1153,13 @@
     `
       )
       .join("");
+
+    grid.querySelectorAll(".btn-edit-prodi-nav").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openEditProdiModal(btn.dataset.prodiId);
+      });
+    });
 
     grid.querySelectorAll(".selection-card").forEach((card) => {
       card.addEventListener("click", () => {
@@ -726,13 +1207,27 @@
       return;
     }
 
+    const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     grid.innerHTML = courses
       .map(
         (c) => `
       <div class="selection-card" data-course-id="${c.id}">
         <div>
           <div class="selection-card-header">
-            <span class="badge badge-primary">${window.escapeHtml(c.code)}</span>
+            <div class="selection-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.45rem;">
+              <span class="badge badge-primary">${window.escapeHtml(c.code)}</span>
+              ${
+                isAdmin
+                  ? `<button type="button" class="btn btn-secondary btn-sm btn-edit-course-nav" data-course-id="${c.id}" title="Edit Mata Kuliah" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 600;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Edit
+                    </button>`
+                  : ""
+              }
+            </div>
           </div>
           <h3 class="selection-title">${window.escapeHtml(c.name)}</h3>
           <p class="selection-desc">${window.escapeHtml(c.description || "Mata kuliah program sarjana.")}</p>
@@ -745,6 +1240,13 @@
     `
       )
       .join("");
+
+    grid.querySelectorAll(".btn-edit-course-nav").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openEditCourseModal(btn.dataset.courseId);
+      });
+    });
 
     grid.querySelectorAll(".selection-card").forEach((card) => {
       card.addEventListener("click", () => {
@@ -778,12 +1280,27 @@
       try {
         const { data, error } = await window.supabaseClient
           .from("question_sets")
-          .select("id, title, description, difficulty, duration_minutes")
+          .select("id, course_id, title, description, difficulty, duration_minutes")
           .eq("course_id", course.id)
           .eq("is_published", true);
         if (!error && Array.isArray(data) && data.length > 0) sets = data;
       } catch (_) {}
     }
+
+    const isSTSI = course.code === "MSIM4207" || course.code === "STSI4207" ||
+      (course.name && course.name.toLowerCase().includes("sistem informasi manajemen"));
+
+    if (isSTSI) {
+      const officialSets = allSets.filter((s) => s.id.startsWith("set-stsi4207-") || s.course_id === "c-msim4207-01");
+      if (officialSets.length >= 3) {
+        sets = officialSets;
+      } else if (sets.length === 0) {
+        sets = officialSets;
+      }
+    }
+
+    // Bersihkan paket gabungan lama jika tersisa
+    sets = sets.filter((s) => s.id !== "d-stsi4207-m1-8" && !((s.title || "").includes("Modul 1 - 8")));
 
     if (sets.length === 0) {
       listEl.innerHTML = `
@@ -794,10 +1311,19 @@
       return;
     }
 
+    // Urutkan paket latihan secara konsisten:
+    // 1. Modul 1 - 3 di paling atas
+    // 2. Modul 4 - 6 di bawahnya
+    // 3. Modul 7 - 9 di paling bawah
+    sets.sort((a, b) => getSetSortOrder(a) - getSetSortOrder(b));
+
+    const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     listEl.innerHTML = sets
       .map((s) => {
         const diffBadge =
           s.difficulty === "Mudah" ? "badge-success" : s.difficulty === "Sulit" ? "badge-danger" : "badge-warning";
+        const questionsForThisSet = getQuestionsForSet(s);
+        const qCount = questionsForThisSet.length || s.question_count || (s.id === "set-stsi4207-m1-3" ? 70 : s.id.startsWith("set-stsi4207-") ? 60 : 20);
         return `
         <div class="qset-card">
           <div class="qset-info">
@@ -805,16 +1331,31 @@
             <p>${window.escapeHtml(s.description || "Uji penguasaan konsep materi ini.")}</p>
             <div class="qset-badges">
               <span class="badge ${diffBadge}">${window.escapeHtml(s.difficulty)}</span>
+              <span class="badge" style="background: #EEF2F6; color: var(--primary-blue); font-weight: 600;">${qCount} Butir Soal</span>
               <span class="badge" style="background: #F1F5F9; color: var(--text-secondary);">${s.duration_minutes || 20} Menit</span>
             </div>
           </div>
-          <div>
+          <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+            ${
+              isAdmin
+                ? `<button type="button" class="btn btn-secondary btn-sm btn-edit-set-nav" data-set-id="${s.id}" title="Edit Paket Soal" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 600;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Paket
+                  </button>`
+                : ""
+            }
             <button class="btn btn-primary btn-sm btn-start-quiz" data-set-id="${s.id}">Mulai Latihan</button>
           </div>
         </div>
       `;
       })
       .join("");
+
+    listEl.querySelectorAll(".btn-edit-set-nav").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        openEditSetModal(btn.dataset.setId);
+      });
+    });
 
     listEl.querySelectorAll(".btn-start-quiz").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -828,18 +1369,27 @@
   }
 
   async function startQuiz(setObj) {
-    const allQuestions = getCatalogQuestions();
-    let questions = allQuestions.filter((q) => q.question_set_id === setObj.id);
-    if (questions.length === 0) questions = allQuestions;
+    let questions = getQuestionsForSet(setObj);
 
-    if (window.supabaseClient) {
+    // Jika online dan tabel Supabase questions memiliki soal spesifik untuk setObj.id
+    if (window.supabaseClient && questions.length === 0) {
       try {
         const { data } = await window.supabaseClient
           .from("questions")
-          .select("id, question_text, option_a, option_b, option_c, option_d, points")
+          .select("id, question_set_id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, points")
           .eq("question_set_id", setObj.id);
         if (data && data.length > 0) questions = data;
       } catch (_) {}
+    }
+
+    if (questions.length === 0) {
+      const allQuestions = getCatalogQuestions();
+      questions = allQuestions.filter((q) => q.question_set_id === setObj.id);
+    }
+
+    if (questions.length === 0) {
+      window.showToast("Paket latihan ini belum memiliki butir soal.", "warning");
+      return;
     }
 
     currentQuestions = questions;
@@ -847,13 +1397,13 @@
     userAnswers = {};
     flaggedQuestions.clear();
 
-    const durationMin = setObj.duration_minutes || 20;
+    const durationMin = setObj.duration_minutes || (questions.length >= 70 ? 45 : 40);
     remainingSeconds = durationMin * 60;
     totalDurationSeconds = remainingSeconds;
 
     updateStepperUI(4);
     const titleEl = document.getElementById("quiz-set-title");
-    if (titleEl) titleEl.textContent = setObj.title;
+    if (titleEl) titleEl.textContent = `${setObj.title} (${questions.length} Butir Soal)`;
 
     renderPalette();
     renderActiveQuestion();
@@ -998,6 +1548,7 @@
     document.getElementById("crumb-back-prodi")?.addEventListener("click", () => updateStepperUI(1));
     document.getElementById("crumb-back-course")?.addEventListener("click", () => updateStepperUI(2));
 
+<<<<<<< HEAD
     // Navigasi Klik Langsung pada Stepper
     document.querySelectorAll(".latihan-stepper .step-item").forEach((item) => {
       item.addEventListener("click", () => {
@@ -1011,6 +1562,41 @@
           } else if (targetStep === 3 && selectedCourse) {
             updateStepperUI(3);
           }
+=======
+    // Handler navigasi tahapan: HANYA BISA LANGSUNG KE KIRI, JIKA KE KANAN MUNCULKAN POPUP
+    document.querySelectorAll(".latihan-stepper .step-item").forEach((item) => {
+      item.addEventListener("click", async () => {
+        const targetStep = Number(item.dataset.step);
+        if (!targetStep || targetStep === currentStep) return;
+
+        // 1. HANYA BISA LANGSUNG KE KIRI (KEMBALI KE TAHAP SEBELUMNYA)
+        if (targetStep < currentStep) {
+          if (targetStep === 1) {
+            updateStepperUI(1);
+            await loadStudyPrograms();
+          } else if (targetStep === 2) {
+            updateStepperUI(2);
+            if (selectedProdi) await loadCoursesForProdi(selectedProdi);
+            else await loadStudyPrograms();
+          } else if (targetStep === 3) {
+            updateStepperUI(3);
+            if (selectedCourse) await loadQuestionSets(selectedCourse);
+          } else if (targetStep === 4) {
+            updateStepperUI(4);
+          }
+          return;
+        }
+
+        // 2. JIKA KLIK KE KANAN (MAJU): BLOKIR & MUNCULKAN POPUP PERINGATAN
+        if (currentStep === 1) {
+          window.showToast("Pilih program studi dahulu", "info");
+        } else if (currentStep === 2) {
+          window.showToast("Pilih mata kuliah dahulu", "info");
+        } else if (currentStep === 3) {
+          window.showToast("Pilih paket soal dahulu", "info");
+        } else if (currentStep === 4) {
+          window.showToast("Selesaikan pengerjaan soal dahulu", "info");
+>>>>>>> 250c0e2 (revisi sikngronisasi)
         }
       });
     });

@@ -1,0 +1,1952 @@
+const fs = require('fs');
+
+const questions = [
+  // =========================================================================
+  // MODUL 1: Sistem Informasi dalam Bisnis
+  // Tes Formatif 1 (Halaman 1 - 3)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m1-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Fungsi sistem informasi adalah mengubah data menjadi ....",
+    option_a: "informasi",
+    option_b: "informatika",
+    option_c: "keputusan",
+    option_d: "kebutuhan",
+    correct_option: "A",
+    explanation: "Fungsi utama sistem informasi adalah memproses data mentah menjadi informasi yang bermanfaat bagi pemakainya."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Infrastruktur teknologi informasi guna berbagi data disebut ....",
+    option_a: "perangkat keras",
+    option_b: "perangkat lunak",
+    option_c: "perangkat telekomunikasi",
+    option_d: "penyimpanan data",
+    correct_option: "C",
+    explanation: "Perangkat telekomunikasi dan jaringan merupakan infrastruktur TI yang berfungsi untuk saling berbagi data dan berkomunikasi."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Tiga level hirarki organisasi yang umum dijumpai pada berbagai perusahaan adalah ....",
+    option_a: "manajemen puncak, manajemen operasional, pekerja",
+    option_b: "manajemen puncak, manajemen menengah, manajemen operasional",
+    option_c: "manajemen puncak, manajemen operasional, sistem informasi",
+    option_d: "manajemen puncak, manajemen menengah, pekerja",
+    correct_option: "B",
+    explanation: "Tiga tingkatan hierarki manajerial dalam organisasi adalah manajemen puncak (strategic), manajemen menengah (tactical), dan manajemen operasional (operational)."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Point of sales yang mengolah data penjualan termasuk dalam tipe sistem informasi ....",
+    option_a: "sistem pembuatan keputusan",
+    option_b: "sistem pemrosesan transaksi",
+    option_c: "sistem pakar",
+    option_d: "sistem penjualan",
+    correct_option: "B",
+    explanation: "Point of Sales (POS) adalah bagian dari Transaction Processing System (TPS) yang mencatat dan memproses transaksi penjualan rutin harian."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sistem terdiri dari komponen yang sering disebut sebagai ....",
+    option_a: "subsistem",
+    option_b: "supra sistem",
+    option_c: "sub sistem",
+    option_d: "sistemik",
+    correct_option: "C",
+    explanation: "Komponen-komponen atau bagian yang lebih kecil yang membentuk suatu sistem disebut sebagai sub sistem."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Informasi dibutuhkan guna membuat keputusan yang ....",
+    option_a: "maksimal",
+    option_b: "optimal",
+    option_c: "rasional",
+    option_d: "bilingual",
+    correct_option: "C",
+    explanation: "Informasi yang akurat dan relevan diperlukan agar pengambil keputusan dapat bertindak secara rasional."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Orang yang bertanggung jawab untuk menentukan arah dan tujuan suatu perusahaan adalah ....",
+    option_a: "manajer menengah",
+    option_b: "supervisor",
+    option_c: "mandor",
+    option_d: "manajer puncak",
+    correct_option: "D",
+    explanation: "Manajer puncak (top manager/eksekutif) memegang tanggung jawab strategis menetapkan visi, misi, dan arah jangka panjang perusahaan."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Operasi rutin harian suatu perusahaan merupakan tanggung jawab dari manajer ....",
+    option_a: "operasional",
+    option_b: "umum",
+    option_c: "puncak",
+    option_d: "HRD",
+    correct_option: "A",
+    explanation: "Manajer operasional mengawasi dan mengendalikan jalannya aktivitas operasional harian perusahaan."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Regulasi yang dikembangkan oleh suatu perusahaan guna menyelesaikan atau melaksanakan suatu tugas disebut proses ....",
+    option_a: "manual",
+    option_b: "otomatis",
+    option_c: "bisnis",
+    option_d: "digital",
+    correct_option: "C",
+    explanation: "Aturan kerja, alur terkoordinasi, dan regulasi internal dalam menyelesaikan tugas organisasi disebut proses bisnis."
+  },
+  {
+    id: "q-stsi4207-m1-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kumpulan instruksi yang digunakan untuk mengendalikan dan mengkoordinasikan sebuah komputer disebut perangkat ....",
+    option_a: "cadangan",
+    option_b: "catu daya",
+    option_c: "keras",
+    option_d: "lunak",
+    correct_option: "D",
+    explanation: "Perangkat lunak (software) adalah sekumpulan instruksi terprogram yang mengatur kerja perangkat keras komputer."
+  },
+
+  // =========================================================================
+  // MODUL 1: Tes Formatif 2 (Halaman 4 - 5)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m1-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Munculnya layanan streaming film dan musik merupakan perkembangan bisnis berbasis teknologi informasi dalam bentuk ....",
+    option_a: "model usaha baru",
+    option_b: "proses bisnis baru",
+    option_c: "strategi usaha baru",
+    option_d: "pendapatan baru",
+    correct_option: "A",
+    explanation: "Layanan streaming digital merupakan bentuk inovasi model bisnis/usaha baru (new business model) yang mengubah cara penyampaian nilai ke konsumen."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Internet memungkinkan pengusaha UMKM di Indonesia berjualan ke luar negeri dengan cara menurunkan biaya ....",
+    option_a: "upah dan gaji",
+    option_b: "produksi",
+    option_c: "operasional",
+    option_d: "tak terduga",
+    correct_option: "C",
+    explanation: "Pemanfaatan internet mereduksi biaya operasional fisik dan saluran distribusi secara signifikan sehingga UMKM dapat menjangkau pasar global."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Keunikan barang digital dibandingkan dengan barang konvensional adalah ....",
+    option_a: "biaya pemasaran sangat tinggi",
+    option_b: "keuntungan pasti besar",
+    option_c: "profit margin rendah",
+    option_d: "biaya produksi hanya sebesar biaya produksi unit pertama",
+    correct_option: "D",
+    explanation: "Barang digital memiliki karakteristik zero marginal cost, di mana biaya pembuatan terkonsentrasi pada unit pertama, sedangkan biaya reproduksi berikutnya mendekati nol."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Biaya untuk berpindah ke penjual lain bagi seorang konsumen disebut sebagai ....",
+    option_a: "switching cost",
+    option_b: "variable cost",
+    option_c: "fixed cost",
+    option_d: "shared cost",
+    correct_option: "A",
+    explanation: "Switching cost adalah biaya, waktu, atau usaha yang harus dikeluarkan pelanggan saat memutuskan berpindah dari satu produk/penjual ke yang lain."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kualitas informasi ketepatan waktu biasanya berbanding terbalik dengan ....",
+    option_a: "ketersediaan akses",
+    option_b: "kelengkapan",
+    option_c: "kehandalan",
+    option_d: "kepercayaan",
+    correct_option: "B",
+    explanation: "Semakin cepat informasi dituntut untuk segera disajikan (ketepatan waktu), sering kali ada kompromi pada kelengkapan detail data yang disajikan."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Mesin Anjungan Tunai Mandiri merupakan contoh teknologi informasi yang berguna untuk ....",
+    option_a: "meraih keuntungan besar",
+    option_b: "keunggulan kompetitif",
+    option_c: "bertahan hidup",
+    option_d: "keunggulan non kompetitif",
+    correct_option: "C",
+    explanation: "ATM menjadi keharusan standar bagi industri perbankan untuk bertahan hidup (survival) memenuhi ekspektasi dasar nasabah."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perkembangan teknologi yang secara drastis mengubah tatanan usaha di berbagai industri disebut sebagai ....",
+    option_a: "teknologi unggul",
+    option_b: "adopsi teknologi",
+    option_c: "difusi teknologi",
+    option_d: "disrupsi teknologi",
+    correct_option: "D",
+    explanation: "Disrupsi teknologi (disruptive technology) mendobrak model bisnis konvensional dan menggantikannya dengan teknologi yang lebih efisien dan modern."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Aplikasi yang memungkinkan suatu mesin dikendalikan melalui internet disebut sebagai ....",
+    option_a: "Internet of Things",
+    option_b: "Internet version 2.0",
+    option_c: "Semantic Web",
+    option_d: "Intelligent Web",
+    correct_option: "A",
+    explanation: "Internet of Things (IoT) menghubungkan berbagai mesin, perangkat fisik, dan sensor melalui protokol internet untuk pemantauan dan pengendalian jarak jauh."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kemampuan untuk menemukan keterkaitan antara data yang nampak tidak saling berhubungan merupakan kelebihan dari teknologi ....",
+    option_a: "Google SEO",
+    option_b: "Big Data",
+    option_c: "Business Reengineering",
+    option_d: "Business Rendering",
+    correct_option: "B",
+    explanation: "Teknologi Big Data Analytics memiliki kemampuan menganalisis kumpulan data masif tak terstruktur guna menemukan pola dan relasi tersembunyi."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "BRI membeli dan mengoperasikan sendiri satelit telekomunikasi dengan tujuan untuk mengatasi masalah ....",
+    option_a: "jaringan telekomunikasi",
+    option_b: "distribusi dana nasabah",
+    option_c: "kredit macet",
+    option_d: "fraud perbankan",
+    correct_option: "A",
+    explanation: "Satelit BRIsat diluncurkan untuk menjamin ketersediaan infrastruktur jaringan telekomunikasi perbankan di ribuan pulau seluruh pelosok Indonesia."
+  },
+
+  // =========================================================================
+  // MODUL 1: Tes Formatif 3 (Halaman 6 - 8)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m1-tf3-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pendekatan yang menggunakan dasar ilmu teknik adalah ....",
+    option_a: "hard approach",
+    option_b: "soft approach",
+    option_c: "technical approach",
+    option_d: "social approach",
+    correct_option: "A",
+    explanation: "Hard approach menekankan aspek teknis, model matematis, dan kapabilitas fisik teknologi dalam studi sistem informasi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pendekatan yang berfokus pada aspek perilaku para pengguna sistem informasi adalah ....",
+    option_a: "hard approach",
+    option_b: "soft approach",
+    option_c: "technical approach",
+    option_d: "social approach",
+    correct_option: "B",
+    explanation: "Soft approach (pendekatan perilaku) mengkaji respons psikologis, budaya kerja, dan penerimaan pengguna terhadap sistem informasi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pendekatan yang menggabungkan pendekatan teknis dan perilaku adalah ....",
+    option_a: "hard approach",
+    option_b: "soft approach",
+    option_c: "technical approach",
+    option_d: "socio-technical approach",
+    correct_option: "D",
+    explanation: "Socio-technical approach menyatukan kinerja optimal teknologi dengan kapasitas perilaku manusia dan struktur organisasi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Ilmu yang mempelajari dasar matematis teknologi informasi adalah ilmu ....",
+    option_a: "aljabar",
+    option_b: "rekayasa",
+    option_c: "matematika Dasar",
+    option_d: "komputer",
+    correct_option: "D",
+    explanation: "Ilmu komputer (Computer Science) mendalami teori komputabilitas, logika algoritma, dan dasar matematis komputasi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Ilmu yang mempelajari cara pembuatan keputusan manajerial secara ilmiah adalah ....",
+    option_a: "manajemen operasional",
+    option_b: "manajemen sains",
+    option_c: "manajemen keuangan",
+    option_d: "manajemen strategis",
+    correct_option: "B",
+    explanation: "Manajemen sains (Management Science) menerapkan metode kuantitatif dan pemodelan matematis untuk pengambilan keputusan manajerial."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Ilmu yang mempelajari perilaku individu dalam menggunakan sebuah sistem informasi adalah ....",
+    option_a: "psikologi",
+    option_b: "para Psikologi",
+    option_c: "kognisi",
+    option_d: "meta Kognisi",
+    correct_option: "A",
+    explanation: "Psikologi mengkaji proses kognitif, kebiasaan, dan faktor perilaku individu dalam berinteraksi dengan sistem teknologi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Jika kita mempelajari dampak gawai terhadap suasana kerja, maka kita menggunakan dasar ilmu ....",
+    option_a: "sosiatri",
+    option_b: "antropologi",
+    option_c: "sosiologi",
+    option_d: "ekonomi",
+    correct_option: "C",
+    explanation: "Sosiologi mempelajari dinamika interaksi sosial, hubungan antarmanusia, dan budaya kelompok dalam lingkungan kerja."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Jika kita menghitung harga jual paket berlangganan streaming layanan musik seperti Spotify dan Joox, maka kita menggunakan dasar ilmu ....",
+    option_a: "sosiatri",
+    option_b: "antropologi",
+    option_c: "sosiologi",
+    option_d: "ekonomi",
+    correct_option: "D",
+    explanation: "Penentuan struktur harga, elastisitas permintaan, dan monetisasi layanan digital merupakan penerapan ilmu ekonomi."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menunda penggunaan gawai terbaru di suatu perusahaan karena menunggu pelatihan karyawan merupakan contoh penggunaan pendekatan ....",
+    option_a: "hard approach",
+    option_b: "soft approach",
+    option_c: "technical approach",
+    option_d: "socio-technical approach",
+    correct_option: "D",
+    explanation: "Menyelaraskan kematangan sumber daya manusia dengan kesiapan teknologi baru merupakan inti dari pendekatan sosio-teknis."
+  },
+  {
+    id: "q-stsi4207-m1-tf3-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menghitung pendayagunaan fasilitas komputasi perusahaan secara optimal merupakan fokus bidang ilmu .....",
+    option_a: "manajemen operasional",
+    option_b: "operations research",
+    option_c: "manajemen keuangan",
+    option_d: "manajemen strategis",
+    correct_option: "B",
+    explanation: "Operations Research (Riset Operasi) berfokus pada optimasi sistematis alokasi sumber daya dan kapasitas komputasi organisasi."
+  },
+
+  // =========================================================================
+  // MODUL 2: Sistem Informasi untuk Bisnis: Kolaborasi dan Strategi
+  // Tes Formatif 1 (Halaman 9 - 11)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m2-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menerima pesanan dari konsumen merupakan proses bisnis dalam fungsi ....",
+    option_a: "penjualan dan pemasaran",
+    option_b: "akuntansi dan keuangan",
+    option_c: "produksi dan manufaktur",
+    option_d: "sumber daya manusia",
+    correct_option: "A",
+    explanation: "Penerimaan pesanan dan pelayanan order pembeli merupakan tanggung jawab utama fungsi penjualan dan pemasaran."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Berdagang melalui internet disebut sebagai aktivitas ....",
+    option_a: "E-Government",
+    option_b: "E-Catalogue",
+    option_c: "E-Procurement",
+    option_d: "E-Commerce",
+    correct_option: "D",
+    explanation: "E-Commerce (Electronic Commerce) adalah aktivitas transaksi jual-beli barang atau jasa secara daring via internet."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Penggunaan E-Business untuk bertransaksi antara pemerintah dengan penyedia jasa konstruksi masuk ke dalam kategori ....",
+    option_a: "E-Business",
+    option_b: "E-Government",
+    option_c: "E-Voting",
+    option_d: "E-Commerce",
+    correct_option: "B",
+    explanation: "Transaksi digital antara institusi pemerintah dengan pelaku usaha (Government-to-Business / G2B) merupakan domain E-Government."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perangkat teknologi informasi yang berguna untuk membantu kolaborasi antara lain adalah ....",
+    option_a: "ERP",
+    option_b: "ECM",
+    option_c: "Email",
+    option_d: "E-Catalogue",
+    correct_option: "C",
+    explanation: "Surel (Email) adalah sarana komunikasi digital fundamental yang memfasilitasi pertukaran pesan dan kolaborasi antarpihak."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Orang yang bertanggung jawab untuk membuat aplikasi adalah ....",
+    option_a: "programmer",
+    option_b: "controller",
+    option_c: "systems administrator",
+    option_d: "designer",
+    correct_option: "A",
+    explanation: "Programmer bertugas menulis kode sumber program dan membangun fungsionalitas aplikasi komputer."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bekerja sama dengan orang lain untuk mencapai tujuan bersama merupakan definisi dari ....",
+    option_a: "kolaborasi",
+    option_b: "koordinasi",
+    option_c: "kooperasi",
+    option_d: "kooptasi",
+    correct_option: "A",
+    explanation: "Kolaborasi adalah proses bekerja bersama antarindividu atau tim secara sinergis demi meraih tujuan yang telah disepakati."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sistem yang digunakan untuk mengelola pengetahuan dalam perusahaan disebut ....",
+    option_a: "knowledge sharing",
+    option_b: "knowledge management systems",
+    option_c: "knowledge distribution",
+    option_d: "knowledge factory",
+    correct_option: "B",
+    explanation: "Knowledge Management Systems (KMS) mendukung proses penciptaan, pengorganisasian, penyimpanan, dan penyebaran pengetahuan korporat."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sistem informasi fungsional yang tidak terintegrasi akan menciptakan fenomena ....",
+    option_a: "disfungsonalisasi informasi",
+    option_b: "disintegrasi informasi",
+    option_c: "silo informasi",
+    option_d: "disintermediasi informasi",
+    correct_option: "C",
+    explanation: "Information Silo terjadi saat departemen menyimpan datanya secara eksklusif dan terpisah tanpa integrasi lintas divisi."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sistem yang dirancang untuk membantu pembuatan keputusan semi terstruktur dan non rutin adalah ....",
+    option_a: "sistem digital",
+    option_b: "sistem pembuat keputusan",
+    option_c: "sistem pendukung keputusan",
+    option_d: "sistem evaluasi keputusan",
+    correct_option: "C",
+    explanation: "Decision Support System (DSS) dirancang untuk membantu para pengambil keputusan menangani permasalahan semi-terstruktur dan masalah tak terduga."
+  },
+  {
+    id: "q-stsi4207-m2-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Proses bisnis dapat diperbaiki dan ditingkatkan dengan bantuan teknologi informasi melalui cara berikut ini, kecuali ....",
+    option_a: "otomatisasi proses bisnis",
+    option_b: "efisiensi proses bisnis",
+    option_c: "rekayasa ulang proses bisnis",
+    option_d: "birokrasi proses bisnis",
+    correct_option: "D",
+    explanation: "TI bertujuan mempermudah dan mempercepat alur kerja; memperpanjang birokrasi justru bertentangan dengan tujuan implementasi TI."
+  },
+
+  // =========================================================================
+  // MODUL 2: Tes Formatif 2 (Halaman 12 - 13)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m2-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Beragam pandangan yang berbeda mengenai pendayagunaan sumber daya organisasi disebut ....",
+    option_a: "budaya organisasi",
+    option_b: "politik organisasi",
+    option_c: "struktur organisasi",
+    option_d: "hirarkir organisasi",
+    correct_option: "B",
+    explanation: "Politik organisasi timbul akibat perbedaan kepentingan dan pandangan anggota dalam memperebutkan alokasi sumber daya."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang tidak termasuk faktor yang mempengaruhi interaksi teknologi informasi dengan organisasi adalah ....",
+    option_a: "keputusan manajemen operasional",
+    option_b: "struktur organisasi",
+    option_c: "politik organisasi",
+    option_d: "budaya organisasi",
+    correct_option: "A",
+    explanation: "Faktor penentu interaksi TI berskala makro seperti struktur, budaya, lingkungan, dan politik organisasi; bukan rutinitas operasional kasual."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pernyataan berikut yang tidak benar adalah ....",
+    option_a: "teknologi informasi meminimalkan biaya",
+    option_b: "teknologi informasi meningkatkan efisiensi",
+    option_c: "teknologi informasi memperbesar nilai perusahaan",
+    option_d: "teknologi informasi mengurangi biaya transaksi",
+    correct_option: "C",
+    explanation: "TI adalah pemampu (enabler) efisiensi dan penekan biaya; nilai pasar perusahaan ditentukan oleh performa bisnis dan persepsi investor, bukan otomatis membesar hanya karena membeli TI."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang tidak termasuk kekuatan persaingan menurut Model Porter adalah ....",
+    option_a: "pemasok",
+    option_b: "pemain baru",
+    option_c: "pelanggan",
+    option_d: "lingkungan sekitar",
+    correct_option: "D",
+    explanation: "Lima Kekuatan Porter meliputi: Pesaing Industri, Pendatang Baru, Produk Pengganti, Daya Tawar Pemasok, dan Daya Tawar Pembeli."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Dalam strategi jaringan, nilai suatu perusahaan dan produknya akan naik jika ....",
+    option_a: "semakin banyak fiturnya",
+    option_b: "semakin banyak penggunanya",
+    option_c: "berkurang masalahnya",
+    option_d: "berkurang kualitasnya",
+    correct_option: "B",
+    explanation: "Efek Jaringan (Network Effect) menerangkan bahwa nilai utilitas suatu platform berbanding lurus dengan peningkatan jumlah penggunanya."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang tidak termasuk aktivitas pendukung dalam model rantai nilai bisnis adalah ....",
+    option_a: "manajemen",
+    option_b: "administrasi",
+    option_c: "pengadaan barang dan jasa",
+    option_d: "layanan purna jual",
+    correct_option: "D",
+    explanation: "Layanan purna jual (customer service) adalah aktivitas primer (primary activity), bukan aktivitas pendukung (support activity)."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang bukan termasuk strategi generik menghadapi persaingan menurut Porter adalah ....",
+    option_a: "biaya paling optimal",
+    option_b: "biaya terendah",
+    option_c: "diferensiasi produk",
+    option_d: "fokus pada ceruk pasar",
+    correct_option: "A",
+    explanation: "Tiga strategi generik Porter: Keunggulan Biaya Terendah (Low-cost leadership), Diferensiasi Produk, dan Fokus pada Ceruk Pasar (Focus)."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kemampuan memenangkan persaingan merupakan dampak dari adanya keunggulan ....",
+    option_a: "teknis",
+    option_b: "bisnis",
+    option_c: "kompetitif",
+    option_d: "informasi",
+    correct_option: "C",
+    explanation: "Keunggulan kompetitif (competitive advantage) memungkinkan perusahaan menghasilkan nilai unggul dan mengungguli para pesaingnya."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Gojek menawarkan layanan GoRide, GoFood, GoSend, dan GoPay dalam satu aplikasi adalah upaya untuk menang bersaing dengan cara ....",
+    option_a: "biaya terendah",
+    option_b: "diferensiasi produk",
+    option_c: "fokus pada ceruk pasar",
+    option_d: "memperkuat hubungan dengan pemasok",
+    correct_option: "B",
+    explanation: "Mengembangkan aplikasi super (Super App) dengan beragam layanan komprehensif adalah strategi diferensiasi produk."
+  },
+  {
+    id: "q-stsi4207-m2-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Penggunaan sensor dan telekomunikasi data pada barang disebut ....",
+    option_a: "internet 2.0",
+    option_b: "internet of things",
+    option_c: "internet wireless",
+    option_d: "internet superhighway",
+    correct_option: "B",
+    explanation: "Internet of Things (IoT) menyematkan sensor cerdas dan transmisi data pada benda fisik agar terkoneksi jaringan."
+  },
+
+  // =========================================================================
+  // MODUL 3: Permasalahan Sosial dan Etika pada Sistem Informasi
+  // Tes Formatif 1 (Halaman 14 - 15)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m3-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang termasuk area abu-abu secara legal yang diakibatkan adanya sistem informasi baru adalah ....",
+    option_a: "sulitnya mengendalikan data",
+    option_b: "belum diatur dengan undang-undang atau regulasi yang ada",
+    option_c: "diimplementasikan secara sembrono",
+    option_d: "tidak memperhatikan kepentingan pengguna tertentu",
+    correct_option: "B",
+    explanation: "Inovasi teknologi digital sering bergerak lebih cepat daripada hukum tertulis, sehingga memunculkan area abu-abu regulasi."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pembajakan perangkat lunak masuk ke wilayah dimensi moral ....",
+    option_a: "hak dan kewajiban kepemilikan",
+    option_b: "kualitas sistem",
+    option_c: "kualitas hidup",
+    option_d: "hak dan kewajiban informasi",
+    correct_option: "A",
+    explanation: "Pembajakan software melanggar hak cipta dan perlindungan kekayaan intelektual (Property Rights and Obligations)."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Siap menanggung potensi kerugian atas keputusan yang dibuat disebut ....",
+    option_a: "liabilitas",
+    option_b: "proses hukum",
+    option_c: "akuntabilitas",
+    option_d: "tanggung jawab",
+    correct_option: "D",
+    explanation: "Tanggung jawab (responsibility) adalah kesediaan moral individu untuk menerima konsekuensi atas keputusan yang diambilnya."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Mekanisme yang menentukan siapa yang bertindak dan siapa yang bertanggung jawab atas suatu tindakan disebut ....",
+    option_a: "liabilitas",
+    option_b: "proses hukum",
+    option_c: "akuntabilitas",
+    option_d: "tanggung jawab",
+    correct_option: "C",
+    explanation: "Akuntabilitas (accountability) merupakan mekanisme penelusuran untuk menentukan pihak yang bertanggung jawab atas pelaksanaan suatu tindakan."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Aturan yang memungkinkan orang yang dirugikan oleh suatu tindakan (baik oleh individu, sistem, maupun organisasi) untuk mendapatkan kompensasi yang layak disebut ....",
+    option_a: "liabilitas",
+    option_b: "proses hukum",
+    option_c: "akuntabilitas",
+    option_d: "tanggung jawab",
+    correct_option: "A",
+    explanation: "Liabilitas (liability) merupakan ketentuan hukum yang memberi hak bagi pihak terzalimi/dirugikan untuk menuntut kompensasi atau pemulihan."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Seseorang mencuri makanan dari supermarket karena keluarganya kelaparan, jika dievaluasi dengan Utilitarian Principle maka ....",
+    option_a: "dapat diterima karena pemilik supermarket kaya",
+    option_b: "dapat diterima karena menyelamatkan keluarga dari kelaparan",
+    option_c: "salah karena tidak ada orang yang mau dicuri barangnya",
+    option_d: "salah karena mencuri itu salah untuk semua orang",
+    correct_option: "B",
+    explanation: "Prinsip Utilitarian menilai tindakan berdasarkan manfaat atau pencegahan mudarat terbesar yang dihasilkan (menyelamatkan nyawa keluarga dari kelaparan)."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Edward Snowden membocorkan data bahwa pemerintah Amerika Serikat memata-matai warganya, menurut Golden Rule maka tindakan tersebut ....",
+    option_a: "dapat diterima untuk kepentingan publik",
+    option_b: "salah karena melanggar hukum",
+    option_c: "tidak dapat diterima, tidak ada yang mau dimata-matai",
+    option_d: "netral",
+    correct_option: "C",
+    explanation: "Aturan Emas (Golden Rule) menyatakan jangan memperlakukan orang lain seperti halnya Anda tidak ingin diperlakukan (tidak ada yang suka dimata-matai)."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Mengedarkan lagu yang disalin dari komputer teman termasuk dalam dimensi moral ....",
+    option_a: "hak dan kewajiban kepemilikan",
+    option_b: "kualitas sistem",
+    option_c: "kualitas hidup",
+    option_d: "hak dan kewajiban informasi",
+    correct_option: "A",
+    explanation: "Menyalin dan menyebarkan karya hak cipta tanpa izin menyangkut hak kepemilikan kekayaan intelektual (Property Rights)."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Seorang teknisi salah memasang perangkat yang membuat sistem perbankan macet dan merugikan nasabah termasuk dalam dimensi moral ....",
+    option_a: "hak dan kewajiban kepemilikan",
+    option_b: "kualitas sistem",
+    option_c: "kualitas hidup",
+    option_d: "hak dan kewajiban informasi",
+    correct_option: "B",
+    explanation: "Kualitas sistem (System Quality) mengatur standar keandalan perangkat dan tanggung jawab atas kesalahan operasional perangkat lunak/keras."
+  },
+  {
+    id: "q-stsi4207-m3-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Di negara Uni Eropa, pengguna dapat meminta Google menghapus catatan penggunaan miliknya, hal ini termasuk dalam dimensi moral ....",
+    option_a: "hak dan kewajiban kepemilikan",
+    option_b: "kualitas sistem",
+    option_c: "kualitas hidup",
+    option_d: "hak dan kewajiban informasi",
+    correct_option: "D",
+    explanation: "Hak atas privasi data pribadi dan 'right to be forgotten' termasuk ke dalam dimensi Hak dan Kewajiban Informasi (Information Rights)."
+  },
+
+  // =========================================================================
+  // MODUL 3: Tes Formatif 2 (Halaman 16 - 17)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m3-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model penggunaan data pribadi di mana diasumsikan pemilik data mengizinkan kecuali dinyatakan secara eksplisit disebut ....",
+    option_a: "opt in",
+    option_b: "opt out",
+    option_c: "opt off",
+    option_d: "opt send",
+    correct_option: "B",
+    explanation: "Opt-out mengasumsikan data pribadi boleh dikumpulkan secara default kecuali pengguna mengambil tindakan tegas untuk menolaknya."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model penggunaan data pribadi di mana diasumsikan pemilik data tidak mengizinkan kecuali dinyatakan secara eksplisit disebut ....",
+    option_a: "opt in",
+    option_b: "opt out",
+    option_c: "opt off",
+    option_d: "opt send",
+    correct_option: "A",
+    explanation: "Opt-in mewajibkan perusahaan meminta izin secara eksplisit terlebih dahulu sebelum data konsumen boleh direkam dan digunakan."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "File kecil yang ditanamkan oleh suatu situs web ke perangkat milik pengunjungnya disebut ....",
+    option_a: "bread crumb",
+    option_b: "biscuit",
+    option_c: "cookies",
+    option_d: "cookout",
+    correct_option: "C",
+    explanation: "Cookies adalah berkas teks kecil yang dikirim server web ke browser klien guna menyimpan riwayat kunjungan dan preferensi."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perlindungan terhadap buku pelajaran teknik sipil adalah ....",
+    option_a: "hak paten",
+    option_b: "hak cipta",
+    option_c: "hak milik",
+    option_d: "hak guna",
+    correct_option: "B",
+    explanation: "Karya tulis, literatur, dan buku teks dilindungi di bawah hukum Hak Cipta (Copyright)."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perlindungan terhadap resep rahasia produk minuman adalah ....",
+    option_a: "merek dagang",
+    option_b: "hak cipta",
+    option_c: "hak paten",
+    option_d: "rahasia dagang",
+    correct_option: "D",
+    explanation: "Formula resep makanan/minuman yang dirahasiakan dilindungi secara hukum melalui instrumen Rahasia Dagang (Trade Secret)."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perlindungan terhadap teknologi komunikasi 4G/LTE adalah ....",
+    option_a: "merk dagang",
+    option_b: "hak cipta",
+    option_c: "hak paten",
+    option_d: "rahasia dagang",
+    correct_option: "C",
+    explanation: "Invensi proses dan teknologi perangkat keras baru seperti modul 4G/LTE dilindungi dengan Hak Paten."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang bukan merupakan sumber energi baru terbarukan adalah Pembangkit listrik ....",
+    option_a: "tenaga surya",
+    option_b: "tenaga gelombang",
+    option_c: "tenaga uap",
+    option_d: "tenaga angin",
+    correct_option: "C",
+    explanation: "PLTU memanfaatkan batu bara atau minyak (bahan bakar fosil yang tidak terbarukan)."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Energi listrik pada pusat data milik perusahaan besar teknologi informasi dunia digunakan untuk mengoperasikan dan mendinginkan ....",
+    option_a: "generator",
+    option_b: "perangkat komputer",
+    option_c: "perangkat pembangkit daya",
+    option_d: "perangkat lunak",
+    correct_option: "B",
+    explanation: "Daya listrik terbesar di fasilitas data center terserap untuk memberi daya dan mendinginkan rak server perangkat komputer."
+  },
+  {
+    id: "q-stsi4207-m1-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bahan beracun dan berbahaya di bawah ini yang tidak digunakan untuk membuat perangkat keras komputer adalah ....",
+    option_a: "cadmium",
+    option_b: "merkurium",
+    option_c: "arsenikum",
+    option_d: "radium",
+    correct_option: "D",
+    explanation: "Radium merupakan isotop radioaktif dan tidak digunakan dalam jalur perakitan sirkuit perangkat keras komputer umum."
+  },
+  {
+    id: "q-stsi4207-m3-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menggunakan papan kunci dan tetikus secara terus-menerus berkontribusi pada kondisi yang disebut ....",
+    option_a: "repetitive sin innocents",
+    option_b: "repetitive stress disorder",
+    option_c: "repetitive post traumatic",
+    option_d: "repetitive stress injury",
+    correct_option: "D",
+    explanation: "RSI (Repetitive Stress Injury) terjadi karena kelelahan jaringan otot akibat gerakan repetitif pada keyboard dan mouse."
+  },
+
+  // =========================================================================
+  // MODUL 4: Infrastruktur Teknologi Informasi
+  // Tes Formatif 1 (Halaman 18 - 20)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m4-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "SAN adalah ....",
+    option_a: "storage area network",
+    option_b: "storage attached network",
+    option_c: "storage array network",
+    option_d: "storage access network",
+    correct_option: "A",
+    explanation: "SAN adalah Storage Area Network, yaitu jaringan berkecepatan tinggi khusus menghubungkan server ke sistem media penyimpanan data."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Antar muka yang menggunakan layar pada perangkat adalah ....",
+    option_a: "stylus",
+    option_b: "touch Screen",
+    option_c: "touch Pen",
+    option_d: "digitizer",
+    correct_option: "B",
+    explanation: "Touch Screen (layar sentuh) memungkinkan interaksi input langsung pengguna melalui sentuhan pada permukaan layar."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bahasa Pemrograman yang dapat dijalankan pada berbagai perangkat adalah ....",
+    option_a: "C++",
+    option_b: "Assembler",
+    option_c: "Pascal",
+    option_d: "Java",
+    correct_option: "D",
+    explanation: "Bahasa pemrograman Java memiliki arsitektur portabel berbasis JVM dengan prinsip 'Write Once, Run Anywhere' (WORA)."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Ciri khas aplikasi dengan lisensi kode terbuka adalah ....",
+    option_a: "gratis dan boleh dijual",
+    option_b: "gratis dan kode sumber disediakan",
+    option_c: "berbayar dan terbatas",
+    option_d: "berbayar dan boleh digandakan",
+    correct_option: "B",
+    explanation: "Open Source Software menyediakan source code secara terbuka sehingga bebas ditelaah, diubah, dan didistribusikan."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menurut hukum Moore, kekuatan komputasi akan naik dua kali lipat setiap ....",
+    option_a: "18 bulan",
+    option_b: "18 tahun",
+    option_c: "18 minggu",
+    option_d: "18 hari",
+    correct_option: "A",
+    explanation: "Hukum Moore menyatakan kerapatan transistor pada sirkuit terpadu mikroprosesor berlipat ganda kira-kira setiap 18 bulan."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kelebihan komputer kuantum dibanding komputer biasa adalah dapat ....",
+    option_a: "bekerja sangat lama",
+    option_b: "mengolah data 1 atau 0",
+    option_c: "bekerja lebih sunyi",
+    option_d: "mengolah data 1,0, dan keduanya secara simultan",
+    correct_option: "D",
+    explanation: "Qubit dalam komputasi kuantum dapat berada dalam keadaan superposisi, merepresentasikan nilai 0, 1, atau keduanya sekaligus."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Jenis komputer yang digunakan untuk menangani transaksi penting perbankan karena keandalannya adalah ....",
+    option_a: "blade server",
+    option_b: "rack server",
+    option_c: "mainframe",
+    option_d: "tablet",
+    correct_option: "C",
+    explanation: "Mainframe digunakan oleh institusi keuangan untuk memproses jutaan transaksi simultan dengan reliabilitas dan keamanan tingkat tinggi."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Aplikasi yang biasa digunakan untuk mengakses layanan komputasi awan adalah ....",
+    option_a: "browser",
+    option_b: "FTP client",
+    option_c: "word processor",
+    option_d: "defrager",
+    correct_option: "A",
+    explanation: "Web browser merupakan aplikasi utama di sisi klien yang digunakan untuk berinteraksi dengan layanan cloud computing."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kebijakan untuk memperbolehkan penggunaan perangkat pribadi untuk kepentingan kerja disebut ....",
+    option_a: "BYOB",
+    option_b: "BYOD",
+    option_c: "BSOD",
+    option_d: "MYOB",
+    correct_option: "B",
+    explanation: "BYOD (Bring Your Own Device) adalah kebijakan perusahaan yang memperkenankan karyawan bekerja memakai gawai milik pribadi."
+  },
+  {
+    id: "q-stsi4207-m4-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sistem operasi perangkat bergerak yang dominan saat ini adalah ....",
+    option_a: "Android dan iOS",
+    option_b: "Symbian dan Blackberry",
+    option_c: "MS Windows CE dan Android",
+    option_d: "iOS dan FreeBSD",
+    correct_option: "A",
+    explanation: "Android (Google) dan iOS (Apple) menguasai lebih dari 99% pangsa pasar sistem operasi mobile dunia saat ini."
+  },
+
+  // =========================================================================
+  // MODUL 4: Tes Formatif 2 (Halaman 21 - 22)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m4-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Dalam model Package Switching, data yang akan dikirim diperlakukan ....",
+    option_a: "dikirim langsung",
+    option_b: "dijadikan beberapa paket data dan dikirim melalui jalur berbeda",
+    option_c: "dijadikan beberapa paket data dan dikirim bergantian",
+    option_d: "dijadikan beberapa paket data dan dikirim bersamaan",
+    correct_option: "B",
+    explanation: "Packet Switching memecah aliran data menjadi potongan paket mandiri yang dapat menempuh rute jaringan yang berbeda."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Alat yang menghubungkan sebuah jaringan komputer dengan berbagai jaringan lain yang berbeda adalah ....",
+    option_a: "hub",
+    option_b: "switch",
+    option_c: "repeater",
+    option_d: "router",
+    correct_option: "D",
+    explanation: "Router bertugas merutekan paket data antarjaringan komputer dengan subnet IP atau teknologi yang berbeda."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kabel untuk menghubungkan jaringan telekomunikasi antar benua adalah ....",
+    option_a: "fiber glass",
+    option_b: "fiber optic",
+    option_c: "fiber soluble",
+    option_d: "fiber kevlar",
+    correct_option: "B",
+    explanation: "Kabel fiber optic laut dalam menghubungkan jaringan telekomunikasi dan internet antarpulau dan antarbenua dengan kecepatan cahaya."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Alat telekomunikasi yang dapat menjangkau sepertiga permukaan bumi adalah ....",
+    option_a: "Satelit",
+    option_b: "Wifi",
+    option_c: "BTS",
+    option_d: "Bluetooth",
+    correct_option: "A",
+    explanation: "Satu unit satelit geostasioner pada ketinggian 36.000 km di atas khatulistiwa dapat memancarkan sinyal mencakup sepertiga belahan bumi."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perangkat pengeras suara komputer tanpa kabel termasuk jaringan ....",
+    option_a: "WAN",
+    option_b: "WLAN",
+    option_c: "LAN",
+    option_d: "PAN",
+    correct_option: "B",
+    explanation: "Speaker nirkabel yang terhubung ke jaringan tanpa kabel lokal termasuk kategori jaringan nirkabel (Wireless LAN / PAN)."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Badan yang mengelola alokasi nama domain dan alamat IP adalah ....",
+    option_a: "ICANN",
+    option_b: "WTO",
+    option_c: "W3C",
+    option_d: "IMF",
+    correct_option: "A",
+    explanation: "ICANN (Internet Corporation for Assigned Names and Numbers) adalah lembaga internasional yang mengkoordinasikan alamat IP dan Domain Name System (DNS)."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Alamat IP yang terdiri atas 4 blok angka antara 0-255 adalah versi ....",
+    option_a: "1",
+    option_b: "2",
+    option_c: "4",
+    option_d: "6",
+    correct_option: "C",
+    explanation: "IPv4 terdiri atas 4 oktet angka 8-bit berkisar dari 0 sampai 255 (misal: 192.168.1.1)."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Energi listrik pada pusat data milik perusahaan besar teknologi informasi dunia digunakan untuk mengoperasikan dan mendinginkan ....",
+    option_a: "generator",
+    option_b: "perangkat komputer",
+    option_c: "perangkat pembangkit daya",
+    option_d: "perangkat lunak",
+    correct_option: "B",
+    explanation: "Kebutuhan listrik fasilitas data center terutama difokuskan untuk menjalankan prosesor dan sistem pendingin server komputer."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Layanan telepon menggunakan jalur Internet adalah ....",
+    option_a: "VOIP",
+    option_b: "VOLTE",
+    option_c: "VOLTA",
+    option_d: "MIRC",
+    correct_option: "A",
+    explanation: "VoIP (Voice over Internet Protocol) memungkinkan transmisi panggilan suara secara digital melalui jaringan internet."
+  },
+  {
+    id: "q-stsi4207-m4-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Server Internet yang melayani permintaan dokumen dari klien adalah ....",
+    option_a: "web server",
+    option_b: "file server",
+    option_c: "application server",
+    option_d: "database server",
+    correct_option: "A",
+    explanation: "Web server melayani permintaan berkas dokumen web (HTML, CSS, gambar) yang diminta oleh peramban (browser) klien."
+  },
+
+  // =========================================================================
+  // MODUL 5: Keamanan Sistem Informasi
+  // Tes Formatif 1 (Halaman 23 - 25)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m5-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Malware yang membajak komputer korban dan menuntut tebusan untuk melepaskannya adalah ....",
+    option_a: "virus",
+    option_b: "worms",
+    option_c: "adware",
+    option_d: "ransomware",
+    correct_option: "D",
+    explanation: "Ransomware mengenkripsi dokumen penting korban dan memeras korban dengan tebusan finansial untuk mendapatkan kunci dekripsi."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Upaya melumpuhkan sistem kelistrikan suatu negara oleh aparat negara lain disebut ....",
+    option_a: "peperangan siber",
+    option_b: "terorisme siber",
+    option_c: "sibernetics",
+    option_d: "kejahatan komputer",
+    correct_option: "A",
+    explanation: "Peperangan siber (cyberwarfare) melibatkan serangan digital tersponsori negara untuk merusak infrastruktur krusial negara lawan."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Program khusus yang secara mandiri menggandakan dirinya sendiri dari satu komputer ke komputer lain melalui jaringan komputer disebut ....",
+    option_a: "virus",
+    option_b: "worms",
+    option_c: "adware",
+    option_d: "ransomware",
+    correct_option: "B",
+    explanation: "Worm menyebar dan menggandakan dirinya secara otonom melalui celah port jaringan tanpa membutuhkan berkas inang manusia."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kerapuhan perangkat lunak yang belum diketahui oleh yang berkepentingan (pembuat dan pengguna) sehingga tidak dilakukan tindakan mitigasi disebut ....",
+    option_a: "bugs",
+    option_b: "error",
+    option_c: "zero day vulnerabilities",
+    option_d: "inherent vulnerabilities",
+    correct_option: "C",
+    explanation: "Zero-Day Vulnerability adalah celah keamanan baru yang belum sempat ditambal oleh pengembang peranti lunak."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Malware yang dirancang untuk menyerang komputer pengendali mesin industri adalah ....",
+    option_a: "stoned",
+    option_b: "wanna cry",
+    option_c: "stuxnet",
+    option_d: "petya",
+    correct_option: "C",
+    explanation: "Stuxnet adalah worm siber canggih yang secara spesifik menargetkan Programmable Logic Controller (PLC) sistem industri SCADA."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kejahatan dengan menggunakan akses poin wifi palsu yang seolah-olah sebagai penyedia layanan akses wifi yang terpercaya untuk mencuri data disebut ....",
+    option_a: "evil twins",
+    option_b: "wanna cry",
+    option_c: "stuxnet",
+    option_d: "petya",
+    correct_option: "A",
+    explanation: "Evil Twin adalah access point rogue nakal yang meniru nama SSID terpercaya demi mencuri kredensial korban yang login."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Wifi dianggap kurang aman, karena ....",
+    option_a: "mudah dipakai",
+    option_b: "sering crash",
+    option_c: "mudah disadap",
+    option_d: "lambat",
+    correct_option: "C",
+    explanation: "Sinyal radio Wi-Fi memancar bebas melintasi dinding sehingga lebih rentan disadap atau diintersepsi gelombangnya."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pembaharuan perangkat lunak untuk menutup celah keamanan disebut sebagai ....",
+    option_a: "patch",
+    option_b: "compiler",
+    option_c: "interpreter",
+    option_d: "cache",
+    correct_option: "A",
+    explanation: "Patch keamanan dirilis produsen untuk menambal bug serta menutup celah eksploitasi kode pada aplikasi."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bujukan dan tipu daya kepada seseorang untuk memberikan akun dan password disebut sebagai ....",
+    option_a: "evil twins",
+    option_b: "social network",
+    option_c: "stuxnet",
+    option_d: "social engineering",
+    correct_option: "D",
+    explanation: "Social Engineering mengandalkan manipulasi psikologis agar korban secara sukarela membocorkan kata sandi atau data rahasia."
+  },
+  {
+    id: "q-stsi4207-m5-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Membanjiri server yang dituju dengan permintaan atas data yang berlebihan sehingga diharapkan server yang dituju kewalahan dan berhenti bekerja disebut sebagai ....",
+    option_a: "MS DOS",
+    option_b: "PC DOS",
+    option_c: "DOS",
+    option_d: "DR DOS",
+    correct_option: "C",
+    explanation: "DoS (Denial of Service) melumpuhkan ketersediaan server dengan membanjiri antrean paket request secara masif."
+  },
+
+  // =========================================================================
+  // MODUL 5: Tes Formatif 2 (Halaman 26 - 28)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m5-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kerahasiaan rekam medis pasien dilindungi oleh regulasi ....",
+    option_a: "Peraturan Menteri Kesehatan Nomor 269 Tahun 2008",
+    option_b: "Peraturan Menteri PAN RB Nomor 269 Tahun 2008",
+    option_c: "UU Nomor 5 Tahun 2011",
+    option_d: "UU Nomor 19 Tahun 2006",
+    correct_option: "A",
+    explanation: "Permenkes No. 269/MENKES/PER/III/2008 adalah regulasi yang mengatur standar pengelolaan dan kerahasiaan rekam medis di Indonesia."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menggunakan PIN dan Kartu ATM untuk bertransaksi melalui mesin ATM adalah upaya ....",
+    option_a: "manajemen risiko",
+    option_b: "manajemen identitas",
+    option_c: "manajemen laba",
+    option_d: "manajemen sumber daya",
+    correct_option: "B",
+    explanation: "Penerapan autentikasi kartu dan PIN adalah pilar manajemen identitas (Identity Management) untuk memastikan keabsahan pengguna."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Membeli asuransi untuk gedung pusat data termasuk upaya ....",
+    option_a: "manajemen risiko",
+    option_b: "manajemen identitas",
+    option_c: "manajemen laba",
+    option_d: "manajemen sumber daya",
+    correct_option: "A",
+    explanation: "Membeli asuransi merupakan strategi pemindahan risiko (risk transference) dalam kerangka manajemen risiko organisasi."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Profesi Computer Forensics bertanggung jawab untuk ....",
+    option_a: "merekayasa data",
+    option_b: "memanipulasi gambar",
+    option_c: "menyajikan bukti ke pengadilan",
+    option_d: "menangkap pelaku kejahatan komputer",
+    correct_option: "C",
+    explanation: "Spesialis forensik komputer bertugas mengumpulkan, memelihara integritas, dan menyajikan alat bukti digital di muka pengadilan."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Konfirmasi rekening tujuan dan jumlah sebelum melakukan transfer dana di ATM merupakan bagian dari ....",
+    option_a: "pengendalian keluaran",
+    option_b: "pengendalian masukan",
+    option_c: "pengendalian proses",
+    option_d: "pengendalian data",
+    correct_option: "B",
+    explanation: "Langkah konfirmasi data sebelum transaksi dieksekusi adalah bentuk pengendalian masukan (input control) guna mencegah galat input."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "PIN kartu ATM diberikan kepada nasabah menggunakan amplop tertutup dan tersegel adalah upaya dari ....",
+    option_a: "pengendalian keluaran",
+    option_b: "pengendalian masukan",
+    option_c: "pengendalian proses",
+    option_d: "pengendalian data",
+    correct_option: "A",
+    explanation: "Penyampaian dokumen cetak rahasia kepada nasabah dalam amplop segel merupakan bagian dari pengendalian keluaran (output control)."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pintu ruang komputer dikunci dan hanya orang tertentu yang boleh membawa kuncinya adalah contoh dari ....",
+    option_a: "pengendalian keluaran",
+    option_b: "pengendalian masukan",
+    option_c: "pengendalian umum",
+    option_d: "pengendalian aplikasi",
+    correct_option: "C",
+    explanation: "Pengendalian fisik fasilitas ruang server komputer merupakan salah satu bentuk pengendalian umum (general controls)."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menggunakan genset dan baterai cadangan merupakan upaya ....",
+    option_a: "disaster preparedness",
+    option_b: "disaster mitigation",
+    option_c: "disaster recovery plan",
+    option_d: "disaster crisis",
+    correct_option: "C",
+    explanation: "Penyediaan generator listrik dan UPS cadangan merupakan bagian dari rencana pemulihan bencana (Disaster Recovery Plan)."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kantor cabang bank di Solo mengambil alih pelayanan nasabah ketika kantor cabang di Yogya terkena bencana merupakan bagian dari ....",
+    option_a: "disaster preparedness",
+    option_b: "disaster mitigation",
+    option_c: "disaster recovery plan",
+    option_d: "business continuity planning",
+    correct_option: "D",
+    explanation: "Business Continuity Planning (BCP) memastikan layanan utama bisnis tetap berkesinambungan saat salah satu unit operasional lumpuh."
+  },
+  {
+    id: "q-stsi4207-m5-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Tujuan audit sistem informasi adalah ...",
+    option_a: "menguji keamanan sistem informasi",
+    option_b: "memeriksa apakah kebijakan keamanan dipatuhi",
+    option_c: "menemukan kesalahan personel sistem informasi",
+    option_d: "menguji kesiapan sistem informasi menghadapi bencana",
+    correct_option: "C",
+    explanation: "Audit sistem informasi bertujuan mendeteksi kesalahan pelaksanaan prosedur dan mengevaluasi kepatuhan kontrol internal staf sistem informasi."
+  },
+
+  // =========================================================================
+  // MODUL 6: Manajemen Data dan Pengetahuan
+  // Tes Formatif 1 (Halaman 29 - 30)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m6-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kumpulan bit disebut ....",
+    option_a: "byte",
+    option_b: "binary digit",
+    option_c: "bite",
+    option_d: "bittermen",
+    correct_option: "A",
+    explanation: "Satu Byte dibentuk oleh gabungan 8 bit data biner."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Data yang sama disimpan di beberapa tempat disebut sebagai ....",
+    option_a: "recycle",
+    option_b: "redundancy",
+    option_c: "reuse",
+    option_d: "register",
+    correct_option: "B",
+    explanation: "Redundansi data (data redundancy) adalah duplikasi data identik yang tersimpan secara berulang pada lokasi berkas yang berbeda."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Sesuatu yang datanya akan direkam dan disimpan oleh suatu organisasi disebut ....",
+    option_a: "ekuitas",
+    option_b: "aset",
+    option_c: "equilibrium",
+    option_d: "entitas",
+    correct_option: "D",
+    explanation: "Entitas (Entity) adalah objek nyata atau konsep (orang, tempat, transaksi) yang informasinya dikumpulkan dan disimpan dalam database."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Karakteristik entitas disebut sebagai ....",
+    option_a: "atribut",
+    option_b: "aset",
+    option_c: "ekuitas",
+    option_d: "entitas",
+    correct_option: "A",
+    explanation: "Atribut (Attribute) adalah elemen atau kolom yang menerangkan sifat dan karakteristik unik dari suatu entitas."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perangkat lunak untuk mengelola data secara terpusat adalah ....",
+    option_a: "DBMS",
+    option_b: "NTFS",
+    option_c: "APFS",
+    option_d: "SPSS",
+    correct_option: "A",
+    explanation: "DBMS (Database Management System) adalah sistem perangkat lunak yang mengatur pembuatan, pemeliharaan, dan akses basis data terpusat."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model basis data yang menggambarkan data sebagai tabel dua dimensi adalah ....",
+    option_a: "relativitas",
+    option_b: "assymetry",
+    option_c: "relasional",
+    option_d: "algoritma",
+    correct_option: "C",
+    explanation: "Basis data relasional (Relational Database) menyajikan data dalam bentuk tabel dua dimensi yang terdiri atas baris dan kolom."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bahasa standar untuk memanipulasi dan mengelola basis data adalah ....",
+    option_a: "SQL",
+    option_b: "Python",
+    option_c: "C++",
+    option_d: "Visual Basic",
+    correct_option: "A",
+    explanation: "SQL (Structured Query Language) merupakan bahasa standar de facto untuk mendefinisikan dan memanipulasi data dalam basis data relasional."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Proses untuk menormalkan suatu relasi dalam basis data dengan memecah satu tabel menjadi beberapa tabel disebut ....",
+    option_a: "optimasi",
+    option_b: "normalisasi",
+    option_c: "deNormalisasi",
+    option_d: "defragmentasi",
+    correct_option: "B",
+    explanation: "Normalisasi adalah teknik mendesain skema relasional dengan memecah tabel kompleks guna meminimalkan redundansi data."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Basis data khusus untuk mengelola Big Data adalah ....",
+    option_a: "MySQL",
+    option_b: "NoSQL",
+    option_c: "PostgreSQL",
+    option_d: "TransactSQL",
+    correct_option: "B",
+    explanation: "Database NoSQL (Not Only SQL) dirancang dengan fleksibilitas tinggi untuk menangani volume data masif tak terstruktur dalam Big Data."
+  },
+  {
+    id: "q-stsi4207-m6-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Proses memasukkan data dari sistem pengolahan transaksi ke Data Warehouse adalah ....",
+    option_a: "EMT",
+    option_b: "ECT",
+    option_c: "ECM",
+    option_d: "ETL",
+    correct_option: "D",
+    explanation: "ETL adalah singkatan dari Extract, Transform, and Load dalam proses migrasi dan integrasi data transaksi ke dalam data warehouse."
+  },
+
+  // =========================================================================
+  // MODUL 6: Tes Formatif 2 (Halaman 31 - 33)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m6-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Agar dapat digunakan secara optimal pengetahuan membutuhkan ....",
+    option_a: "kompetisi",
+    option_b: "koperasi",
+    option_c: "kooptasi",
+    option_d: "kolaborasi",
+    correct_option: "D",
+    explanation: "Pemanfaatan pengetahuan organisasi menuntut adanya kolaborasi dan budaya berbagi (knowledge sharing) antarkaryawan."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Keterampilan untuk mengukir kayu termasuk pengetahuan ....",
+    option_a: "tacit",
+    option_b: "eksplisit",
+    option_c: "terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "A",
+    explanation: "Tacit knowledge adalah keahlian personal, intuisi, dan keterampilan motorik yang tersimpan dalam pikiran dan sulit dituangkan dalam dokumen."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kebijakan tertulis mengenai penggunaan laboratorium sebuah universitas merupakan pengetahuan ....",
+    option_a: "tacit",
+    option_b: "eksplisit",
+    option_c: "terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "B",
+    explanation: "Explicit knowledge adalah pengetahuan yang telah diformalkan dan didokumentasikan secara tertulis sehingga mudah disebarluaskan."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Skema untuk membuat klasifikasi pengetahuan disebut ....",
+    option_a: "taksasi",
+    option_b: "taksidermi",
+    option_c: "taksonomi",
+    option_d: "taksaka",
+    correct_option: "C",
+    explanation: "Taksonomi pengetahuan adalah struktur pengelompokan hierarkis untuk mengorganisasi dan mengkategorikan informasi."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Aplikasi yang banyak digunakan untuk pembelajaran jarak jauh adalah ....",
+    option_a: "LST",
+    option_b: "LCD",
+    option_c: "LMS",
+    option_d: "LED",
+    correct_option: "C",
+    explanation: "LMS (Learning Management System) adalah platform software untuk mengelola perkuliahan, modul ajar, dan evaluasi daring."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Arsitek rumah biasanya menggunakan aplikasi ....",
+    option_a: "CAD",
+    option_b: "CAM",
+    option_c: "VR",
+    option_d: "Pokemon Go",
+    correct_option: "A",
+    explanation: "CAD (Computer-Aided Design) dipakai para arsitek dan teknisi perancang untuk menggambar denah dan visualisasi presisi 2D/3D."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Alat simulasi untuk ujian Surat Ijin Mengemudi merupakan contoh dari ....",
+    option_a: "CAD",
+    option_b: "CAM",
+    option_c: "VR",
+    option_d: "Pokemon Go",
+    correct_option: "C",
+    explanation: "Virtual Reality (VR) menghadirkan simulasi imersif lingkungan berkendara yang aman dan realistis untuk pelatihan pengemudi."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "MIT Open Source Ware menggunakan aplikasi ....",
+    option_a: "LST",
+    option_b: "LCD",
+    option_c: "LMS",
+    option_d: "LED",
+    correct_option: "C",
+    explanation: "MIT OpenCourseWare menyajikan materi pendidikan terbuka menggunakan platform sistem manajemen pembelajaran (LMS)."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Manusia membutuhkan bantuan kecerdasan buatan dalam manajemen pengetahuan ....",
+    option_a: "setiap saat",
+    option_b: "tidak pernah",
+    option_c: "datanya tidak ada",
+    option_d: "jumlah data dan informasi sangat besar",
+    correct_option: "D",
+    explanation: "Saat volume data sangat masif, algoritma Artificial Intelligence membantu memilah, mengelompokkan, dan menemukan intisari pengetahuan."
+  },
+  {
+    id: "q-stsi4207-m6-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pembelajaran organisasi mayoritas melibatkan pengetahuan yang bersifat ....",
+    option_a: "tacit",
+    option_b: "eksplisit",
+    option_c: "terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "B",
+    explanation: "Pengetahuan eksplisit yang terangkum dalam dokumen standar dan pedoman kerja menjadi sarana utama transfer ilmu di organisasi."
+  },
+
+  // =========================================================================
+  // MODUL 7: Implementasi Sistem Informasi dalam Bisnis
+  // Tes Formatif 1 (Halaman 34 - 36)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m7-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Perusahaan besar dengan banyak divisi, usaha berskala besar, dan anak perusahaan disebut ....",
+    option_a: "Enterpreneur",
+    option_b: "Socialpreneur",
+    option_c: "Enterprise",
+    option_d: "Technopreneur",
+    correct_option: "C",
+    explanation: "Enterprise adalah istilah korporasi berskala besar dengan berbagai unit bisnis dan jaringan anak perusahaan yang terintegrasi."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Dampak dari pembentukan divisi yang saling berdiri sendiri dalam suatu perusahaan besar adalah ....",
+    option_a: "silo informasi",
+    option_b: "kuasi informasi",
+    option_c: "politik organisasi",
+    option_d: "isolasi informasi",
+    correct_option: "A",
+    explanation: "Pemisahan divisi tanpa integrasi menciptakan sekat 'silo informasi', di mana informasi terisolasi dan tidak mengalir ke bagian lain."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Proses pengiriman barang merupakan bagian dari modul ERP ....",
+    option_a: "akuntansi dan keuangan",
+    option_b: "manufaktur dan operasi",
+    option_c: "penjualan dan pemasaran",
+    option_d: "sumber daya manusia",
+    correct_option: "B",
+    explanation: "Pengelolaan gudang, logistik, dan pengiriman fisik barang diatur dalam modul operasi dan manufaktur (Supply Chain Management)."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pengajuan ijin cuti pegawai merupakan bagian dari modul ERP ....",
+    option_a: "akuntansi dan keuangan",
+    option_b: "manufaktur dan operasi",
+    option_c: "penjualan dan pemasaran",
+    option_d: "sumber daya manusia",
+    correct_option: "D",
+    explanation: "Pengajuan cuti, absensi, dan data kepegawaian diproses dalam modul Human Resource Management (HRM)."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Petani tembakau bagi perusahaan rokok merupakan bagian segmen rantai pasokan ....",
+    option_a: "streamer",
+    option_b: "upstream",
+    option_c: "internal",
+    option_d: "downstream",
+    correct_option: "B",
+    explanation: "Penyedia bahan baku mentah dasar berada pada bagian hulu (upstream) dalam rantai pasokan (supply chain)."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Minimarket merupakan bagian rantai pasokan yang masuk dalam segmen ....",
+    option_a: "streamer",
+    option_b: "upstream",
+    option_c: "internal",
+    option_d: "downstream",
+    correct_option: "D",
+    explanation: "Toko eceran yang menyalurkan produk jadi langsung kepada konsumen akhir berada pada segmen hilir (downstream)."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Kegiatan produksi yang dipicu oleh estimasi penjualan disebut ....",
+    option_a: "push manufacturing",
+    option_b: "pull manufacturing",
+    option_c: "modern manufacturing",
+    option_d: "traditional manufacturing",
+    correct_option: "A",
+    explanation: "Push-based model memproduksi barang berdasarkan peramalan (forecast) penjualan sebelum pesanan aktual tiba."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Modul yang membantu tenaga penjualan dalam perangkat lunak CRM adalah ....",
+    option_a: "SFA",
+    option_b: "PO",
+    option_c: "AR",
+    option_d: "AP",
+    correct_option: "A",
+    explanation: "SFA (Sales Force Automation) membantu tenaga penjual mencatat prospek pelanggan, jadwal follow-up, dan riwayat penawaran."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Bagian CRM yang menentukan apa saja barang yang paling diminati pembeli usia muda adalah ....",
+    option_a: "operasional",
+    option_b: "finansial",
+    option_c: "analitis",
+    option_d: "sekuensial",
+    correct_option: "C",
+    explanation: "Analytical CRM menganalisis data riwayat transaksi konsumen untuk memetakan perilaku dan preferensi demografis pembeli."
+  },
+  {
+    id: "q-stsi4207-m7-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Petugas Call Centre menggunakan bagian CRM ....",
+    option_a: "Operasional",
+    option_b: "Finansial",
+    option_c: "Analitis",
+    option_d: "Sekuensial",
+    correct_option: "A",
+    explanation: "Operational CRM menyediakan antarmuka bagi staf call centre untuk menangani interaksi langsung dan keluhan pelanggan."
+  },
+
+  // =========================================================================
+  // MODUL 7: Tes Formatif 2 (Halaman 37 - 38)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m7-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model bisnis untuk toko online seperti Blibli.Com adalah ....",
+    option_a: "pengepul",
+    option_b: "pengecer",
+    option_c: "perantara",
+    option_d: "media sosial",
+    correct_option: "B",
+    explanation: "Toko ritel daring (e-tailer) beroperasi sebagai pengecer digital yang menjual barang langsung ke konsumen pemakai."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Tokopedia termasuk perusahaan dengan model bisnis ....",
+    option_a: "pengepul",
+    option_b: "pengecer",
+    option_c: "perantara",
+    option_d: "media sosial",
+    correct_option: "C",
+    explanation: "Marketplace bertindak sebagai perantara transaksi (transaction broker) yang mempertemukan pihak penjual dan pembeli."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pembelian karet alam bagi perusahaan ban termasuk model perdagangan ....",
+    option_a: "C2C",
+    option_b: "G2G",
+    option_c: "B2C",
+    option_d: "B2B",
+    correct_option: "D",
+    explanation: "Transaksi pengadaan material antarperusahaan manufaktur merupakan model Business-to-Business (B2B)."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Amazon termasuk model perdagangan ....",
+    option_a: "C2C",
+    option_b: "G2G",
+    option_c: "B2C",
+    option_d: "B2B",
+    correct_option: "C",
+    explanation: "Amazon menyalurkan dan menjual produk langsung kepada konsumen perorangan dalam kerangka Business-to-Consumer (B2C)."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Pendapatan Google terbesar berasal dari ....",
+    option_a: "penjualan smartphone pixel",
+    option_b: "penjualan google drive",
+    option_c: "iklan",
+    option_d: "penjualan android",
+    correct_option: "C",
+    explanation: "Sumber pendapatan terbesar raksasa teknologi Google diperoleh melalui bisnis penayangan iklan daring (Google Ads)."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model pendapatan Joox adalah ....",
+    option_a: "premium",
+    option_b: "freemium",
+    option_c: "berlangganan",
+    option_d: "iklan",
+    correct_option: "B",
+    explanation: "Model freemium memberikan akses gratis dengan keterbatasan tertentu serta opsi langganan berbayar untuk fitur premium."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Traveloka, AirBnB, Tiket.com adalah contoh perusahaan yang menggunakan model bisnis ....",
+    option_a: "penyedia konten",
+    option_b: "pedagang eceran",
+    option_c: "penjual iklan",
+    option_d: "perantara transaksi",
+    correct_option: "D",
+    explanation: "Aplikasi OTA memfasilitasi pemesanan kamar hotel dan tiket penerbangan dengan memperoleh komisi sebagai perantara transaksi."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Youtube adalah contoh perusahaan yang menggunakan model bisnis ....",
+    option_a: "penyedia konten",
+    option_b: "pedagang eceran",
+    option_c: "penjual iklan",
+    option_d: "perantara transaksi",
+    correct_option: "A",
+    explanation: "YouTube menyediakan wadah platform penyiaran dan distribusi video digital sebagai penyedia konten (content provider)."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Ruang Guru adalah contoh perusahaan yang menggunakan model bisnis ....",
+    option_a: "penyedia konten",
+    option_b: "pedagang eceran",
+    option_c: "penjual iklan",
+    option_d: "perantara transaksi",
+    correct_option: "A",
+    explanation: "Ruangguru memproduksi materi pelajaran digital dan paket video bimbingan sebagai penyedia konten edukasi."
+  },
+  {
+    id: "q-stsi4207-m7-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Netflix mampu bersaing dengan Blockbuster karena meniadakan biaya sewa ....",
+    option_a: "kios",
+    option_b: "komputer",
+    option_c: "lahan",
+    option_d: "rumah",
+    correct_option: "A",
+    explanation: "Model streaming video Netflix memangkas beban biaya sewa toko fisik (kios) kaset video yang membebani Blockbuster."
+  },
+
+  // =========================================================================
+  // MODUL 8: Peran Sistem Informasi dalam Pembuatan Keputusan Bisnis
+  // Tes Formatif 1 (Halaman 39 - 41)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m8-tf1-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menghitung gaji bulanan karyawan termasuk jenis keputusan ....",
+    option_a: "rasional",
+    option_b: "terstruktur",
+    option_c: "semi terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "B",
+    explanation: "Penghitungan gaji rutin memiliki rumus tetap dan aturan baku yang pasti, sehingga tergolong keputusan terstruktur (structured decision)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Memilih pemasok untuk barang tertentu termasuk jenis keputusan ....",
+    option_a: "rasional",
+    option_b: "terstruktur",
+    option_c: "semi terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "C",
+    explanation: "Pemilihan pemasok memiliki kriteria terukur sekaligus membutuhkan penilaian subjektif dan negosiasi (semi terstruktur)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Membuat produk baru termasuk jenis keputusan ....",
+    option_a: "rasional",
+    option_b: "terstruktur",
+    option_c: "semi terstruktur",
+    option_d: "tidak terstruktur",
+    correct_option: "D",
+    explanation: "Peluncuran produk baru sarat ketidakpastian dan tidak memiliki formula baku otomatis, sehingga termasuk keputusan tidak terstruktur."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Tiga kategori peran manajerial menurut Mintzberg adalah ....",
+    option_a: "interpersonal, informational, keputusan",
+    option_b: "pengendalian, kepemimpinan, pengawasan",
+    option_c: "operasional, manajerial, eksekutif",
+    option_d: "budaya, organisasional, teknis",
+    correct_option: "A",
+    explanation: "Henry Mintzberg mengelompokkan peran manajerial ke dalam tiga ranah: Interpersonal, Informasional, dan Pengambilan Keputusan (Decisional)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menolak kebenaran informasi karena konsepsi yang dimiliki disebut ....",
+    option_a: "filter redaksional",
+    option_b: "filter reduksional",
+    option_c: "filter abrasif",
+    option_d: "filter manajerial",
+    correct_option: "D",
+    explanation: "Filter manajerial mencerminkan praduga atau kerangka berpikir manajer yang menyaring dan menolak fakta yang tidak sesuai keyakinannya."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Konsistensi struktur data merupakan dimensi kualitas data ....",
+    option_a: "integritas",
+    option_b: "akurasi",
+    option_c: "ketepatan waktu",
+    option_d: "kelengkapan",
+    correct_option: "A",
+    explanation: "Integritas data (Data Integrity) merujuk pada konsistensi format, kebenaran relasi struktural, dan keutuhan data dalam basis data."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Membuat anggaran merupakan perwujudan fungsi manajemen ....",
+    option_a: "perencanaan",
+    option_b: "pengendalian",
+    option_c: "koordinasi",
+    option_d: "pengawasan",
+    correct_option: "A",
+    explanation: "Menyusun anggaran dan mengalokasikan proyeksi dana merupakan wujud konkret pelaksanaan fungsi perencanaan (planning)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Memberikan surat peringatan pada karyawan yang melanggar aturan merupakan perwujudan fungsi manajemen ....",
+    option_a: "perencanaan",
+    option_b: "pengendalian",
+    option_c: "koordinasi",
+    option_d: "pengawasan",
+    correct_option: "B",
+    explanation: "Tindakan korektif dan penegakan regulasi terhadap penyimpangan kerja merupakan perwujudan fungsi pengendalian (controlling)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Membaca dan mempelajari laporan penjualan harian merupakan perwujudan fungsi manajemen ....",
+    option_a: "perencanaan",
+    option_b: "pengendalian",
+    option_c: "koordinasi",
+    option_d: "pengawasan",
+    correct_option: "D",
+    explanation: "Meninjau laporan kemajuan harian untuk memantau performa terhadap sasaran adalah pelaksanaan fungsi pengawasan (monitoring)."
+  },
+  {
+    id: "q-stsi4207-m8-tf1-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Mengajak diskusi karyawan yang mengalami penurunan kinerja untuk mencari tahu penyebabnya merupakan tahapan pembuatan keputusan ....",
+    option_a: "pencarian fakta",
+    option_b: "perancangan solusi",
+    option_c: "pemilihan alternatif solusi",
+    option_d: "penerapan solusi",
+    correct_option: "A",
+    explanation: "Menyelidiki akar persoalan dan mengumpulkan data latar belakang merupakan fase pencarian fakta (Intelligence/Fact Finding)."
+  },
+
+  // =========================================================================
+  // MODUL 8: Tes Formatif 2 (Halaman 42 - 44)
+  // =========================================================================
+  {
+    id: "q-stsi4207-m8-tf2-01",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Analisis prediktif dapat digunakan untuk hal berikut, kecuali ....",
+    option_a: "mengantisipasi tanggapan pada produk baru",
+    option_b: "mengidentifikasi produk yang paling menguntungkan",
+    option_c: "menentukan rute pengiriman barang terbaik",
+    option_d: "menilai kelayakan kredit nasabah",
+    correct_option: "D",
+    explanation: "Kelayakan kredit umumnya menggunakan sistem skoring berbasis aturan kaku, sedangkan analisis prediktif memproyeksikan kecenderungan masa depan."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-02",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Dalam BSC, kinerja diukur berdasarkan ....",
+    option_a: "KIP",
+    option_b: "KPI",
+    option_c: "IKP",
+    option_d: "PIK",
+    correct_option: "B",
+    explanation: "Balanced Scorecard (BSC) memonitor pencapaian target organisasi melalui indikator kinerja utama (Key Performance Indicators / KPI)."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-03",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Analisa sensitivitas banyak digunakan dalam sistem ....",
+    option_a: "DMS",
+    option_b: "DSS",
+    option_c: "DNS",
+    option_d: "NDA",
+    correct_option: "B",
+    explanation: "Analisis sensitivitas (What-If analysis) merupakan kapabilitas inti dalam Decision Support System (DSS)."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-04",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Media untuk menampilkan kinerja perusahaan berdasarkan kriteria tertentu adalah ....",
+    option_a: "dashcam",
+    option_b: "scoring",
+    option_c: "dashboard",
+    option_d: "KPI",
+    correct_option: "C",
+    explanation: "Dashboard visual menyajikan ringkasan indikator performa grafis agar mudah dievaluasi para pimpinan perusahaan."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-05",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Yang tidak termasuk alat dalam analisis prediktif adalah ....",
+    option_a: "statistik",
+    option_b: "ekonometri",
+    option_c: "data mining",
+    option_d: "intuisi",
+    correct_option: "D",
+    explanation: "Analisis prediktif mengandalkan metode kuantitatif matematis dan data empiris, bukan berdasarkan intuisi semata."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-06",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Fasilitas untuk menelusuri data yang menjadi dasar suatu laporan disebut ....",
+    option_a: "drill down",
+    option_b: "throughput",
+    option_c: "drilling",
+    option_d: "data staging",
+    correct_option: "A",
+    explanation: "Fitur drill-down memungkinkan pengguna menavigasi dari ringkasan laporan makro hingga ke perincian transaksi mikro."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-07",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menurunnya keterlambatan pengiriman barang merupakan KPI untuk Scorecard dalam dimensi ....",
+    option_a: "keuangan",
+    option_b: "pembelajaran dan pertumbuhan",
+    option_c: "proses Bisnis",
+    option_d: "pelanggan",
+    correct_option: "C",
+    explanation: "Ketepatan waktu dan efisiensi rantai distribusi logistik dinilai dalam perspektif proses bisnis internal."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-08",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Naiknya kas masuk merupakan KPI untuk Scorecard dalam dimensi ....",
+    option_a: "keuangan",
+    option_b: "pembelajaran dan pertumbuhan",
+    option_c: "proses Bisnis",
+    option_d: "pelanggan",
+    correct_option: "A",
+    explanation: "Peningkatan arus kas masuk dan pendapatan dinilai langsung pada dimensi keuangan (financial perspective)."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-09",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Menurunnya piutang tidak tertagih merupakan KPI untuk Scorecard dalam dimensi ....",
+    option_a: "keuangan",
+    option_b: "pembelajaran dan pertumbuhan",
+    option_c: "proses Bisnis",
+    option_d: "pelanggan",
+    correct_option: "A",
+    explanation: "Kolektibilitas piutang dan rasio kredit macet adalah indikator performa pada dimensi keuangan."
+  },
+  {
+    id: "q-stsi4207-m8-tf2-10",
+    question_set_id: "d-stsi4207-m1-8",
+    question_text: "Model yang dominan digunakan dalam DSS adalah ....",
+    option_a: "ikonik",
+    option_b: "mental",
+    option_c: "analog",
+    option_d: "matematis",
+    correct_option: "D",
+    explanation: "Decision Support System (DSS) banyak menggunakan model matematis dan simulasi kuantitatif untuk mengevaluasi beragam alternatif keputusan bisnis."
+  }
+];
+
+console.log(`Total questions generated: ${questions.length}`);
+fs.writeFileSync('scratch/stsi4207_questions.json', JSON.stringify(questions, null, 2), 'utf-8');

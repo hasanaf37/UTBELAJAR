@@ -3,6 +3,7 @@
    ============================================================================== */
 
 /* ==============================================================================
+<<<<<<< HEAD
    Breadcrumb / Stepper Navigasi Interaktif & Responsif (Laptop & Handphone)
    ============================================================================== */
 .latihan-stepper {
@@ -15,7 +16,74 @@
   border-radius: 14px;
   border: 1.5px solid var(--border);
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+=======
+   STEPPER INDIKATOR MODERN & RESPONSIF (LAPTOP & HANDPHONE)
+   ============================================================================== */
+.latihan-stepper-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Header Status Mobile (Khusus layar HP <= 768px) */
+.mobile-stepper-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-stepper-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+  background: var(--soft-blue);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.mobile-stepper-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+}
+
+.mobile-stepper-track {
+  display: none;
+  width: 100%;
+  height: 5px;
+  background: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
+
+.mobile-stepper-fill {
+  height: 100%;
+  width: 20%;
+  background: linear-gradient(90deg, var(--primary-blue), #2563EB);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Deretan Tab Nav Bar (Kompak & Rapi) */
+.latihan-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+>>>>>>> 250c0e2 (revisi sikngronisasi)
   overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
@@ -25,9 +93,15 @@
   display: none; /* Chrome, Safari, Edge */
 }
 
+.latihan-stepper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Item Navigasi Tahap (Nav Tab Item) */
 .step-item {
   display: inline-flex;
   align-items: center;
+<<<<<<< HEAD
   gap: 0.6rem;
   padding: 0.5rem 0.95rem;
   border-radius: 10px;
@@ -46,9 +120,42 @@
 .step-item span {
   display: inline-block;
   white-space: nowrap;
+=======
+  gap: 0.45rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #F8FAFC;
+  transition: all 0.18s ease;
+  user-select: none;
+  flex-shrink: 0;
+  cursor: pointer !important;
+  text-decoration: none;
 }
 
+.step-item:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: var(--primary-blue);
+  transform: translateY(-1px);
+>>>>>>> 250c0e2 (revisi sikngronisasi)
+}
+
+.step-item:hover .step-number {
+  background: var(--primary-blue);
+  color: #FFFFFF;
+}
+
+.step-item:active {
+  transform: scale(0.98);
+}
+
+/* Kotak Nomor (Tidak Terlalu Bulat) */
 .step-number {
+<<<<<<< HEAD
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -61,6 +168,34 @@
   font-weight: 800;
   flex-shrink: 0;
   transition: all 0.2s ease;
+=======
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #E2E8F0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.step-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Di mana kita berhenti (Tahap Aktif): BORDER BERWARNA & HIGHLIGHT TERANG */
+.step-item.active {
+  background: #FFFFFF;
+  color: var(--primary-navy);
+  font-weight: 800;
+  border: 2px solid var(--primary-blue);
+  box-shadow: 0 2px 8px rgba(65, 105, 245, 0.14);
+>>>>>>> 250c0e2 (revisi sikngronisasi)
 }
 
 /* Tahap yang telah selesai / terlewati (Completed) */
@@ -85,6 +220,7 @@
   color: #FFFFFF;
 }
 
+<<<<<<< HEAD
 /* Tahap yang sedang aktif (Current) */
 .step-item.is-current {
   background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%) !important;
@@ -118,6 +254,34 @@
   stroke: #94A3B8;
   stroke-width: 2.5;
   display: block;
+=======
+/* Tahap yang bukan aktif (Tanpa ceklis, nomor tetap tampil bersih) */
+.step-item.completed {
+  background: #F8FAFC;
+  border: 1.5px solid var(--border);
+  color: var(--primary-navy);
+  cursor: pointer !important;
+}
+
+.step-item.completed:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: var(--primary-blue);
+}
+
+.step-item.completed .step-number {
+  background: #E2E8F0;
+  color: #475569;
+}
+
+/* Icon Pemisah / Panah Chevron */
+.step-chevron {
+  color: #CBD5E1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.1rem;
+>>>>>>> 250c0e2 (revisi sikngronisasi)
 }
 
 /* Grid Program Studi & Mata Kuliah */
@@ -589,11 +753,25 @@
 }
 
 @media (max-width: 768px) {
+  .latihan-stepper-wrapper {
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .mobile-stepper-header {
+    display: flex;
+  }
+
+  .mobile-stepper-track {
+    display: block;
+  }
+
   .latihan-stepper {
     justify-content: flex-start;
     overflow-x: auto;
     flex-wrap: nowrap;
     white-space: nowrap;
+<<<<<<< HEAD
     padding: 0.5rem 0.65rem;
     gap: 0.4rem;
     margin-bottom: 1.25rem;
@@ -607,11 +785,22 @@
     gap: 0.45rem;
     border-radius: 8px;
     scroll-snap-align: center;
+=======
+    padding: 0.35rem 0.25rem;
+    gap: 0.4rem;
+  }
+
+  .step-item {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    gap: 0.4rem;
+>>>>>>> 250c0e2 (revisi sikngronisasi)
   }
 
   .step-number {
     width: 22px;
     height: 22px;
+<<<<<<< HEAD
     font-size: 0.74rem;
   }
 
@@ -622,6 +811,9 @@
   .step-separator svg {
     width: 12px;
     height: 12px;
+=======
+    font-size: 0.7rem;
+>>>>>>> 250c0e2 (revisi sikngronisasi)
   }
 
   .selection-grid {
