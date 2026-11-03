@@ -489,11 +489,16 @@
     }
   };
 
-  // Helper deteksi baris penyimpanan katalog sistem (is_active: false & prefix _SYS_)
+  // Helper deteksi baris penyimpanan katalog sistem (is_active: false & prefix _SYS_ / _P_)
   function isSystemProdiRow(row) {
     if (!row) return true;
     const code = String(row.code || "");
-    return row.is_active === false || code.startsWith("_SYS_") || code.startsWith("__SYS_");
+    return (
+      row.is_active === false ||
+      code.startsWith("_SYS_") ||
+      code.startsWith("__SYS_") ||
+      code.startsWith("_P_")
+    );
   }
 
   function isCurrentSessionAdminSync() {
@@ -830,34 +835,72 @@
     }
 
     if (window.supabaseClient && window.isSupabaseConfigured()) {
-      // 1. Baca dari Cloud Store (_SYS_MK_) sebagai sumber kebenaran utama lintas perangkat (Laptop & HP)
+      // 1. PRIORITAS UTAMA: Tabel resmi `courses` (Mata Kuliah) di Supabase apabila tabel sudah dibuat
+      try {
+        const { data: tableCourses, error: tableErr } = await window.supabaseClient
+          .from("courses")
+          .select("id, study_program_id, code, name, description, created_at")
+          .order("code", { ascending: true });
+
+        if (!tableErr && Array.isArray(tableCourses)) {
+          // Jika tabel courses ada dan sudah memiliki isi, jadikan sumber utama langsung
+          if (tableCourses.length > 0) {
+            await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, tableCourses);
+            localStorage.setItem("utb_catalog_courses", JSON.stringify(tableCourses));
+            return tableCourses;
+          }
+
+          // Jika tabel courses baru saja dibuat (kosong) dan belum pernah diinisialisasi sebelumnya:
+          const initFlag = await dbReadSysStore("_SYS_MKT_");
+          if (initFlag.exists === true) {
+            // Memang kosong karena Admin telah menghapus semua mata kuliah
+            localStorage.setItem("utb_catalog_courses", JSON.stringify([]));
+            return [];
+          } else {
+            // Inisialisasi awal tabel courses dengan data terkini dari Cloud/Admin/Default (sesuai prodi aktif)
+            const cloudBackup = await dbReadSysStore(SYS_MK_CODE);
+            const activeProdis = await window.dbGetCatalogProdis();
+            const validProdiIds = new Set((activeProdis || []).map((p) => p.id));
+            const sourceCourses =
+              cloudBackup.exists === true && Array.isArray(cloudBackup.value)
+                ? cloudBackup.value
+                : hasLocal
+                  ? localList
+                  : window.DEFAULT_COURSE_LIST;
+
+            const toSeed = sourceCourses.filter(
+              (c) => validProdiIds.size === 0 || validProdiIds.has(c.study_program_id)
+            );
+            if (toSeed.length > 0) {
+              await window.supabaseClient.from("courses").upsert(
+                toSeed.map((c) => ({
+                  id: c.id,
+                  study_program_id: c.study_program_id,
+                  code: c.code,
+                  name: c.name,
+                  description: c.description || "Mata kuliah program sarjana.",
+                })),
+                { onConflict: "study_program_id,code" }
+              );
+            }
+            await dbWriteSysStore("b0000000-0000-4000-8000-000000000006", "_SYS_MKT_", { initialized: true });
+            await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, toSeed);
+            localStorage.setItem("utb_catalog_courses", JSON.stringify(toSeed));
+            return toSeed;
+          }
+        }
+      } catch (_) {}
+
+      // 2. FALLBACK CLOUD OTOMATIS (_SYS_MK_): Dipakai apabila tabel `courses` belum dibuat di Supabase
       const cloudStore = await dbReadSysStore(SYS_MK_CODE);
       if (cloudStore.exists === true && Array.isArray(cloudStore.value)) {
         localStorage.setItem("utb_catalog_courses", JSON.stringify(cloudStore.value));
         return cloudStore.value;
       }
 
-      // 2. Jika _SYS_MK_ belum pernah dibuat di Supabase, cek apakah tabel courses tersedia
-      if (cloudStore.exists === false) {
-        try {
-          const { data, error } = await window.supabaseClient
-            .from("courses")
-            .select("id, study_program_id, code, name, description, created_at")
-            .order("code", { ascending: true });
-
-          if (!error && Array.isArray(data) && data.length > 0) {
-            await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, data);
-            localStorage.setItem("utb_catalog_courses", JSON.stringify(data));
-            return data;
-          }
-        } catch (_) {}
-
-        // 3. Jika user saat ini adalah Admin dan sudah memiliki data lokal (misal setelah menghapus MK di laptop),
-        //    langsung unggah ke Supabase Cloud agar perangkat lain (HP siswa) segera tersinkron!
-        if (isCurrentSessionAdminSync() && hasLocal) {
-          await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, localList);
-          return localList;
-        }
+      if (cloudStore.exists === false && isCurrentSessionAdminSync() && hasLocal) {
+        await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, localList);
+        return localList;
       }
     }
 
@@ -937,17 +980,15 @@
     if (window.supabaseClient && window.isSupabaseConfigured()) {
       await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, baseList);
       try {
-        if (courseId && !courseId.startsWith("course-") && !courseId.startsWith("c-")) {
-          await window.supabaseClient
-            .from("courses")
-            .update({
-              study_program_id: updateData.study_program_id,
-              code: updateData.code,
-              name: updateData.name,
-              description: updateData.description,
-            })
-            .eq("id", courseId);
-        }
+        await window.supabaseClient
+          .from("courses")
+          .update({
+            study_program_id: updateData.study_program_id,
+            code: updateData.code,
+            name: updateData.name,
+            description: updateData.description,
+          })
+          .eq("id", courseId);
       } catch (_) {}
     }
   };
@@ -976,6 +1017,12 @@
       if (localModulsRaw !== null) {
         const localModuls = JSON.parse(localModulsRaw);
         if (Array.isArray(localModuls)) {
+          const removedModuls = localModuls.filter((m) => m.course_id === courseId);
+          for (const rm of removedModuls) {
+            if (rm.cloud_file_id && typeof window.dbDeleteModulFile === "function") {
+              await window.dbDeleteModulFile(rm.cloud_file_id, rm.cloud_chunks);
+            }
+          }
           const filteredModuls = localModuls.filter((m) => m.course_id !== courseId);
           localStorage.setItem("utb_catalog_moduls", JSON.stringify(filteredModuls));
           if (typeof window.dbSaveCatalogModuls === "function") {
@@ -997,15 +1044,16 @@
       }
     } catch (_) {}
 
-    // Simpan daftar mata kuliah terbaru langsung ke Supabase Cloud (_SYS_MK_) & tabel courses (bila ada)
+    // Simpan daftar mata kuliah terbaru ke tabel `courses` (utama) & Cloud Store (_SYS_MK_)
     if (window.supabaseClient && window.isSupabaseConfigured()) {
+      await dbWriteSysStore("b0000000-0000-4000-8000-000000000006", "_SYS_MKT_", { initialized: true });
       await dbWriteSysStore(SYS_MK_ID, SYS_MK_CODE, updated);
       try {
-        let query = window.supabaseClient.from("courses").delete();
-        if (courseId && !courseId.startsWith("course-") && !courseId.startsWith("c-")) {
-          await query.eq("id", courseId);
-        } else if (normCode) {
-          await query.eq("code", normCode);
+        if (courseId) {
+          await window.supabaseClient.from("courses").delete().eq("id", courseId);
+        }
+        if (normCode) {
+          await window.supabaseClient.from("courses").delete().eq("code", normCode);
         }
       } catch (_) {}
     }
@@ -1043,20 +1091,66 @@
     }
 
     if (window.supabaseClient && window.isSupabaseConfigured()) {
+      // 1. PRIORITAS UTAMA: Tabel resmi `public.moduls` apabila sudah dibuat di Supabase
+      try {
+        const { data: tableModuls, error: tableErr } = await window.supabaseClient
+          .from("moduls")
+          .select("*")
+          .order("created_at", { ascending: true });
+
+        if (!tableErr && Array.isArray(tableModuls)) {
+          const mergedTable = tableModuls.map((tm) => {
+            const localMatch = Array.isArray(localList) ? localList.find((lm) => lm.id === tm.id) : null;
+            return {
+              ...tm,
+              images: Array.isArray(tm.images) && tm.images.length > 0 ? tm.images : localMatch?.images || [],
+              idb_key: localMatch?.idb_key || "",
+            };
+          });
+
+          // Sertakan modul lokal Admin yang baru diunggah namun belum sempat tersinkron ke tabel moduls
+          if (isCurrentSessionAdminSync() && Array.isArray(localList)) {
+            const tableIds = new Set(mergedTable.map((m) => m.id));
+            localList.forEach((lm) => {
+              if (lm && lm.id && !tableIds.has(lm.id) && lm.idb_key && !lm.storage_path && !lm.cloud_file_id) {
+                mergedTable.push(lm);
+              }
+            });
+          }
+
+          localStorage.setItem("utb_catalog_moduls", JSON.stringify(mergedTable));
+          return mergedTable;
+        }
+      } catch (_) {}
+
+      // 2. FALLBACK CLOUD OTOMATIS (_SYS_MOD_): Dipakai bila tabel `moduls` belum dibuat
       const cloudStore = await dbReadSysStore(SYS_MOD_CODE);
       if (cloudStore.exists === true && Array.isArray(cloudStore.value)) {
-        // Pertahankan gambar lokal / idb_key pada perangkat pengunggah jika ada
         const merged = cloudStore.value.map((cm) => {
           const localMatch = Array.isArray(localList) ? localList.find((lm) => lm.id === cm.id) : null;
           if (localMatch) {
             return {
               ...cm,
               idb_key: cm.idb_key || localMatch.idb_key || "",
+              storage_path: cm.storage_path || localMatch.storage_path || "",
+              pdf_file_url: cm.pdf_file_url || localMatch.pdf_file_url || "",
+              cloud_file_id: cm.cloud_file_id || localMatch.cloud_file_id || "",
+              cloud_chunks: cm.cloud_chunks || localMatch.cloud_chunks || 0,
+              cloud_mime: cm.cloud_mime || localMatch.cloud_mime || "",
               images: Array.isArray(cm.images) && cm.images.length > 0 ? cm.images : localMatch.images || [],
             };
           }
           return cm;
         });
+
+        if (isCurrentSessionAdminSync() && Array.isArray(localList)) {
+          const cloudIds = new Set(merged.map((m) => m.id));
+          localList.forEach((lm) => {
+            if (lm && lm.id && !cloudIds.has(lm.id) && lm.idb_key && !lm.cloud_file_id && !lm.storage_path) {
+              merged.push(lm);
+            }
+          });
+        }
         localStorage.setItem("utb_catalog_moduls", JSON.stringify(merged));
         return merged;
       } else if (cloudStore.exists === false && isCurrentSessionAdminSync() && Array.isArray(localList)) {
@@ -1070,7 +1164,302 @@
     if (!Array.isArray(modulsList)) return;
     localStorage.setItem("utb_catalog_moduls", JSON.stringify(modulsList));
     if (window.supabaseClient && window.isSupabaseConfigured()) {
-      await dbWriteSysStore(SYS_MOD_ID, SYS_MOD_CODE, sanitizeModulsForCloud(modulsList));
+      const sanitized = sanitizeModulsForCloud(modulsList);
+
+      // 1. Sinkronkan ke tabel resmi `public.moduls` apabila tabel sudah tersedia
+      try {
+        const { data: existingRows, error: checkErr } = await window.supabaseClient
+          .from("moduls")
+          .select("id");
+
+        if (!checkErr && Array.isArray(existingRows)) {
+          const currentIds = new Set(sanitized.map((m) => m.id));
+          const toDeleteIds = existingRows.map((r) => r.id).filter((id) => !currentIds.has(id));
+          if (toDeleteIds.length > 0) {
+            await window.supabaseClient.from("moduls").delete().in("id", toDeleteIds);
+          }
+
+          if (sanitized.length > 0) {
+            const validCourses = await window.dbGetCatalogCourses();
+            const validCourseIds = new Set((validCourses || []).map((c) => c.id));
+            const rowsToUpsert = sanitized
+              .filter((m) => validCourseIds.size === 0 || validCourseIds.has(m.course_id))
+              .map((m) => ({
+                id: m.id,
+                course_id: m.course_id,
+                title: m.title,
+                edition: m.edition || "Modul 01",
+                pdf_file_url: m.pdf_file_url || null,
+                pdf_external_url: m.pdf_external_url || null,
+                storage_path: m.storage_path || null,
+                cloud_file_id: m.cloud_file_id || null,
+                cloud_chunks: Number(m.cloud_chunks) || 0,
+                cloud_mime: m.cloud_mime || null,
+                images: Array.isArray(m.images) ? m.images : [],
+              }));
+
+            if (rowsToUpsert.length > 0) {
+              await window.supabaseClient.from("moduls").upsert(rowsToUpsert, { onConflict: "id" });
+            }
+          }
+        }
+      } catch (_) {}
+
+      // 2. Tetap perbarui Cloud Store cadangan (_SYS_MOD_)
+      await dbWriteSysStore(SYS_MOD_ID, SYS_MOD_CODE, sanitized);
+    }
+  };
+
+  // ============================================================================
+  // SINKRONISASI FILE PDF & GAMBAR MODUL KE SUPABASE CLOUD (CHUNKED BINARY STORE)
+  // Memungkinkan file PDF yang diunggah Admin langsung terbaca & diunduh di semua user/HP
+  // ============================================================================
+  function blobToBase64Payload(blobOrFile) {
+    return new Promise((resolve, reject) => {
+      if (typeof FileReader !== "undefined") {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const res = String(reader.result || "");
+          const commaIdx = res.indexOf(",");
+          if (commaIdx === -1) return reject(new Error("Format DataURL tidak valid."));
+          const meta = res.slice(0, commaIdx);
+          const mimeMatch = meta.match(/^data:([^;]+)/);
+          resolve({
+            base64: res.slice(commaIdx + 1),
+            mime: mimeMatch ? mimeMatch[1] : blobOrFile.type || "application/pdf",
+          });
+        };
+        reader.onerror = () => reject(new Error("Gagal membaca file PDF."));
+        reader.readAsDataURL(blobOrFile);
+      } else if (typeof Buffer !== "undefined") {
+        // Dukungan pengujian Node.js
+        blobOrFile.arrayBuffer().then((ab) => {
+          resolve({
+            base64: Buffer.from(ab).toString("base64"),
+            mime: blobOrFile.type || "application/pdf",
+          });
+        }).catch(reject);
+      } else {
+        reject(new Error("FileReader tidak didukung."));
+      }
+    });
+  }
+
+  function base64ToBlobSafe(base64Str, mimeType = "application/pdf") {
+    const cleanB64 = String(base64Str || "").replace(/\s+/g, "");
+    if (typeof atob === "function") {
+      const sliceSize = 65536; // Kelipatan 4 aman untuk atob pada file besar di HP & Desktop
+      const byteArrays = [];
+      for (let offset = 0; offset < cleanB64.length; offset += sliceSize) {
+        const slice = cleanB64.slice(offset, offset + sliceSize);
+        const byteChars = atob(slice);
+        const byteNumbers = new Uint8Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        byteArrays.push(byteNumbers);
+      }
+      return new Blob(byteArrays, { type: mimeType });
+    }
+    if (typeof Buffer !== "undefined") {
+      return new Blob([Buffer.from(cleanB64, "base64")], { type: mimeType });
+    }
+    return null;
+  }
+
+  window.dbUploadModulFile = async function (fileOrPayload, explicitMime, onProgress) {
+    if (!window.supabaseClient || !window.isSupabaseConfigured() || !fileOrPayload) {
+      return null;
+    }
+
+    // 1. PRIORITAS UTAMA: Supabase Storage Bucket `modul-pdfs` (jika bucket sudah dibuat via SQL)
+    if (
+      typeof fileOrPayload !== "string" &&
+      window.supabaseClient.storage &&
+      typeof window.supabaseClient.storage.from === "function"
+    ) {
+      try {
+        const ext = (explicitMime || fileOrPayload.type || "").includes("pdf") ? "pdf" : "bin";
+        const storagePath = `soal-modul/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { data: upData, error: upErr } = await window.supabaseClient.storage
+          .from("modul-pdfs")
+          .upload(storagePath, fileOrPayload, {
+            contentType: explicitMime || fileOrPayload.type || "application/pdf",
+            upsert: true,
+          });
+
+        if (!upErr && upData) {
+          const { data: pubData } = window.supabaseClient.storage
+            .from("modul-pdfs")
+            .getPublicUrl(storagePath);
+          if (pubData && pubData.publicUrl) {
+            if (typeof onProgress === "function") onProgress(100);
+            return {
+              storage_path: storagePath,
+              pdf_file_url: pubData.publicUrl,
+              cloud_mime: explicitMime || fileOrPayload.type || "application/pdf",
+            };
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. FALLBACK CLOUD OTOMATIS: Chunked Binary Store jika Storage Bucket `modul-pdfs` belum dibuat
+    let rawStr = "";
+    let resolvedMime = explicitMime || "application/pdf";
+
+    if (typeof fileOrPayload === "string") {
+      rawStr = fileOrPayload;
+      resolvedMime = explicitMime || "application/x-utb-images";
+    } else {
+      const converted = await blobToBase64Payload(fileOrPayload);
+      rawStr = converted.base64;
+      resolvedMime = explicitMime || converted.mime || "application/pdf";
+    }
+
+    if (!rawStr) return null;
+
+    // ID unik 6 karakter sehingga kode chunk `_P_xxxxxx_0` pendek & aman di VARCHAR
+    const fileId = (
+      Date.now().toString(36).slice(-3) + Math.random().toString(36).slice(2, 5)
+    )
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "a")
+      .padEnd(6, "0")
+      .slice(0, 6);
+
+    const CHUNK_SIZE = 600000; // ~600 KB teks per bagian (cepat & stabil di jaringan mobile)
+    const chunks = [];
+    for (let i = 0; i < rawStr.length; i += CHUNK_SIZE) {
+      chunks.push(rawStr.slice(i, i + CHUNK_SIZE));
+    }
+
+    const totalChunks = chunks.length;
+    let uploaded = 0;
+
+    // Unggah paralel per 3 chunk agar cepat sekaligus tidak membebani koneksi
+    const BATCH_SIZE = 3;
+    for (let b = 0; b < totalChunks; b += BATCH_SIZE) {
+      const batch = chunks.slice(b, b + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (chunkText, offsetIdx) => {
+          const idx = b + offsetIdx;
+          const chunkCode = `_P_${fileId}_${idx}`;
+          const rowPayload = {
+            id: generateUuid(),
+            code: chunkCode,
+            name: chunkCode,
+            description: chunkText,
+            is_active: false,
+            updated_at: new Date().toISOString(),
+          };
+
+          const { error } = await window.supabaseClient
+            .from("study_programs")
+            .upsert(rowPayload, { onConflict: "code" });
+
+          if (error) {
+            const { error: insErr } = await window.supabaseClient
+              .from("study_programs")
+              .insert(rowPayload);
+            if (insErr) {
+              throw new Error(`Gagal mengunggah bagian ${idx + 1}/${totalChunks}: ${insErr.message}`);
+            }
+          }
+
+          uploaded++;
+          if (typeof onProgress === "function") {
+            onProgress(Math.round((uploaded / totalChunks) * 100));
+          }
+        })
+      );
+    }
+
+    return {
+      cloud_file_id: fileId,
+      cloud_chunks: totalChunks,
+      cloud_mime: resolvedMime,
+    };
+  };
+
+  window.dbDownloadModulFile = async function (fileId, chunkCount, mimeType, onProgress) {
+    if (!window.supabaseClient || !window.isSupabaseConfigured() || !fileId) {
+      return null;
+    }
+
+    const total = Math.max(1, Number(chunkCount) || 1);
+    const allCodes = Array.from({ length: total }, (_, idx) => `_P_${fileId}_${idx}`);
+    const chunkMap = new Map();
+
+    // Ambil per 5 bagian sekaligus agar respons cepat dan hemat request
+    const FETCH_BATCH = 5;
+    for (let i = 0; i < allCodes.length; i += FETCH_BATCH) {
+      const batchCodes = allCodes.slice(i, i + FETCH_BATCH);
+      const { data, error } = await window.supabaseClient
+        .from("study_programs")
+        .select("code, description")
+        .in("code", batchCodes);
+
+      if (error || !Array.isArray(data)) {
+        console.warn("Gagal mengunduh bagian file modul dari Supabase:", error?.message);
+        return null;
+      }
+
+      data.forEach((row) => {
+        if (row && row.code && typeof row.description === "string") {
+          chunkMap.set(row.code, row.description);
+        }
+      });
+
+      if (typeof onProgress === "function") {
+        onProgress(Math.min(99, Math.round((chunkMap.size / total) * 100)));
+      }
+    }
+
+    // Susun kembali sesuai urutan indeks
+    const orderedParts = [];
+    for (let idx = 0; idx < total; idx++) {
+      const part = chunkMap.get(`_P_${fileId}_${idx}`);
+      if (typeof part !== "string") {
+        console.warn(`Bagian file modul _P_${fileId}_${idx} tidak ditemukan di Cloud.`);
+        return null;
+      }
+      orderedParts.push(part);
+    }
+
+    const joined = orderedParts.join("");
+    if (typeof onProgress === "function") onProgress(100);
+
+    if (mimeType === "application/x-utb-images") {
+      try {
+        const images = JSON.parse(joined);
+        return { type: "images", images: Array.isArray(images) ? images : [] };
+      } catch (_) {
+        return null;
+      }
+    }
+
+    const blob = base64ToBlobSafe(joined, mimeType || "application/pdf");
+    return blob ? { type: "pdf", blob } : null;
+  };
+
+  window.dbDeleteModulFile = async function (fileId, chunkCount, storagePath) {
+    if (!window.supabaseClient || !window.isSupabaseConfigured()) return;
+    if (storagePath && window.supabaseClient.storage && typeof window.supabaseClient.storage.from === "function") {
+      try {
+        await window.supabaseClient.storage.from("modul-pdfs").remove([storagePath]);
+      } catch (_) {}
+    }
+    if (!fileId) return;
+    try {
+      const maxChunks = Math.max(1, Number(chunkCount) || 30);
+      const allCodes = Array.from({ length: maxChunks }, (_, idx) => `_P_${fileId}_${idx}`);
+      for (let i = 0; i < allCodes.length; i += 20) {
+        const batch = allCodes.slice(i, i + 20);
+        await window.supabaseClient.from("study_programs").delete().in("code", batch);
+      }
+    } catch (err) {
+      console.warn("Gagal membersihkan chunk file modul di Supabase:", err.message);
     }
   };
 
@@ -1134,60 +1523,101 @@
     }
   };
 
-  // 10. Simpan Konfigurasi AI (OpenRouter / Gemini / OpenAI) ke Supabase agar siswa & seluruh perangkat bisa terhubung
+  function normalizeCloudAiConfig(rawCfg) {
+    if (!rawCfg || typeof rawCfg !== "object") return null;
+    const provider = String(rawCfg.provider || "gemini").trim().toLowerCase();
+    const defaultModel =
+      provider === "openrouter"
+        ? "openrouter/auto"
+        : provider === "groq"
+          ? "llama-3.3-70b-versatile"
+          : provider === "openai" || provider === "custom"
+            ? "gpt-4o-mini"
+            : provider === "supabase"
+              ? "ai-chat"
+              : "gemini-2.0-flash";
+
+    return {
+      provider,
+      model: String(rawCfg.model || defaultModel).trim(),
+      apiKey: String(rawCfg.apiKey || "").trim(),
+      customEndpoint: String(rawCfg.customEndpoint || "").trim(),
+      systemPrompt: typeof rawCfg.systemPrompt === "string" ? rawCfg.systemPrompt : "",
+      updatedAt: rawCfg.updatedAt || null,
+    };
+  }
+
+  // 10. Simpan Konfigurasi AI (Gemini / OpenRouter / OpenAI / Groq / Custom / Supabase) ke Cloud agar seluruh user identik dengan Admin
   window.dbSaveAiConfig = async function (config) {
-    if (!config) return;
+    if (!config || typeof config !== "object") return false;
     try {
-      localStorage.setItem("utb_ai_config", JSON.stringify(config));
+      const normalized = normalizeCloudAiConfig({
+        ...config,
+        updatedAt: config.updatedAt || new Date().toISOString(),
+      });
+      localStorage.setItem("utb_ai_config", JSON.stringify(normalized));
 
       if (window.supabaseClient && window.isSupabaseConfigured()) {
-        // Simpan di kolom TEXT tak terbatas (_SYS_AI_) agar API Key panjang tidak terpotong VARCHAR(150)
-        await dbWriteSysStore(SYS_AI_ID, SYS_AI_CODE, config);
+        // Simpan di kolom TEXT tak terbatas (_SYS_AI_) agar provider, model, endpoint & API Key panjang tersimpan utuh
+        return await dbWriteSysStore(SYS_AI_ID, SYS_AI_CODE, normalized);
       }
+      return true;
     } catch (err) {
       console.warn("Gagal menyimpan konfigurasi AI ke Supabase:", err.message);
+      return false;
     }
   };
 
-  // 11. Ambil Konfigurasi AI dari Supabase (Memastikan siswa di HP/tablet terhubung ke agent OpenRouter yang sama)
+  // 11. Ambil Konfigurasi AI dari Supabase (Menjamin seluruh user di semua perangkat memakai provider & API Key yang sama persis dengan Admin)
   window.dbGetAiConfig = async function () {
     let localCfg = null;
     try {
       const raw = localStorage.getItem("utb_ai_config");
-      if (raw) localCfg = JSON.parse(raw);
+      if (raw) localCfg = normalizeCloudAiConfig(JSON.parse(raw));
     } catch (_) {}
+
+    const isAdmin = isCurrentSessionAdminSync();
 
     if (window.supabaseClient && window.isSupabaseConfigured()) {
       try {
         const sysAi = await dbReadSysStore(SYS_AI_CODE);
+
         if (sysAi.exists === true && sysAi.value && typeof sysAi.value === "object") {
-          const remoteCfg = sysAi.value;
-          if (remoteCfg.apiKey || remoteCfg.provider === "custom" || remoteCfg.provider === "openrouter") {
+          const remoteCfg = normalizeCloudAiConfig(sysAi.value);
+          if (remoteCfg) {
+            // Jika yang membuka adalah Admin dan di browser Admin ada konfigurasi lokal yang lebih baru, dorong ke Cloud
+            if (isAdmin && localCfg && localCfg.updatedAt) {
+              const localTs = Date.parse(localCfg.updatedAt) || 0;
+              const remoteTs = Date.parse(remoteCfg.updatedAt || "") || 0;
+              if (localTs > remoteTs) {
+                await dbWriteSysStore(SYS_AI_ID, SYS_AI_CODE, localCfg);
+                localStorage.setItem("utb_ai_config", JSON.stringify(localCfg));
+                return localCfg;
+              }
+            }
+
+            // Untuk User biasa (maupun Admin jika Cloud lebih baru/sama), selalu selaraskan 100% dengan setting Cloud
             localStorage.setItem("utb_ai_config", JSON.stringify(remoteCfg));
             return remoteCfg;
           }
-        }
+        } else if (sysAi.exists === false) {
+          // Belum ada konfigurasi _SYS_AI_ di Cloud:
+          // Hanya sesi Admin yang boleh mengunggah konfigurasi lokal ke Cloud pertama kali
+          if (isAdmin && localCfg) {
+            const seeded = {
+              ...localCfg,
+              updatedAt: localCfg.updatedAt || new Date().toISOString(),
+            };
+            await dbWriteSysStore(SYS_AI_ID, SYS_AI_CODE, seeded);
+            localStorage.setItem("utb_ai_config", JSON.stringify(seeded));
+            return seeded;
+          }
 
-        const { data, error } = await window.supabaseClient
-          .from("admins")
-          .select("full_name")
-          .eq("username", "__system_ai_config__")
-          .limit(1);
-
-        if (!error && data && data.length > 0 && data[0].full_name) {
-          try {
-            const remoteCfg = JSON.parse(data[0].full_name);
-            if (remoteCfg && typeof remoteCfg === "object") {
-              if (remoteCfg.apiKey || remoteCfg.provider === "custom" || remoteCfg.provider === "openrouter") {
-                localStorage.setItem("utb_ai_config", JSON.stringify(remoteCfg));
-                return remoteCfg;
-              }
-            }
-          } catch (_) {}
-        }
-
-        if (localCfg && localCfg.apiKey) {
-          window.dbSaveAiConfig(localCfg);
+          // Untuk User biasa: pastikan cache lama dibersihkan agar tidak pernah memakai provider usang yang berbeda dari Admin
+          if (!isAdmin) {
+            localStorage.removeItem("utb_ai_config");
+            return null;
+          }
         }
       } catch (e) {
         console.warn("Gagal mengambil konfigurasi AI dari Supabase:", e.message);
@@ -1196,4 +1626,13 @@
 
     return localCfg;
   };
+
+  // Sinkronisasi otomatis di latar belakang: jika Admin membuka halaman mana pun dan sudah punya setting AI lokal, pastikan Cloud langsung terisi
+  setTimeout(() => {
+    try {
+      if (isCurrentSessionAdminSync() && localStorage.getItem("utb_ai_config")) {
+        window.dbGetAiConfig().catch(() => {});
+      }
+    } catch (_) {}
+  }, 400);
 })();

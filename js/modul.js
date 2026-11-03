@@ -5,6 +5,10 @@
 // ==============================================================================
 
 (function () {
+  if (typeof window !== "undefined" && window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions?.workerSrc) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
   // 1. DATA MASTER PROGRAM STUDI
   const DEFAULT_PRODIS = [
     {
@@ -252,6 +256,52 @@
     }
   }
 
+  // Unggah otomatis file PDF lokal milik Admin yang belum tersinkron ke Cloud Supabase
+  async function syncPendingAdminFilesToCloud() {
+    if (!isAdmin || typeof window.dbUploadModulFile !== "function") return;
+    try {
+      const list = getModuls();
+      let anySynced = false;
+
+      for (let i = 0; i < list.length; i++) {
+        const m = list[i];
+        if (!m || m.cloud_file_id || m.storage_path) continue;
+
+        if (m.idb_key) {
+          const localBlob = await getFileFromIdb(m.idb_key);
+          if (localBlob instanceof Blob) {
+            window.showToast(`Menyinkronkan PDF "${m.title}" ke Cloud Supabase...`, "info");
+            const cloudMeta = await window.dbUploadModulFile(localBlob, "application/pdf");
+            if (cloudMeta) {
+              list[i] = { ...m, ...cloudMeta };
+              anySynced = true;
+            }
+          }
+        } else if (
+          Array.isArray(m.images) &&
+          m.images.some((src) => typeof src === "string" && src.startsWith("data:"))
+        ) {
+          const cloudMeta = await window.dbUploadModulFile(JSON.stringify(m.images), "application/x-utb-images");
+          if (cloudMeta) {
+            list[i] = { ...m, ...cloudMeta };
+            anySynced = true;
+          }
+        }
+      }
+
+      if (anySynced) {
+        localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
+        if (typeof window.dbSaveCatalogModuls === "function") {
+          await window.dbSaveCatalogModuls(list);
+        }
+        renderAdminModulLists();
+        window.showToast("File PDF modul berhasil disinkronkan ke semua pengguna!", "success");
+      }
+    } catch (err) {
+      console.warn("Gagal sinkronisasi otomatis PDF lokal ke Cloud:", err);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
@@ -264,6 +314,8 @@
     if (isAdmin) {
       if (adminPanel) adminPanel.style.display = "block";
       initAdminModulController();
+      // Sinkronkan otomatis bila ada PDF yang sebelumnya hanya tersimpan di browser Admin
+      syncPendingAdminFilesToCloud();
     } else {
       if (adminPanel) adminPanel.remove();
     }
@@ -366,12 +418,13 @@
     const grid = document.getElementById("modul-course-grid");
     if (!grid) return;
 
-    // Ambil data mata kuliah terupdate dari Supabase
-    if (typeof window.dbGetCatalogCourses === "function") {
-      try {
-        await window.dbGetCatalogCourses();
-      } catch (_) {}
-    }
+    // Ambil data mata kuliah & modul terupdate dari Supabase
+    try {
+      await Promise.all([
+        typeof window.dbGetCatalogCourses === "function" ? window.dbGetCatalogCourses() : Promise.resolve(),
+        typeof window.dbGetCatalogModuls === "function" ? window.dbGetCatalogModuls() : Promise.resolve(),
+      ]);
+    } catch (_) {}
 
     const allCourses = getCourses();
     const courses = allCourses.filter((c) => c.study_program_id === prodi.id);
@@ -422,10 +475,16 @@
   }
 
   // TAHAP 3: BUKA PEMBACA WEB KOMIK SOAL MODUL
-  function openCourseReader(course) {
+  async function openCourseReader(course, preferredModulId = null) {
     setStep(3);
     const titleEl = document.getElementById("modul-reader-course-title");
     if (titleEl) titleEl.textContent = `${course.code} — ${course.name}`;
+
+    if (typeof window.dbGetCatalogModuls === "function") {
+      try {
+        await window.dbGetCatalogModuls();
+      } catch (_) {}
+    }
 
     const allModuls = getModuls();
     let courseModuls = allModuls.filter((m) => m.course_id === course.id);
@@ -444,12 +503,15 @@
       ];
     }
 
+    const initialTarget =
+      (preferredModulId && courseModuls.find((m) => m.id === preferredModulId)) || courseModuls[0];
+
     const pillsContainer = document.getElementById("modul-pills-container");
     if (pillsContainer) {
       pillsContainer.innerHTML = courseModuls
         .map(
-          (m, idx) => `
-          <button type="button" class="modul-pill-btn ${idx === 0 ? "active" : ""}" data-mid="${m.id}">
+          (m) => `
+          <button type="button" class="modul-pill-btn ${m.id === initialTarget.id ? "active" : ""}" data-mid="${m.id}">
             <span>📘 ${window.escapeHtml(m.title)}</span>
           </button>
         `
@@ -466,7 +528,7 @@
       });
     }
 
-    loadActiveModul(courseModuls[0]);
+    loadActiveModul(initialTarget);
   }
 
   // ============================================================================
@@ -518,17 +580,45 @@
       </div>
     `;
 
-    // KASUS 1: MODUL MEMILIKI DAFTAR GAMBAR SCAN ASLI (SEPERTI CAMSCANNER page-1.jpg, page-2.jpg, page-3.jpg)
-    if (Array.isArray(modul.images) && modul.images.length > 0) {
-      const total = modul.images.length;
+    // KASUS 1: MODUL MEMILIKI DAFTAR GAMBAR SCAN ASLI (LOKAL ATAU CLOUD SUPABASE)
+    let resolvedImages = Array.isArray(modul.images) && modul.images.length > 0 ? modul.images : null;
+    if (!resolvedImages && modul.cloud_file_id && modul.cloud_mime === "application/x-utb-images") {
+      const imgCacheKey = "cloud_img_" + modul.cloud_file_id;
+      const cachedImgs = await getFileFromIdb(imgCacheKey);
+      if (Array.isArray(cachedImgs) && cachedImgs.length > 0) {
+        resolvedImages = cachedImgs;
+      } else if (typeof window.dbDownloadModulFile === "function") {
+        streamEl.innerHTML = `
+          <div id="cloud-dl-status" style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
+            ☁️ Mengunduh halaman scan modul dari Cloud Supabase (0%)...
+          </div>
+        `;
+        const cloudRes = await window.dbDownloadModulFile(
+          modul.cloud_file_id,
+          modul.cloud_chunks,
+          modul.cloud_mime,
+          (pct) => {
+            const st = document.getElementById("cloud-dl-status");
+            if (st) st.textContent = `☁️ Mengunduh halaman scan modul dari Cloud Supabase (${pct}%)...`;
+          }
+        );
+        if (cloudRes && Array.isArray(cloudRes.images) && cloudRes.images.length > 0) {
+          resolvedImages = cloudRes.images;
+          await saveFileToIdb(imgCacheKey, resolvedImages);
+        }
+      }
+    }
+
+    if (Array.isArray(resolvedImages) && resolvedImages.length > 0) {
+      const total = resolvedImages.length;
       if (counterEl) counterEl.textContent = `${total} Halaman (Scan JPG)`;
 
-      streamEl.innerHTML = modul.images
+      streamEl.innerHTML = resolvedImages
         .map(
           (imgSrc, idx) => `
         <div class="comic-page-frame" style="max-width: ${Math.round(820 * currentComicZoom)}px;">
-          <img src="${imgSrc}" alt="Halaman ${idx + 1}" loading="lazy">
-          <span class="comic-page-number-pill">Halaman ${idx + 1} / ${total}</span>
+          <img src="${imgSrc}" alt="${idx + 1}/${total}" loading="lazy">
+          <span class="comic-page-number-pill">${idx + 1}/${total}</span>
         </div>
       `
         )
@@ -536,24 +626,140 @@
       return;
     }
 
-    // KASUS 2: MODUL MEMILIKI FILE PDF DI INDEXEDDB ATAU DATA URL (HASIL UPLOAD ADMIN)
+    // KASUS 2: MODUL MEMILIKI FILE PDF (INDEXEDDB LOKAL, CLOUD SUPABASE, ATAU FILE BAWAAN)
     let pdfData = null;
-    if (modul.idb_key) {
-      const stored = await getFileFromIdb(modul.idb_key);
+    const cacheKey = "modul_pdf_" + (modul.id || modul.storage_path || modul.cloud_file_id || "default");
+    const idbKeys = [
+      modul.idb_key,
+      cacheKey,
+      modul.cloud_file_id ? "cloud_pdf_" + modul.cloud_file_id : null,
+      modul.storage_path ? "cloud_pdf_" + modul.storage_path : null,
+    ].filter(Boolean);
+
+    for (const k of idbKeys) {
+      const stored = await getFileFromIdb(k);
       if (stored instanceof Blob) {
         pdfData = await stored.arrayBuffer();
-      } else if (stored) {
+        break;
+      } else if (stored instanceof ArrayBuffer) {
         pdfData = stored;
+        break;
       }
-    } else if (modul.pdf_data_url) {
+    }
+
+    // Jika file PDF belum ada di IndexedDB perangkat ini dan tersimpan di Supabase Storage
+    if (!pdfData && modul.pdf_file_url) {
+      const isRemote = String(modul.pdf_file_url).startsWith("http");
+      if (isRemote) {
+        streamEl.innerHTML = `
+          <div id="cloud-dl-status" style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
+            ☁️ Mengunduh file PDF modul dari Cloud Supabase (0%)...
+          </div>
+        `;
+        try {
+          const res = await fetch(modul.pdf_file_url);
+          if (res.ok) {
+            const contentLength = Number(res.headers.get("content-length")) || 0;
+            let blob = null;
+            if (contentLength > 0 && res.body && typeof res.body.getReader === "function") {
+              const reader = res.body.getReader();
+              const chunks = [];
+              let received = 0;
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                received += value.length;
+                const pct = Math.min(99, Math.round((received / contentLength) * 100));
+                const st = document.getElementById("cloud-dl-status");
+                if (st) st.textContent = `☁️ Mengunduh file PDF modul dari Cloud Supabase (${pct}%)...`;
+              }
+              blob = new Blob(chunks, { type: "application/pdf" });
+            } else {
+              blob = await res.blob();
+            }
+            if (blob && blob.size > 0) {
+              await saveFileToIdb(cacheKey, blob);
+              if (modul.idb_key) await saveFileToIdb(modul.idb_key, blob);
+              pdfData = await blob.arrayBuffer();
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("Gagal mengunduh pdf_file_url dari Cloud:", fetchErr);
+        }
+      } else {
+        try {
+          const res = await fetch(modul.pdf_file_url);
+          if (res.ok) {
+            const blob = await res.blob();
+            pdfData = await blob.arrayBuffer();
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Jika file PDF tersimpan di Cloud Supabase Chunked Store (_P_...)
+    if (!pdfData && modul.cloud_file_id && modul.cloud_mime !== "application/x-utb-images") {
+      const pdfCacheKey = "cloud_pdf_" + modul.cloud_file_id;
+      const cachedBlob = await getFileFromIdb(pdfCacheKey);
+      if (cachedBlob instanceof Blob) {
+        pdfData = await cachedBlob.arrayBuffer();
+      } else if (typeof window.dbDownloadModulFile === "function") {
+        streamEl.innerHTML = `
+          <div id="cloud-dl-status" style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
+            ☁️ Mengunduh file PDF modul dari Cloud Supabase (0%)...
+          </div>
+        `;
+        const cloudRes = await window.dbDownloadModulFile(
+          modul.cloud_file_id,
+          modul.cloud_chunks,
+          modul.cloud_mime || "application/pdf",
+          (pct) => {
+            const st = document.getElementById("cloud-dl-status");
+            if (st) st.textContent = `☁️ Mengunduh file PDF modul dari Cloud Supabase (${pct}%)...`;
+          }
+        );
+        if (cloudRes && cloudRes.blob instanceof Blob) {
+          await saveFileToIdb(pdfCacheKey, cloudRes.blob);
+          await saveFileToIdb(cacheKey, cloudRes.blob);
+          if (modul.idb_key) {
+            await saveFileToIdb(modul.idb_key, cloudRes.blob);
+          }
+          pdfData = await cloudRes.blob.arrayBuffer();
+        }
+      }
+    }
+
+    if (!pdfData && modul.pdf_data_url) {
       pdfData = modul.pdf_data_url;
-    } else if (modul.pdf_file_url) {
-      pdfData = modul.pdf_file_url;
     }
 
     if (pdfData && window.pdfjsLib) {
+      if (!window.pdfjsLib.GlobalWorkerOptions?.workerSrc) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
       try {
-        const loadingTask = window.pdfjsLib.getDocument(pdfData);
+        const docParam =
+          pdfData instanceof ArrayBuffer
+            ? {
+                data: new Uint8Array(pdfData),
+                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+                cMapPacked: true,
+              }
+            : typeof pdfData === "string" && pdfData.startsWith("data:")
+            ? {
+                data: base64ToBlobSafe(pdfData.split(",")[1] || "").arrayBuffer(),
+                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+                cMapPacked: true,
+              }
+            : {
+                url: pdfData,
+                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+                cMapPacked: true,
+              };
+
+        const loadingTask = window.pdfjsLib.getDocument(docParam);
         const pdfDoc = await loadingTask.promise;
         const total = pdfDoc.numPages;
         if (counterEl) counterEl.textContent = `${total} Halaman (PDF Scan)`;
@@ -561,37 +767,41 @@
         streamEl.innerHTML = "";
 
         for (let p = 1; p <= total; p++) {
-          const page = await pdfDoc.getPage(p);
           const frame = document.createElement("div");
           frame.className = "comic-page-frame";
           frame.style.maxWidth = `${Math.round(820 * currentComicZoom)}px`;
 
           const canvas = document.createElement("canvas");
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+          canvas.style.display = "block";
           frame.appendChild(canvas);
 
           const pill = document.createElement("span");
           pill.className = "comic-page-number-pill";
-          pill.textContent = `Halaman ${p} / ${total}`;
+          pill.textContent = `${p}/${total}`;
           frame.appendChild(pill);
 
           streamEl.appendChild(frame);
 
-          // Render halaman PDF ke canvas
-          const unscaledViewport = page.getViewport({ scale: 1 });
-          const targetW = Math.min(820, window.innerWidth - 32);
-          const dpr = Math.min(window.devicePixelRatio || 1.5, 2);
-          const fitScale = (targetW / unscaledViewport.width) * dpr;
-          const viewport = page.getViewport({ scale: fitScale });
+          try {
+            const page = await pdfDoc.getPage(p);
+            const unscaledViewport = page.getViewport({ scale: 1 });
+            const targetW = Math.min(820, window.innerWidth - 32);
+            const dpr = Math.min(window.devicePixelRatio || 1.5, 2);
+            const fitScale = (targetW / unscaledViewport.width) * dpr;
+            const viewport = page.getViewport({ scale: fitScale });
 
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          canvas.style.width = "100%";
-          canvas.style.height = "auto";
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
 
-          await page.render({
-            canvasContext: canvas.getContext("2d"),
-            viewport,
-          }).promise;
+            await page.render({
+              canvasContext: canvas.getContext("2d"),
+              viewport,
+            }).promise;
+          } catch (pageErr) {
+            console.warn(`Gagal merender halaman PDF ke-${p}:`, pageErr);
+          }
         }
         return;
       } catch (err) {
@@ -607,7 +817,7 @@
         <h3 style="color: #FFFFFF; font-size: 1.15rem; margin-bottom: 0.4rem;">Belum Ada File Scan Modul</h3>
         <p style="color: #94A3B8; font-size: 0.88rem; line-height: 1.6;">
           Modul ini belum memiliki lampiran file PDF/gambar hasil scan CamScanner.
-          ${isAdmin ? 'Anda dapat mengunggah file PDF melalui panel <strong>"Manajemen Soal Modul"</strong> di atas.' : 'Silakan pilih mata kuliah <strong>MSIM4207</strong> untuk melihat contoh modul scan yang sudah tersedia.'}
+          ${isAdmin ? 'Anda dapat mengunggah file PDF melalui panel <strong>"Manajemen Soal Modul"</strong> di atas.' : 'Admin belum mengunggah file modul untuk mata kuliah ini.'}
         </p>
       </div>
     `;
@@ -708,17 +918,39 @@
         .replace(/[^a-zA-Z0-9_-]+/g, "-")
         .replace(/^-+|-+$/g, "") + ".pdf";
 
-    // 1. Jika ada file PDF tersimpan di IndexedDB
-    if (activeModul.idb_key) {
-      const stored = await getFileFromIdb(activeModul.idb_key);
+    // 1. Cek cache IndexedDB terlebih dahulu (lokal / hasil unduh sebelumnya)
+    const cacheKeys = [
+      activeModul.idb_key,
+      "modul_pdf_" + (activeModul.id || ""),
+      "cloud_pdf_" + (activeModul.id || ""),
+      "cloud_pdf_" + (activeModul.storage_path || ""),
+      "cloud_pdf_" + (activeModul.cloud_file_id || ""),
+    ].filter(Boolean);
+
+    for (const key of cacheKeys) {
+      const stored = await getFileFromIdb(key);
       if (stored instanceof Blob) {
         triggerDownload(stored, safeName);
+        window.showToast(`Mengunduh file PDF "${safeName}"...`, "success");
         return;
       }
     }
 
-    // 2. Jika ada path file PDF asli (misal: assets/modul/MSIM4207-Modul-01.pdf)
+    // 2. Jika ada URL file PDF (Supabase Storage publik atau assets lokal)
     if (activeModul.pdf_file_url) {
+      if (String(activeModul.pdf_file_url).startsWith("http")) {
+        try {
+          window.showToast(`Mengunduh file PDF "${safeName}" dari Cloud...`, "info");
+          const res = await fetch(activeModul.pdf_file_url);
+          if (res.ok) {
+            const blob = await res.blob();
+            await saveFileToIdb("modul_pdf_" + (activeModul.id || "default"), blob);
+            triggerDownload(blob, safeName);
+            window.showToast(`File PDF "${safeName}" berhasil diunduh!`, "success");
+            return;
+          }
+        } catch (_) {}
+      }
       const a = document.createElement("a");
       a.href = activeModul.pdf_file_url;
       a.download = safeName;
@@ -729,7 +961,27 @@
       return;
     }
 
-    // 3. Jika ada data URL PDF
+    // 3. Jika file PDF berasal dari Cloud Supabase Chunked Store
+    if (activeModul.cloud_file_id && activeModul.cloud_mime !== "application/x-utb-images") {
+      const cacheKey = "cloud_pdf_" + activeModul.cloud_file_id;
+      if (typeof window.dbDownloadModulFile === "function") {
+        window.showToast("Mengambil file PDF dari Cloud Supabase...", "info");
+        const cloudRes = await window.dbDownloadModulFile(
+          activeModul.cloud_file_id,
+          activeModul.cloud_chunks,
+          activeModul.cloud_mime || "application/pdf"
+        );
+        if (cloudRes && cloudRes.blob instanceof Blob) {
+          await saveFileToIdb(cacheKey, cloudRes.blob);
+          await saveFileToIdb("modul_pdf_" + (activeModul.id || "default"), cloudRes.blob);
+          triggerDownload(cloudRes.blob, safeName);
+          window.showToast(`File PDF "${safeName}" berhasil diunduh!`, "success");
+          return;
+        }
+      }
+    }
+
+    // 4. Jika ada data URL PDF
     if (activeModul.pdf_data_url) {
       triggerDownload(activeModul.pdf_data_url, safeName);
       return;
@@ -869,12 +1121,18 @@
         const newId = "mod-" + Date.now();
         let idbKey = null;
         let uploadedImages = [];
+        let cloudMeta = null;
 
         if (files.length > 0) {
           const firstFile = files[0];
           if (firstFile.type === "application/pdf" || firstFile.name.toLowerCase().endsWith(".pdf")) {
             idbKey = "modul_pdf_" + newId;
             await saveFileToIdb(idbKey, firstFile);
+            if (typeof window.dbUploadModulFile === "function") {
+              cloudMeta = await window.dbUploadModulFile(firstFile, "application/pdf", (pct) => {
+                window.setButtonLoading(submitBtn, true, `Sinkron Cloud (${pct}%)...`);
+              });
+            }
           } else {
             for (let i = 0; i < files.length; i++) {
               const dataUrl = await new Promise((res) => {
@@ -883,6 +1141,15 @@
                 r.readAsDataURL(files[i]);
               });
               uploadedImages.push(dataUrl);
+            }
+            if (uploadedImages.length > 0 && typeof window.dbUploadModulFile === "function") {
+              cloudMeta = await window.dbUploadModulFile(
+                JSON.stringify(uploadedImages),
+                "application/x-utb-images",
+                (pct) => {
+                  window.setButtonLoading(submitBtn, true, `Sinkron Cloud (${pct}%)...`);
+                }
+              );
             }
           }
         }
@@ -895,6 +1162,7 @@
           pdf_external_url,
           idb_key: idbKey,
           images: uploadedImages,
+          ...(cloudMeta || {}),
         };
 
         const list = getModuls();
@@ -905,13 +1173,12 @@
         }
 
         window.closeModal(modalUpload);
-        window.showToast(`File PDF "${title}" berhasil diunggah!`, "success");
+        window.showToast(`File PDF "${title}" berhasil diunggah & disinkronkan ke semua pengguna!`, "success");
 
         // Perbarui daftar dan langsung buka modul baru yang diunggah
         renderAdminModulLists();
         if (selectedCourse && selectedCourse.id === course_id) {
-          openCourseReader(selectedCourse);
-          loadActiveModul(newModulObj);
+          await openCourseReader(selectedCourse, newModulObj.id);
         }
       } catch (err) {
         console.error("Gagal mengunggah file:", err);
@@ -940,6 +1207,19 @@
 
       if (activeModul.idb_key) {
         await deleteFileFromIdb(activeModul.idb_key);
+      }
+      if (activeModul.cloud_file_id || activeModul.storage_path) {
+        if (activeModul.cloud_file_id) {
+          await deleteFileFromIdb("cloud_pdf_" + activeModul.cloud_file_id);
+          await deleteFileFromIdb("cloud_img_" + activeModul.cloud_file_id);
+        }
+        if (typeof window.dbDeleteModulFile === "function") {
+          await window.dbDeleteModulFile(
+            activeModul.cloud_file_id,
+            activeModul.cloud_chunks,
+            activeModul.storage_path
+          );
+        }
       }
 
       const updated = getModuls().filter((m) => m.id !== activeModul.id);
@@ -1105,67 +1385,97 @@
 
       if (!course_id || !title) return;
 
-      const newId = editId || "mod-" + Date.now();
-      let idbKey = null;
-      let uploadedImages = [];
+      const submitBookBtn = document.getElementById("btn-submit-m-book");
+      window.setButtonLoading(submitBookBtn, true, "Mengunggah & Menyimpan ke Cloud...");
 
-      // Proses file yang diupload (PDF atau beberapa file gambar JPG/PNG)
-      if (files.length > 0) {
-        const firstFile = files[0];
-        if (firstFile.type === "application/pdf" || firstFile.name.toLowerCase().endsWith(".pdf")) {
-          // File PDF: Simpan di IndexedDB
-          idbKey = "modul_pdf_" + newId;
-          await saveFileToIdb(idbKey, firstFile);
-        } else {
-          // File Gambar JPG / PNG: Baca sebagai data URL
-          for (let i = 0; i < files.length; i++) {
-            const dataUrl = await new Promise((res) => {
-              const r = new FileReader();
-              r.onload = () => res(r.result);
-              r.readAsDataURL(files[i]);
-            });
-            uploadedImages.push(dataUrl);
+      try {
+        const newId = editId || "mod-" + Date.now();
+        let idbKey = null;
+        let uploadedImages = [];
+        let cloudMeta = null;
+
+        // Proses file yang diupload (PDF atau beberapa file gambar JPG/PNG)
+        if (files.length > 0) {
+          const firstFile = files[0];
+          if (firstFile.type === "application/pdf" || firstFile.name.toLowerCase().endsWith(".pdf")) {
+            // File PDF: Simpan di IndexedDB & unggah ke Cloud Supabase
+            idbKey = "modul_pdf_" + newId;
+            await saveFileToIdb(idbKey, firstFile);
+            if (typeof window.dbUploadModulFile === "function") {
+              cloudMeta = await window.dbUploadModulFile(firstFile, "application/pdf", (pct) => {
+                window.setButtonLoading(submitBookBtn, true, `Sinkron Cloud (${pct}%)...`);
+              });
+            }
+          } else {
+            // File Gambar JPG / PNG: Baca sebagai data URL & unggah ke Cloud Supabase
+            for (let i = 0; i < files.length; i++) {
+              const dataUrl = await new Promise((res) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.readAsDataURL(files[i]);
+              });
+              uploadedImages.push(dataUrl);
+            }
+            if (uploadedImages.length > 0 && typeof window.dbUploadModulFile === "function") {
+              cloudMeta = await window.dbUploadModulFile(
+                JSON.stringify(uploadedImages),
+                "application/x-utb-images",
+                (pct) => {
+                  window.setButtonLoading(submitBookBtn, true, `Sinkron Cloud (${pct}%)...`);
+                }
+              );
+            }
           }
         }
-      }
 
-      const list = getModuls();
-      if (editId) {
-        const idx = list.findIndex((m) => m.id === editId);
-        if (idx !== -1) {
-          list[idx] = {
-            ...list[idx],
+        const list = getModuls();
+        if (editId) {
+          const idx = list.findIndex((m) => m.id === editId);
+          if (idx !== -1) {
+            if (cloudMeta && list[idx].cloud_file_id && typeof window.dbDeleteModulFile === "function") {
+              await window.dbDeleteModulFile(list[idx].cloud_file_id, list[idx].cloud_chunks);
+            }
+            list[idx] = {
+              ...list[idx],
+              course_id,
+              title,
+              edition,
+              pdf_external_url: pdf_external_url || list[idx].pdf_external_url || "",
+              idb_key: idbKey || list[idx].idb_key || "",
+              images: uploadedImages.length > 0 ? uploadedImages : list[idx].images || [],
+              ...(cloudMeta || {}),
+            };
+          }
+          window.showToast(`Modul "${title}" berhasil diperbarui di Cloud Supabase!`, "success");
+        } else {
+          list.push({
+            id: newId,
             course_id,
             title,
             edition,
-            pdf_external_url: pdf_external_url || list[idx].pdf_external_url || "",
-            idb_key: idbKey || list[idx].idb_key || "",
-            images: uploadedImages.length > 0 ? uploadedImages : list[idx].images || [],
-          };
+            pdf_external_url,
+            idb_key: idbKey,
+            images: uploadedImages,
+            ...(cloudMeta || {}),
+          });
+          window.showToast(`Modul "${title}" berhasil diunggah & disinkronkan ke semua pengguna!`, "success");
         }
-        window.showToast(`Modul "${title}" berhasil diperbarui!`, "success");
-      } else {
-        list.push({
-          id: newId,
-          course_id,
-          title,
-          edition,
-          pdf_external_url,
-          idb_key: idbKey,
-          images: uploadedImages,
-        });
-        window.showToast(`Modul "${title}" berhasil diunggah!`, "success");
-      }
 
-      localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
-      if (typeof window.dbSaveCatalogModuls === "function") {
-        await window.dbSaveCatalogModuls(list);
-      }
-      cancelBookBtn?.click();
-      renderAdminModulLists();
+        localStorage.setItem("utb_catalog_moduls", JSON.stringify(list));
+        if (typeof window.dbSaveCatalogModuls === "function") {
+          await window.dbSaveCatalogModuls(list);
+        }
+        cancelBookBtn?.click();
+        renderAdminModulLists();
 
-      if (selectedCourse && selectedCourse.id === course_id) {
-        openCourseReader(selectedCourse);
+        if (selectedCourse && selectedCourse.id === course_id) {
+          await openCourseReader(selectedCourse, newId);
+        }
+      } catch (err) {
+        console.error("Gagal mengunggah modul:", err);
+        window.showToast("Gagal mengunggah file modul: " + err.message, "danger");
+      } finally {
+        window.setButtonLoading(submitBookBtn, false);
       }
     });
 
@@ -1403,6 +1713,15 @@
 
           if (item && item.idb_key) {
             await deleteFileFromIdb(item.idb_key);
+          }
+          if (item && (item.cloud_file_id || item.storage_path)) {
+            if (item.cloud_file_id) {
+              await deleteFileFromIdb("cloud_pdf_" + item.cloud_file_id);
+              await deleteFileFromIdb("cloud_img_" + item.cloud_file_id);
+            }
+            if (typeof window.dbDeleteModulFile === "function") {
+              await window.dbDeleteModulFile(item.cloud_file_id, item.cloud_chunks, item.storage_path);
+            }
           }
           const updated = getModuls().filter((m) => m.id !== btn.dataset.id);
           localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));

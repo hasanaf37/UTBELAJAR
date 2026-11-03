@@ -154,16 +154,52 @@
     renderHistorySidebar();
   }
 
+  function getProviderDisplayName(provider) {
+    switch (String(provider || "").toLowerCase()) {
+      case "gemini":
+        return "Google Gemini";
+      case "openrouter":
+        return "OpenRouter";
+      case "openai":
+        return "OpenAI";
+      case "groq":
+        return "Groq Cloud";
+      case "custom":
+        return "Custom AI";
+      case "supabase":
+        return "Supabase Edge";
+      default:
+        return "Google Gemini";
+    }
+  }
+
+  function getDefaultModelForProvider(provider) {
+    switch (String(provider || "").toLowerCase()) {
+      case "openrouter":
+        return "openrouter/auto";
+      case "groq":
+        return "llama-3.3-70b-versatile";
+      case "openai":
+      case "custom":
+        return "gpt-4o-mini";
+      case "supabase":
+        return "ai-chat";
+      default:
+        return "gemini-2.0-flash";
+    }
+  }
+
   function getAiConfig() {
     try {
       const raw = localStorage.getItem("utb_ai_config");
       if (raw) {
         const parsed = JSON.parse(raw);
+        const provider = String(parsed.provider || "gemini").trim().toLowerCase();
         return {
-          provider: parsed.provider || "gemini",
-          model: parsed.model || "gemini-2.0-flash",
-          apiKey: (parsed.apiKey || "").trim(),
-          customEndpoint: (parsed.customEndpoint || "").trim(),
+          provider,
+          model: String(parsed.model || getDefaultModelForProvider(provider)).trim(),
+          apiKey: String(parsed.apiKey || "").trim(),
+          customEndpoint: String(parsed.customEndpoint || "").trim(),
           systemPrompt: parsed.systemPrompt || DEFAULT_SYSTEM_PROMPT,
           updatedAt: parsed.updatedAt || null,
         };
@@ -179,22 +215,41 @@
     };
   }
 
+  let aiSyncInFlight = null;
+  let lastAiSyncTs = 0;
+
+  async function syncAiConfigFromCloud(force = false) {
+    if (typeof window.dbGetAiConfig !== "function") return getAiConfig();
+    const now = Date.now();
+    if (!force && now - lastAiSyncTs < 1500) {
+      return getAiConfig();
+    }
+    if (aiSyncInFlight) return aiSyncInFlight;
+
+    aiSyncInFlight = (async () => {
+      try {
+        await window.dbGetAiConfig();
+        lastAiSyncTs = Date.now();
+      } catch (_) {}
+      updateAiHeaderStatus();
+      return getAiConfig();
+    })().finally(() => {
+      aiSyncInFlight = null;
+    });
+
+    return aiSyncInFlight;
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     // Pasang event listener input & tombol Enter seketika agar tidak pernah tertunda
     setupChatInput();
     setupPromptChips();
 
-    // 1. Sinkronkan konfigurasi AI dari Supabase terlebih dahulu agar siswa & seluruh perangkat langsung terhubung ke OpenRouter
-    if (typeof window.dbGetAiConfig === "function") {
-      try {
-        await window.dbGetAiConfig();
-      } catch (_) {}
-    }
-
-    updateAiHeaderStatus();
-
     currentUser = await window.requireAuth();
     if (!currentUser) return;
+
+    // 1. Sinkronkan konfigurasi AI dari Supabase setelah sesi terverifikasi agar User & Admin 100% memakai provider yang sama
+    await syncAiConfigFromCloud(true);
 
     // 2. Muat riwayat percakapan sebelumnya untuk pengguna yang sedang login
     const conversations = getConversations();
@@ -214,6 +269,16 @@
     }
 
     updateAiHeaderStatus();
+
+    // Sinkronisasi otomatis ketika tab/layar HP dibuka kembali (apabila Admin baru saja mengganti provider/API Key)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        syncAiConfigFromCloud(false);
+      }
+    });
+    window.addEventListener("focus", () => {
+      syncAiConfigFromCloud(false);
+    });
   });
 
   function updateAiHeaderStatus() {
@@ -221,19 +286,8 @@
     const statusEl = document.querySelector(".chat-agent-status");
     const badgeEl = document.getElementById("admin-ai-status-badge");
 
-    if (cfg.apiKey || (cfg.provider === "custom" && cfg.customEndpoint)) {
-      const providerLabel =
-        cfg.provider === "gemini"
-          ? "Google Gemini"
-          : cfg.provider === "openrouter"
-          ? "OpenRouter"
-          : cfg.provider === "openai"
-          ? "OpenAI"
-          : cfg.provider === "groq"
-          ? "Groq Cloud"
-          : cfg.provider === "custom"
-          ? "Custom AI"
-          : "Supabase Edge";
+    if (cfg.apiKey || (cfg.provider === "custom" && cfg.customEndpoint) || cfg.provider === "supabase") {
+      const providerLabel = getProviderDisplayName(cfg.provider);
       if (statusEl) statusEl.textContent = `● Terhubung (${providerLabel} — ${cfg.model})`;
       if (badgeEl) {
         badgeEl.className = "badge badge-success";
@@ -288,21 +342,20 @@
     provEl?.addEventListener("change", () => {
       const p = provEl.value;
       toggleEndpointVisibility(p);
-      if (!modelEl) return;
-      if (p === "gemini") modelEl.value = "gemini-2.0-flash";
-      else if (p === "openrouter") {
-        modelEl.value = "openrouter/auto";
-        if (endpointEl && !endpointEl.value) {
+      if (modelEl) {
+        modelEl.value = getDefaultModelForProvider(p);
+      }
+      if (endpointEl) {
+        if (p === "openrouter") {
           endpointEl.value = "https://openrouter.ai/api/v1/chat/completions";
-        }
-      } else if (p === "openai") modelEl.value = "gpt-4o-mini";
-      else if (p === "groq") modelEl.value = "llama-3.3-70b-versatile";
-      else if (p === "custom") {
-        modelEl.value = "gpt-4o-mini";
-        if (endpointEl && endpointEl.value === "https://openrouter.ai/api/v1/chat/completions") {
+        } else if (p === "custom") {
+          if (endpointEl.value === "https://openrouter.ai/api/v1/chat/completions") {
+            endpointEl.value = "";
+          }
+        } else {
           endpointEl.value = "";
         }
-      } else modelEl.value = "ai-chat";
+      }
     });
 
     document.getElementById("btn-toggle-ai-key-vis")?.addEventListener("click", () => {
@@ -322,11 +375,15 @@
       const submitBtn = e.target.querySelector("button[type='submit']");
       window.setButtonLoading(submitBtn, true, "Menyimpan ke Cloud...");
 
+      const selectedProvider = provEl?.value || "gemini";
       const newCfg = {
-        provider: provEl?.value || "gemini",
-        model: modelEl?.value.trim() || "gemini-2.0-flash",
+        provider: selectedProvider,
+        model: modelEl?.value.trim() || getDefaultModelForProvider(selectedProvider),
         apiKey: keyEl?.value.trim() || "",
-        customEndpoint: endpointEl?.value.trim() || "",
+        customEndpoint:
+          selectedProvider === "custom" || selectedProvider === "openrouter"
+            ? endpointEl?.value.trim() || ""
+            : "",
         systemPrompt: sysEl?.value.trim() || DEFAULT_SYSTEM_PROMPT,
         updatedAt: new Date().toISOString(),
       };
@@ -336,38 +393,48 @@
       } else {
         localStorage.setItem("utb_ai_config", JSON.stringify(newCfg));
       }
+      lastAiSyncTs = Date.now();
 
       window.setButtonLoading(submitBtn, false);
       if (savedInfoEl) {
-        savedInfoEl.textContent = `Tersimpan & tersinkronisasi ke seluruh siswa: ${window.formatDateTime(newCfg.updatedAt)}`;
+        savedInfoEl.textContent = `Tersimpan & tersinkronisasi ke seluruh pengguna: ${window.formatDateTime(newCfg.updatedAt)}`;
       }
       updateAiHeaderStatus();
-      window.showToast("Konfigurasi OpenRouter AI berhasil disimpan & langsung aktif untuk seluruh siswa!", "success");
+      window.showToast(
+        `Konfigurasi ${getProviderDisplayName(newCfg.provider)} berhasil disimpan & langsung aktif untuk seluruh pengguna!`,
+        "success"
+      );
     });
 
     document.getElementById("btn-reset-ai-config")?.addEventListener("click", async () => {
       localStorage.removeItem("utb_ai_config");
+      const resetCfg = {
+        provider: "gemini",
+        model: "gemini-2.0-flash",
+        apiKey: "",
+        customEndpoint: "",
+        systemPrompt: DEFAULT_SYSTEM_PROMPT,
+        updatedAt: new Date().toISOString(),
+      };
       if (typeof window.dbSaveAiConfig === "function") {
-        await window.dbSaveAiConfig({
-          provider: "gemini",
-          model: "gemini-2.0-flash",
-          apiKey: "",
-          customEndpoint: "",
-          systemPrompt: DEFAULT_SYSTEM_PROMPT,
-          updatedAt: new Date().toISOString(),
-        });
+        await window.dbSaveAiConfig(resetCfg);
       }
+      lastAiSyncTs = Date.now();
+      if (provEl) provEl.value = "gemini";
+      if (modelEl) modelEl.value = "gemini-2.0-flash";
       if (keyEl) keyEl.value = "";
       if (endpointEl) endpointEl.value = "";
+      toggleEndpointVisibility("gemini");
       updateAiHeaderStatus();
-      window.showToast("API Key AI telah direset.", "info");
+      window.showToast("Konfigurasi & API Key AI telah direset untuk seluruh pengguna.", "info");
     });
 
     document.getElementById("btn-test-ai-config")?.addEventListener("click", async (e) => {
       const btn = e.currentTarget;
+      const selectedProvider = provEl?.value || "gemini";
       const tempCfg = {
-        provider: provEl?.value || "gemini",
-        model: modelEl?.value.trim() || "gemini-2.0-flash",
+        provider: selectedProvider,
+        model: modelEl?.value.trim() || getDefaultModelForProvider(selectedProvider),
         apiKey: keyEl?.value.trim() || "",
         customEndpoint: endpointEl?.value.trim() || "",
         systemPrompt: sysEl?.value.trim() || DEFAULT_SYSTEM_PROMPT,
@@ -393,18 +460,9 @@
   }
 
   async function requestAiReply(userMessage, customCfg) {
-    let cfg = customCfg || getAiConfig();
-
-    // Jika API Key belum tersedia di local (misal siswa di perangkat/HP lain), coba sinkronkan dari Supabase
-    if (!cfg.apiKey && typeof window.dbGetAiConfig === "function") {
-      try {
-        const remoteCfg = await window.dbGetAiConfig();
-        if (remoteCfg && remoteCfg.apiKey) {
-          cfg = remoteCfg;
-          updateAiHeaderStatus();
-        }
-      } catch (_) {}
-    }
+    // Apabila bukan mode uji coba manual (customCfg), selalu tarik setting terbaru dari Cloud
+    // agar jika Admin baru mengganti provider (Gemini/OpenRouter/Groq/OpenAI), User langsung memakai provider yang sama!
+    let cfg = customCfg ? customCfg : await syncAiConfigFromCloud(true);
 
     // 1. Google Gemini REST API
     if (cfg.provider === "gemini" && cfg.apiKey) {
@@ -534,7 +592,7 @@
         rawReply = JSON.stringify(rawReply, null, 2);
       }
 
-      return rawReply || "Tidak ada respons teks dari agen AI OpenRouter.";
+      return rawReply || `Tidak ada respons teks dari agen AI (${getProviderDisplayName(cfg.provider)}).`;
     }
 
     // 3. Supabase Edge Function
