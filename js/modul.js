@@ -9,10 +9,10 @@
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
 
-  // 1. DATA MASTER PROGRAM STUDI
+    // 1. DATA MASTER PROGRAM STUDI
   const DEFAULT_PRODIS = [
     {
-      id: "b1111111-1111-1111-1111-111111111111",
+      id: "0c8034ac-e04d-4c85-8f72-e8ce3ed9595b",
       code: "SI",
       name: "Sistem Informasi",
       description: "Studi rekayasa perangkat lunak, sistem informasi bisnis, basis data, dan transformasi digital.",
@@ -37,25 +37,25 @@
     },
   ];
 
-  // 2. DATA MASTER MATA KULIAH (MSIM4207 Menjadi Mata Kuliah Utama untuk File Scan PDF)
+    // 2. DATA MASTER MATA KULIAH (STSI4207 / MSIM4207 Sistem Informasi Manajemen)
   const DEFAULT_COURSES = [
     {
-      id: "c-msim4207-01",
-      study_program_id: "b1111111-1111-1111-1111-111111111111", // Sistem Informasi
-      code: "MSIM4207",
+      id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      study_program_id: "0c8034ac-e04d-4c85-8f72-e8ce3ed9595b", // Sistem Informasi
+      code: "STSI4207",
       name: "Sistem Informasi Manajemen",
-      description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), dan infrastruktur TI dalam organisasi bisnis.",
+      description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), infrastruktur TI, dan model bisnis digital.",
     },
     {
-      id: "c1111111-1111-1111-1111-111111111111",
-      study_program_id: "b1111111-1111-1111-1111-111111111111",
-      code: "MSIM4201",
-      name: "Analisis dan Perancangan Sistem",
-      description: "Konsep siklus hidup pengembangan sistem (SDLC), pemodelan UML, dan use case diagram.",
+      id: "c1111111-1111-4111-8111-111111111111",
+      study_program_id: "0c8034ac-e04d-4c85-8f72-e8ce3ed9595b",
+      code: "MSIM4207",
+      name: "Sistem Informasi Manajemen",
+      description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), infrastruktur TI, dan model bisnis digital.",
     },
     {
       id: "c2222222-2222-2222-2222-222222222222",
-      study_program_id: "b1111111-1111-1111-1111-111111111111",
+      study_program_id: "0c8034ac-e04d-4c85-8f72-e8ce3ed9595b",
       code: "MSIM4202",
       name: "Sistem Basis Data",
       description: "Normalisasi data, Entity-Relationship Diagram (ERD), sintaks SQL, dan transaksi database.",
@@ -83,53 +83,63 @@
     },
   ];
 
-    // 3. DATA MASTER MODUL (Memuat File Scan CamScanner Asli & PDF Modul Terpisah 1-3, 4-6, 7-9, Lengkap)
+      // 3. DATA MASTER MODUL (Memuat UUID yang Sinkron dengan Supabase Table public.moduls)
   const DEFAULT_MODULS = [
     {
-      id: "mod-msim4207-01-03",
-      course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul 01 - 03: Sistem Informasi Manajemen",
-      edition: "MSIM4207 | Modul 01 - 03 (18 Halaman)",
+      id: "d0111111-1111-4111-8111-111111111111",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "STSI4207 Modul 01 - 03: Sistem Informasi Manajemen",
+      edition: "Modul 01 - 03 (18 Halaman)",
       pdf_file_url: "assets/modul/MSIM4207-Modul-01-03.pdf",
       pdf_data_url: "",
       images: [],
       page_count: 18,
     },
     {
-      id: "mod-msim4207-04-06",
-      course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul 04 - 06: Sistem Informasi Manajemen",
-      edition: "MSIM4207 | Modul 04 - 06 (17 Halaman)",
+      id: "d0222222-2222-4222-8222-222222222222",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "STSI4207 Modul 04 - 06: Sistem Informasi Manajemen",
+      edition: "Modul 04 - 06 (17 Halaman)",
       pdf_file_url: "assets/modul/MSIM4207-Modul-04-06.pdf",
       pdf_data_url: "",
       images: [],
       page_count: 17,
     },
     {
-      id: "mod-msim4207-07-09",
-      course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul 07 - 09: Sistem Informasi Manajemen",
-      edition: "MSIM4207 | Modul 07 - 09 (15 Halaman)",
+      id: "d0333333-3333-4333-8333-333333333333",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "STSI4207 Modul 07 - 09: Sistem Informasi Manajemen",
+      edition: "Modul 07 - 09 (15 Halaman)",
       pdf_file_url: "assets/modul/MSIM4207-Modul-07-09.pdf",
       pdf_data_url: "",
       images: [],
       page_count: 15,
     },
     {
-      id: "mod-msim4207-full",
-      course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul Lengkap (Modul 01 - 09)",
-      edition: "MSIM4207 | Modul Lengkap (60 Halaman)",
+      id: "d0444444-4444-4444-8444-444444444444",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "STSI4207 Modul Lengkap (Modul 01 - 09)",
+      edition: "Modul Lengkap (60 Halaman)",
       pdf_file_url: "assets/modul/Sistem-Informasi-Manajemen.pdf",
       pdf_data_url: "",
       images: [],
       page_count: 60,
     },
     {
-      id: "mod-msim4207-01",
-      course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul 01: Sistem Informasi dalam Bisnis (Scan CamScanner)",
-      edition: "MSIM4207 | Modul 01 (Tes Formatif 1)",
+      id: "d0999999-9999-4999-8999-999999999999",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "Sistem Informasi Manajemen (Upload Admin)",
+      edition: "Modul 1 - 9",
+      pdf_file_url: "https://dfpyizwmzqmlbyapgrpg.supabase.co/storage/v1/object/public/modul-pdfs/soal-modul/1793700336530-agu6hp.pdf",
+      pdf_data_url: "",
+      images: [],
+      page_count: 60,
+    },
+    {
+      id: "d0555555-5555-4555-8555-555555555555",
+      course_id: "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      title: "STSI4207 Modul 01: Sistem Informasi dalam Bisnis (Scan CamScanner)",
+      edition: "Modul 01 (Tes Formatif 1)",
       pdf_file_url: "assets/modul/MSIM4207-Modul-01.pdf",
       pdf_data_url: (typeof window !== "undefined" && window.DEFAULT_CAMSCANNER_PDF_DATA_URL) || "",
       images: [
@@ -636,6 +646,16 @@
       if (course.code && m.course_code && m.course_code.toUpperCase() === course.code.toUpperCase()) return true;
       if (course.code && m.edition && m.edition.toUpperCase().includes(course.code.toUpperCase())) return true;
       if (course.code && m.title && m.title.toUpperCase().includes(course.code.toUpperCase())) return true;
+
+      // Pencocokan fleksibel untuk mata kuliah Sistem Informasi Manajemen (STSI4207 / MSIM4207)
+      const isSIM = (course.code && (course.code.includes("4207") || course.code.toUpperCase() === "STSI4207" || course.code.toUpperCase() === "MSIM4207")) ||
+                    (course.name && course.name.toLowerCase().includes("sistem informasi manajemen"));
+      if (isSIM) {
+        const titleStr = (m.title || "").toLowerCase();
+        const editionStr = (m.edition || "").toLowerCase();
+        if (titleStr.includes("4207") || titleStr.includes("sistem informasi manajemen") || titleStr.includes("modul")) return true;
+        if (editionStr.includes("4207") || editionStr.includes("sistem informasi manajemen") || editionStr.includes("modul")) return true;
+      }
       return false;
     });
 
@@ -998,21 +1018,29 @@
       }
     }
 
-    // Fallback: Tampilkan viewer PDF langsung browser via Object URL jika PDF.js gagal atau terhambat
-    if (pdfData || fallbackBlob) {
-      try {
-        const finalBlob = fallbackBlob || (pdfData instanceof ArrayBuffer ? new Blob([pdfData], { type: "application/pdf" }) : null);
-        if (finalBlob) {
-          const blobUrl = URL.createObjectURL(finalBlob);
-          if (counterEl) counterEl.textContent = "Dokumen PDF Siap";
-          streamEl.innerHTML = `
-            <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1rem 0;">
-              <iframe src="${blobUrl}#toolbar=1" style="width: 100%; height: 85vh; border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" title="${window.escapeHtml(modul.title)}"></iframe>
-            </div>
-          `;
-          return;
-        }
-      } catch (_) {}
+    // Fallback: Tampilkan viewer PDF langsung browser via Object URL atau Link Publik jika PDF.js gagal atau terhambat
+    const directUrl = fallbackBlob
+      ? URL.createObjectURL(fallbackBlob)
+      : (pdfData instanceof ArrayBuffer
+          ? URL.createObjectURL(new Blob([pdfData], { type: "application/pdf" }))
+          : (typeof effectivePdfUrl === "string" && effectivePdfUrl ? effectivePdfUrl : null));
+
+    if (directUrl) {
+      if (counterEl) counterEl.textContent = "Dokumen PDF Siap";
+      streamEl.innerHTML = `
+        <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1rem 0; text-align: center;">
+          <div style="margin-bottom: 1rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem;">
+            <a href="${directUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+              📄 Buka Dokumen PDF di Tab Baru
+            </a>
+            <a href="${directUrl}" download="${window.escapeHtml(modul.title || 'modul')}.pdf" class="btn btn-secondary btn-sm">
+              📥 Unduh PDF
+            </a>
+          </div>
+          <iframe src="${directUrl}#toolbar=1" style="width: 100%; height: 85vh; border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" title="${window.escapeHtml(modul.title)}"></iframe>
+        </div>
+      `;
+      return;
     }
 
     // KASUS 3: BELUM ADA FILE SCAN PADA MODUL INI
@@ -1359,7 +1387,7 @@
       window.setButtonLoading(submitBtn, true, "Mengunggah & Memproses PDF...");
 
       try {
-        const newId = "mod-" + Date.now();
+        const newId = (typeof window.generateUuid === "function" ? window.generateUuid() : null) || crypto.randomUUID();
         let idbKey = null;
         let uploadedImages = [];
         let cloudMeta = null;
@@ -1463,6 +1491,9 @@
         }
       }
 
+      if (typeof window.dbDeleteSingleModul === "function") {
+        await window.dbDeleteSingleModul(activeModul.id);
+      }
       const updated = getModuls().filter((m) => m.id !== activeModul.id);
       localStorage.setItem("utb_catalog_moduls", JSON.stringify(updated));
       if (typeof window.dbSaveCatalogModuls === "function") {
@@ -1630,7 +1661,7 @@
       window.setButtonLoading(submitBookBtn, true, "Mengunggah & Menyimpan ke Cloud...");
 
       try {
-        const newId = editId || "mod-" + Date.now();
+        const newId = editId || ((typeof window.generateUuid === "function" ? window.generateUuid() : null) || crypto.randomUUID());
         let idbKey = null;
         let uploadedImages = [];
         let cloudMeta = null;

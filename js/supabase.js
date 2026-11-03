@@ -147,6 +147,33 @@
     });
   }
   window.generateUuid = generateUuid;
+  function ensureValidUuid(idStr) {
+    if (typeof idStr === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idStr)) {
+      return idStr.toLowerCase();
+    }
+    const presetMap = {
+      "mod-msim4207-01-03": "d0111111-1111-4111-8111-111111111111",
+      "mod-msim4207-04-06": "d0222222-2222-4222-8222-222222222222",
+      "mod-msim4207-07-09": "d0333333-3333-4333-8333-333333333333",
+      "mod-msim4207-full": "d0444444-4444-4444-8444-444444444444",
+      "mod-msim4207-01": "d0555555-5555-4555-8555-555555555555",
+      "c-msim4207-01": "e7a2070f-ea4f-45d7-b056-9bced6731450",
+      "b1111111-1111-1111-1111-111111111111": "0c8034ac-e04d-4c85-8f72-e8ce3ed9595b",
+    };
+    if (presetMap[idStr]) return presetMap[idStr];
+
+    let hash = 0;
+    const str = String(idStr || "default-uuid");
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+    }
+    const hex = Math.abs(hash).toString(16).padStart(8, "0");
+    const pad = "00000000000000000000000000000000";
+    const raw = (hex + pad).slice(0, 32);
+    return `${raw.slice(0, 8)}-${raw.slice(8, 12)}-4${raw.slice(13, 16)}-a${raw.slice(17, 20)}-${raw.slice(20, 32)}`;
+  }
+  window.ensureValidUuid = ensureValidUuid;
+
 
   // 1. Ambil seluruh data pengguna (Users & Admins) dari Supabase secara real-time
   window.dbGetUsers = async function () {
