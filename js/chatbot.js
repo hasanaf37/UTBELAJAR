@@ -264,8 +264,6 @@
       const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
       if (isAdmin) {
         initAdminAiConfigPanel();
-      } else {
-        initUserAiConfigPanel();
       }
     } catch (err) {
       console.warn("Info panel admin AI:", err.message);
@@ -283,42 +281,6 @@
       syncAiConfigFromCloud(false);
     });
   });
-
-  function updateUserAiConfigDisplay() {
-    const cfg = getAiConfig();
-    const promptTextEl = document.getElementById("user-ai-system-prompt-text");
-    const metaEl = document.getElementById("user-ai-active-meta");
-    const badgeEl = document.getElementById("user-ai-status-badge");
-
-    if (promptTextEl) {
-      promptTextEl.textContent = `"${cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT}"`;
-    }
-
-    const providerLabel = getProviderDisplayName(cfg.provider);
-    if (metaEl) {
-      metaEl.textContent = `Model Aktif: ${cfg.model} (${providerLabel})`;
-    }
-
-    if (badgeEl) {
-      badgeEl.className = cfg.apiKey ? "badge badge-success" : "badge badge-warning";
-      badgeEl.textContent = cfg.apiKey ? "● Tersinkronisasi dengan Admin" : "● Mode Default Sistem";
-    }
-  }
-
-  function initUserAiConfigPanel() {
-    const userPanel = document.getElementById("user-ai-config-panel");
-    if (!userPanel) return;
-    userPanel.style.display = "block";
-
-    const toggleBtn = document.getElementById("btn-toggle-user-prompt-body");
-    const promptBody = document.getElementById("user-ai-prompt-body");
-    toggleBtn?.addEventListener("click", () => {
-      if (!promptBody) return;
-      promptBody.style.display = promptBody.style.display === "none" ? "block" : "none";
-    });
-
-    updateUserAiConfigDisplay();
-  }
 
   function updateAiHeaderStatus() {
     const cfg = getAiConfig();
@@ -339,8 +301,6 @@
         badgeEl.textContent = "Mode Asisten Bawaan (API Key Belum Diisi)";
       }
     }
-
-    updateUserAiConfigDisplay();
   }
 
   function initAdminAiConfigPanel() {
