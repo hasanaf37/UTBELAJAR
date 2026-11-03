@@ -315,7 +315,7 @@
       if (s1 && s1.style.display !== "none") {
         renderProdiStep();
       } else if (s2 && s2.style.display !== "none" && selectedProdi) {
-        renderCourseStep(selectedProdi);
+        renderCourseStep(selectedProdi, false);
       }
     }
   }
@@ -379,28 +379,28 @@
       channel
         .on("postgres_changes", { event: "*", schema: "public", table: "study_programs" }, async () => {
           console.log("Supabase Realtime: study_programs berubah");
-          await syncCatalogFromSupabase(true);
+          await syncCatalogFromSupabase(false);
           if (currentModulStep === 1) renderProdiStep();
           renderAdminModulLists();
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, async () => {
           console.log("Supabase Realtime: courses berubah");
-          await syncCatalogFromSupabase(true);
-          if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi);
+          await syncCatalogFromSupabase(false);
+          if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi, false);
           renderAdminModulLists();
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "moduls" }, async (payload) => {
           console.log("Supabase Realtime: moduls berubah", payload);
-          await syncCatalogFromSupabase(true);
+          await syncCatalogFromSupabase(false);
           renderAdminModulLists();
-          if (currentModulStep === 3 && selectedCourse) {
+          // Jangan reset posisi baca atau scroll jika modul yang sama masih aktif
+          if (currentModulStep === 3 && selectedCourse && activeModul) {
             const allModuls = getModuls();
             const courseModuls = allModuls.filter((m) => m.course_id === selectedCourse.id);
-            const targetModul = (payload.new && courseModuls.find((m) => m.id === payload.new.id)) ||
-              (activeModul && courseModuls.find((m) => m.id === activeModul.id)) ||
-              courseModuls[0];
-            if (targetModul) {
-              await openCourseReader(selectedCourse, targetModul.id);
+            const currentStillExists = courseModuls.some((m) => m.id === activeModul.id);
+            if (!currentStillExists) {
+              const fallback = courseModuls[0];
+              if (fallback) await openCourseReader(selectedCourse, fallback.id, false);
             }
           }
         })
@@ -418,13 +418,7 @@
       if (e.key && e.key.startsWith("utb_catalog_")) {
         renderAdminModulLists();
         if (currentModulStep === 1) renderProdiStep();
-        else if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi);
-        else if (currentModulStep === 3 && selectedCourse) {
-          const allModuls = getModuls();
-          const courseModuls = allModuls.filter((m) => m.course_id === selectedCourse.id);
-          const stillExists = activeModul && courseModuls.some((m) => m.id === activeModul.id);
-          openCourseReader(selectedCourse, stillExists ? activeModul.id : null);
-        }
+        else if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi, false);
       }
     });
   }
@@ -450,21 +444,22 @@
     }
 
     setupReaderNavigation();
-    setStep(1);
+    setStep(1, false);
     renderProdiStep();
 
-    // Auto-sinkronisasi ketika tab di HP / perangkat lain dibuka kembali
+    // Auto-sinkronisasi latar belakang ketika tab dibuka kembali (tanpa mereset scroll atau posisi baca)
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") syncCatalogFromSupabase(true);
+      if (document.visibilityState === "visible") syncCatalogFromSupabase(false);
     });
-    window.addEventListener("focus", () => syncCatalogFromSupabase(true));
   });
 
   // ============================================================================
   // STEPPER TAHAPAN (1. Prodi -> 2. Mata Kuliah -> 3. Baca Soal Modul)
   // ============================================================================
-  function setStep(stepNum) {
+  function setStep(stepNum, shouldScrollToTop = false) {
+    const isStepChange = currentModulStep !== stepNum;
     currentModulStep = stepNum;
+
     document.querySelectorAll("[data-mstep]").forEach((el) => {
       const n = Number(el.dataset.mstep);
       const numEl = el.querySelector(".step-number");
@@ -490,8 +485,13 @@
     const mobileTitle = document.getElementById("modul-mobile-title");
     if (mobileTitle) mobileTitle.textContent = stepLabels[stepNum - 1] || "";
 
+    // Geser stepper horizontal HANYA pada container stepper (tidak mempengaruhi posisi scroll window vertikal)
+    const stepperContainer = document.querySelector(".latihan-stepper");
     const activeItem = document.querySelector(`[data-mstep="${stepNum}"]`);
-    activeItem?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    if (stepperContainer && activeItem) {
+      const offset = activeItem.offsetLeft - stepperContainer.clientWidth / 2 + activeItem.clientWidth / 2;
+      stepperContainer.scrollTo({ left: Math.max(0, offset), behavior: "smooth" });
+    }
 
     const s1 = document.getElementById("step-modul-prodi");
     const s2 = document.getElementById("step-modul-course");
@@ -509,7 +509,11 @@
       if (badgeHideTimer) clearTimeout(badgeHideTimer);
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll ke atas HANYA jika berpindah tahap secara eksplisit oleh klik pengguna
+    if (isStepChange && shouldScrollToTop) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     if (stepNum === 3) {
       setTimeout(updateComicScrollProgress, 100);
     }
@@ -551,15 +555,15 @@
         const found = prodis.find((p) => p.id === card.dataset.prodiId);
         if (found) {
           selectedProdi = found;
-          renderCourseStep(found);
+          renderCourseStep(found, true);
         }
       });
     });
   }
 
   // TAHAP 2: PILIH MATA KULIAH
-  async function renderCourseStep(prodi) {
-    setStep(2);
+  async function renderCourseStep(prodi, shouldScrollToTop = true) {
+    setStep(2, shouldScrollToTop);
     const heading = document.getElementById("modul-course-heading");
     if (heading) {
       // Cegah duplikasi kode prodi jika prodi.name sudah mengandung "(SI)" atau kode lainnya
@@ -621,15 +625,15 @@
         const found = courses.find((c) => c.id === card.dataset.courseId);
         if (found) {
           selectedCourse = found;
-          openCourseReader(found);
+          openCourseReader(found, null, true);
         }
       });
     });
   }
 
   // TAHAP 3: BUKA PEMBACA WEB KOMIK SOAL MODUL
-  async function openCourseReader(course, preferredModulId = null) {
-    setStep(3);
+  async function openCourseReader(course, preferredModulId = null, shouldScrollToTop = true) {
+    setStep(3, shouldScrollToTop);
     const titleEl = document.getElementById("modul-reader-course-title");
     if (titleEl) titleEl.textContent = `${course.code} — ${course.name}`;
 
@@ -1139,8 +1143,18 @@
     }
   }
 
-  window.addEventListener("scroll", updateComicScrollProgress, { passive: true });
-  window.addEventListener("resize", updateComicScrollProgress, { passive: true });
+  // Throttle event scroll dengan requestAnimationFrame agar bebas stutter dan tidak memicu layout reflow berulang
+  let comicScrollRafId = null;
+  function handleThrottledComicScroll() {
+    if (comicScrollRafId) return;
+    comicScrollRafId = requestAnimationFrame(() => {
+      comicScrollRafId = null;
+      updateComicScrollProgress();
+    });
+  }
+
+  window.addEventListener("scroll", handleThrottledComicScroll, { passive: true });
+  window.addEventListener("resize", handleThrottledComicScroll, { passive: true });
 
   // ============================================================================
   // UNDUH FILE PDF ASLI
@@ -1251,13 +1265,16 @@
   // ============================================================================
   function setupReaderNavigation() {
     document.getElementById("btn-modul-back-prodi")?.addEventListener("click", () => {
-      setStep(1);
+      setStep(1, true);
       renderProdiStep();
     });
 
     document.getElementById("btn-modul-back-course")?.addEventListener("click", () => {
-      if (selectedProdi) renderCourseStep(selectedProdi);
-      else setStep(1);
+      if (selectedProdi) renderCourseStep(selectedProdi, true);
+      else {
+        setStep(1, true);
+        renderProdiStep();
+      }
     });
 
     // Handler navigasi tahapan: HANYA BISA LANGSUNG KE KIRI, JIKA KE KANAN MUNCULKAN POPUP
@@ -1269,12 +1286,14 @@
         // 1. HANYA BISA LANGSUNG KE KIRI
         if (targetStep < currentModulStep) {
           if (targetStep === 1) {
-            setStep(1);
+            setStep(1, true);
             renderProdiStep();
           } else if (targetStep === 2) {
-            setStep(2);
-            if (selectedProdi) renderCourseStep(selectedProdi);
-            else renderProdiStep();
+            if (selectedProdi) renderCourseStep(selectedProdi, true);
+            else {
+              setStep(1, true);
+              renderProdiStep();
+            }
           }
           return;
         }
@@ -1286,18 +1305,6 @@
           window.showToast("Pilih mata kuliah dahulu", "info");
         }
       });
-    });
-
-    document.querySelector('[data-mstep="2"]')?.addEventListener("click", () => {
-      if (selectedProdi) {
-        renderCourseStep(selectedProdi);
-      }
-    });
-
-    document.querySelector('[data-mstep="3"]')?.addEventListener("click", () => {
-      if (selectedCourse) {
-        openCourseReader(selectedCourse);
-      }
     });
 
     // Kontrol Zoom
