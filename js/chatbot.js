@@ -5,6 +5,7 @@
 (function () {
   const DEFAULT_SYSTEM_PROMPT =
     "Anda adalah UTBelajar AI, asisten belajar digital independen untuk mahasiswa. Berikan penjelasan materi kuliah, rangkuman modul, dan contoh soal latihan dengan bahasa Indonesia yang terstruktur, ramah, dan mudah dipahami.";
+  window.DEFAULT_SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 
   const DEFAULT_WELCOME_HTML = `
     <div class="chat-welcome-box">
@@ -263,6 +264,8 @@
       const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
       if (isAdmin) {
         initAdminAiConfigPanel();
+      } else {
+        initUserAiConfigPanel();
       }
     } catch (err) {
       console.warn("Info panel admin AI:", err.message);
@@ -270,7 +273,7 @@
 
     updateAiHeaderStatus();
 
-    // Sinkronisasi otomatis ketika tab/layar HP dibuka kembali (apabila Admin baru saja mengganti provider/API Key)
+    // Sinkronisasi otomatis ketika tab/layar HP dibuka kembali (apabila Admin baru saja mengganti provider/API Key/Instruksi Sistem)
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         syncAiConfigFromCloud(false);
@@ -280,6 +283,42 @@
       syncAiConfigFromCloud(false);
     });
   });
+
+  function updateUserAiConfigDisplay() {
+    const cfg = getAiConfig();
+    const promptTextEl = document.getElementById("user-ai-system-prompt-text");
+    const metaEl = document.getElementById("user-ai-active-meta");
+    const badgeEl = document.getElementById("user-ai-status-badge");
+
+    if (promptTextEl) {
+      promptTextEl.textContent = `"${cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT}"`;
+    }
+
+    const providerLabel = getProviderDisplayName(cfg.provider);
+    if (metaEl) {
+      metaEl.textContent = `Model Aktif: ${cfg.model} (${providerLabel})`;
+    }
+
+    if (badgeEl) {
+      badgeEl.className = cfg.apiKey ? "badge badge-success" : "badge badge-warning";
+      badgeEl.textContent = cfg.apiKey ? "● Tersinkronisasi dengan Admin" : "● Mode Default Sistem";
+    }
+  }
+
+  function initUserAiConfigPanel() {
+    const userPanel = document.getElementById("user-ai-config-panel");
+    if (!userPanel) return;
+    userPanel.style.display = "block";
+
+    const toggleBtn = document.getElementById("btn-toggle-user-prompt-body");
+    const promptBody = document.getElementById("user-ai-prompt-body");
+    toggleBtn?.addEventListener("click", () => {
+      if (!promptBody) return;
+      promptBody.style.display = promptBody.style.display === "none" ? "block" : "none";
+    });
+
+    updateUserAiConfigDisplay();
+  }
 
   function updateAiHeaderStatus() {
     const cfg = getAiConfig();
@@ -300,6 +339,8 @@
         badgeEl.textContent = "Mode Asisten Bawaan (API Key Belum Diisi)";
       }
     }
+
+    updateUserAiConfigDisplay();
   }
 
   function initAdminAiConfigPanel() {
@@ -598,7 +639,11 @@
     // 3. Supabase Edge Function
     if (cfg.provider === "supabase" && window.supabaseClient) {
       const { data, error } = await window.supabaseClient.functions.invoke(window.APP_CONFIG.AI_FUNCTION_NAME, {
-        body: { message: userMessage, conversation_id: activeConversationId },
+        body: {
+          message: userMessage,
+          conversation_id: activeConversationId,
+          system_prompt: cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT,
+        },
       });
       if (!error && data?.reply) return data.reply;
     }
@@ -608,6 +653,7 @@
   }
 
   function buildBuiltInAcademicResponse(msg) {
+    const isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     const lower = msg.toLowerCase();
     if (lower.includes("normalisasi") || lower.includes("basis data") || lower.includes("sql")) {
       return (
@@ -641,7 +687,9 @@
       "1. **Pahami Definisi Inti**: Identifikasi kata kunci dan konsep utama pada modul.\n" +
       "2. **Buat Peta Konsep**: Hubungkan teori dengan studi kasus praktis.\n" +
       "3. **Uji Pemahaman**: Kerjakan paket soal pada menu **Latihan Soal** untuk mengukur kesiapan ujian.\n\n" +
-      "*(Catatan Admin: Anda dapat memasukkan API Key Google Gemini / OpenAI / Groq pada panel Konfigurasi AI di atas untuk mengaktifkan jawaban generatif penuh).* "
+      (isAdmin
+        ? "*(Catatan Admin: Anda dapat memasukkan API Key Google Gemini / OpenAI / Groq pada panel Konfigurasi AI di atas untuk mengaktifkan jawaban generatif penuh).* "
+        : "*(Tips Belajar: Anda dapat menanyakan ringkasan bab, konsep kunci, maupun pembuatan latihan soal mandiri kepada UTBelajar AI).*")
     );
   }
 

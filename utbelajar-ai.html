@@ -159,6 +159,37 @@
           </form>
         </div>
 
+        <!-- ================================================================ -->
+        <!-- PANEL INFORMASI KONFIGURASI & INSTRUKSI SISTEM (SISI USER)       -->
+        <!-- ================================================================ -->
+        <div id="user-ai-config-panel" class="card" style="display: none; margin-bottom: 1.25rem; border: 1.5px solid rgba(65, 105, 245, 0.25); background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.65rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--soft-blue); color: var(--primary-blue); padding: 0.22rem 0.7rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800;">
+                <span>📋 INSTRUKSI SISTEM (SYSTEM PROMPT ASISTEN BELAJAR)</span>
+              </div>
+              <span id="user-ai-status-badge" class="badge badge-success" style="font-size: 0.72rem;">
+                ● Tersinkronisasi dengan Admin
+              </span>
+            </div>
+            <button type="button" id="btn-toggle-user-prompt-body" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">
+              Sembunyikan/Tampilkan
+            </button>
+          </div>
+          <div id="user-ai-prompt-body">
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.45rem;">
+              Konfigurasi arahan dan peran asisten belajar aktif yang disetel oleh Administrator:
+            </p>
+            <div id="user-ai-system-prompt-text" style="font-size: 0.84rem; line-height: 1.55; color: var(--primary-navy); background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.85rem; font-style: italic;">
+              Memuat instruksi sistem...
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.74rem; color: var(--text-secondary); flex-wrap: wrap; gap: 0.5rem;">
+              <span id="user-ai-active-meta">Model: gpt-4o-mini (OpenAI)</span>
+              <span style="color: var(--primary-blue); font-weight: 600;">● Otomatis diselaraskan dengan konfigurasi Admin</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Container Chatbot Layout (2 Kolom) -->
         <div class="chatbot-layout">
           <!-- Sidebar Riwayat Percakapan AI -->

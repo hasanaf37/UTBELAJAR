@@ -1537,12 +1537,17 @@
               ? "ai-chat"
               : "gemini-2.0-flash";
 
+    const defaultPrompt =
+      "Anda adalah UTBelajar AI, asisten belajar digital independen untuk mahasiswa. Berikan penjelasan materi kuliah, rangkuman modul, dan contoh soal latihan dengan bahasa Indonesia yang terstruktur, ramah, dan mudah dipahami.";
+    const rawPrompt = typeof rawCfg.systemPrompt === "string" ? rawCfg.systemPrompt.trim() : "";
+    const systemPrompt = rawPrompt.length > 0 ? rawPrompt : (window.DEFAULT_SYSTEM_PROMPT || defaultPrompt);
+
     return {
       provider,
       model: String(rawCfg.model || defaultModel).trim(),
       apiKey: String(rawCfg.apiKey || "").trim(),
       customEndpoint: String(rawCfg.customEndpoint || "").trim(),
-      systemPrompt: typeof rawCfg.systemPrompt === "string" ? rawCfg.systemPrompt : "",
+      systemPrompt,
       updatedAt: rawCfg.updatedAt || null,
     };
   }
