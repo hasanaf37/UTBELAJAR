@@ -1108,11 +1108,11 @@
             };
           });
 
-          // Sertakan modul lokal Admin yang baru diunggah namun belum sempat tersinkron ke tabel moduls
-          if (isCurrentSessionAdminSync() && Array.isArray(localList)) {
+          // Sertakan modul lokal Admin yang baru diunggah agar tidak hilang sebelum tersinkron ke tabel moduls
+          if (Array.isArray(localList)) {
             const tableIds = new Set(mergedTable.map((m) => m.id));
             localList.forEach((lm) => {
-              if (lm && lm.id && !tableIds.has(lm.id) && lm.idb_key && !lm.storage_path && !lm.cloud_file_id) {
+              if (lm && lm.id && !tableIds.has(lm.id)) {
                 mergedTable.push(lm);
               }
             });
@@ -1121,7 +1121,9 @@
           localStorage.setItem("utb_catalog_moduls", JSON.stringify(mergedTable));
           return mergedTable;
         }
-      } catch (_) {}
+      } catch (err) {
+        console.warn("Gagal mengambil moduls dari Supabase:", err.message);
+      }
 
       // 2. FALLBACK CLOUD OTOMATIS (_SYS_MOD_): Dipakai bila tabel `moduls` belum dibuat
       const cloudStore = await dbReadSysStore(SYS_MOD_CODE);
@@ -1143,10 +1145,10 @@
           return cm;
         });
 
-        if (isCurrentSessionAdminSync() && Array.isArray(localList)) {
+        if (Array.isArray(localList)) {
           const cloudIds = new Set(merged.map((m) => m.id));
           localList.forEach((lm) => {
-            if (lm && lm.id && !cloudIds.has(lm.id) && lm.idb_key && !lm.cloud_file_id && !lm.storage_path) {
+            if (lm && lm.id && !cloudIds.has(lm.id)) {
               merged.push(lm);
             }
           });
@@ -1185,9 +1187,9 @@
             const rowsToUpsert = sanitized
               .filter((m) => validCourseIds.size === 0 || validCourseIds.has(m.course_id))
               .map((m) => ({
-                id: m.id,
-                course_id: m.course_id,
-                title: m.title,
+                id: String(m.id),
+                course_id: String(m.course_id),
+                title: String(m.title || "Modul"),
                 edition: m.edition || "Modul 01",
                 pdf_file_url: m.pdf_file_url || null,
                 pdf_external_url: m.pdf_external_url || null,
@@ -1199,11 +1201,20 @@
               }));
 
             if (rowsToUpsert.length > 0) {
-              await window.supabaseClient.from("moduls").upsert(rowsToUpsert, { onConflict: "id" });
+              const { error: upsertErr } = await window.supabaseClient
+                .from("moduls")
+                .upsert(rowsToUpsert, { onConflict: "id" });
+              if (upsertErr) {
+                console.warn("Supabase upsert moduls:", upsertErr.message);
+              }
             }
           }
+        } else if (checkErr) {
+          console.warn("Supabase select moduls:", checkErr.message);
         }
-      } catch (_) {}
+      } catch (err) {
+        console.warn("Gagal menyimpan moduls ke tabel Supabase:", err.message);
+      }
 
       // 2. Tetap perbarui Cloud Store cadangan (_SYS_MOD_)
       await dbWriteSysStore(SYS_MOD_ID, SYS_MOD_CODE, sanitized);

@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- SKRIP RESMI SETUP SOAL MODUL BERSIH & REALTIME SUPABASE
--- Komponen: Program Studi, Mata Kuliah, dan Buku & PDF Modul
+-- Komponen: Program Studi, Mata Kuliah, dan Buku & PDF Modul (Tipe ID TEXT Fleksibel)
 -- Jalankan skrip ini langsung di menu SQL Editor pada Dashboard Supabase Anda
 -- ==============================================================================
 
@@ -24,10 +24,10 @@ CREATE INDEX IF NOT EXISTS idx_study_programs_code ON public.study_programs(code
 
 -- ==============================================================================
 -- 3. TABEL 2: MATA KULIAH (courses)
--- Relasi langsung ke study_programs (ON DELETE CASCADE)
+-- Menggunakan id TEXT agar mendukung ID custom seperti 'c-msim4207-01' maupun UUID
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.courses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     study_program_id UUID NOT NULL REFERENCES public.study_programs(id) ON DELETE CASCADE,
     code VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -42,11 +42,11 @@ CREATE INDEX IF NOT EXISTS idx_courses_code ON public.courses(code);
 
 -- ==============================================================================
 -- 4. TABEL 3: BUKU & PDF MODUL (moduls)
--- Relasi langsung ke courses (ON DELETE CASCADE)
+-- Menggunakan id TEXT dan course_id TEXT agar sinkron instan dengan frontend
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.moduls (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    course_id TEXT NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     edition VARCHAR(100) DEFAULT 'Modul 01',
     pdf_file_url TEXT,
@@ -62,6 +62,40 @@ CREATE TABLE IF NOT EXISTS public.moduls (
 );
 
 CREATE INDEX IF NOT EXISTS idx_moduls_course_id ON public.moduls(course_id);
+
+-- Migrasi otomatis jika tabel courses atau moduls sebelumnya dibuat bertipe UUID
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'courses' AND column_name = 'id' AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE IF EXISTS public.moduls DROP CONSTRAINT IF EXISTS moduls_course_id_fkey;
+        ALTER TABLE IF EXISTS public.courses ALTER COLUMN id TYPE TEXT USING id::TEXT;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'moduls' AND column_name = 'id' AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE IF EXISTS public.moduls ALTER COLUMN id TYPE TEXT USING id::TEXT;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'moduls' AND column_name = 'course_id' AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE IF EXISTS public.moduls ALTER COLUMN course_id TYPE TEXT USING course_id::TEXT;
+    END IF;
+
+    -- Pasang kembali constraint foreign key jika belum terpasang
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_schema = 'public' AND constraint_name = 'moduls_course_id_fkey'
+    ) THEN
+        ALTER TABLE public.moduls ADD CONSTRAINT moduls_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 -- ==============================================================================
 -- 5. KEAMANAN & AKSES (Row Level Security - RLS)
@@ -96,15 +130,44 @@ CREATE POLICY "Public access for moduls"
     WITH CHECK (true);
 
 -- ==============================================================================
--- 6. PENGAKTIFAN REALTIME PENUH (SUPABASE REALTIME REPLICATION)
+-- 6. STORAGE BUCKET: `modul-pdfs` (Untuk Menyimpan File Dokumen PDF Asli)
+-- ==============================================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('modul-pdfs', 'modul-pdfs', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "Public read modul-pdfs" ON storage.objects;
+CREATE POLICY "Public read modul-pdfs"
+    ON storage.objects FOR SELECT
+    TO anon, authenticated
+    USING (bucket_id = 'modul-pdfs');
+
+DROP POLICY IF EXISTS "Allow upload modul-pdfs" ON storage.objects;
+CREATE POLICY "Allow upload modul-pdfs"
+    ON storage.objects FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (bucket_id = 'modul-pdfs');
+
+DROP POLICY IF EXISTS "Allow update modul-pdfs" ON storage.objects;
+CREATE POLICY "Allow update modul-pdfs"
+    ON storage.objects FOR UPDATE
+    TO anon, authenticated
+    USING (bucket_id = 'modul-pdfs');
+
+DROP POLICY IF EXISTS "Allow delete modul-pdfs" ON storage.objects;
+CREATE POLICY "Allow delete modul-pdfs"
+    ON storage.objects FOR DELETE
+    TO anon, authenticated
+    USING (bucket_id = 'modul-pdfs');
+
+-- ==============================================================================
+-- 7. PENGAKTIFAN REALTIME PENUH (SUPABASE REALTIME REPLICATION)
 -- Agar perubahan dari sisi Admin Web / Supabase langsung terupdate detik itu juga
 -- ==============================================================================
--- REPLICA IDENTITY FULL memastikan payload DELETE/UPDATE memuat data lengkap
 ALTER TABLE public.study_programs REPLICA IDENTITY FULL;
 ALTER TABLE public.courses REPLICA IDENTITY FULL;
 ALTER TABLE public.moduls REPLICA IDENTITY FULL;
 
--- Daftarkan ketiga tabel ke publikasi realtime Supabase
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -128,7 +191,6 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.moduls;
     END IF;
 
-    -- Daftarkan juga question_sets jika tabel sudah dibuat
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'question_sets') THEN
         ALTER TABLE public.question_sets REPLICA IDENTITY FULL;
         IF NOT EXISTS (

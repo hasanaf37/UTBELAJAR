@@ -1050,16 +1050,6 @@
     const steps = document.querySelectorAll(".latihan-stepper .step-item");
     steps.forEach((s) => {
       const sNum = Number(s.dataset.step);
-<<<<<<< HEAD
-      if (sNum <= step) s.classList.add("active");
-      else s.classList.remove("active");
-
-      s.classList.toggle("is-completed", sNum < step);
-      s.classList.toggle("is-current", sNum === step);
-
-      if (sNum === step) {
-        s.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-=======
       const numEl = s.querySelector(".step-number");
       if (numEl) numEl.textContent = sNum; // Selalu nomor, tanpa tanda ceklis
 
@@ -1071,7 +1061,6 @@
         s.classList.remove("active");
       } else {
         s.classList.remove("active", "completed");
->>>>>>> 250c0e2 (revisi sikngronisasi)
       }
     });
 
@@ -1548,21 +1537,6 @@
     document.getElementById("crumb-back-prodi")?.addEventListener("click", () => updateStepperUI(1));
     document.getElementById("crumb-back-course")?.addEventListener("click", () => updateStepperUI(2));
 
-<<<<<<< HEAD
-    // Navigasi Klik Langsung pada Stepper
-    document.querySelectorAll(".latihan-stepper .step-item").forEach((item) => {
-      item.addEventListener("click", () => {
-        const targetStep = Number(item.dataset.step);
-        // Izinkan klik jika tahap sudah selesai atau sedang aktif
-        if (item.classList.contains("is-completed") || item.classList.contains("is-current")) {
-          if (targetStep === 1) {
-            updateStepperUI(1);
-          } else if (targetStep === 2 && selectedProdi) {
-            updateStepperUI(2);
-          } else if (targetStep === 3 && selectedCourse) {
-            updateStepperUI(3);
-          }
-=======
     // Handler navigasi tahapan: HANYA BISA LANGSUNG KE KIRI, JIKA KE KANAN MUNCULKAN POPUP
     document.querySelectorAll(".latihan-stepper .step-item").forEach((item) => {
       item.addEventListener("click", async () => {
@@ -1596,7 +1570,6 @@
           window.showToast("Pilih paket soal dahulu", "info");
         } else if (currentStep === 4) {
           window.showToast("Selesaikan pengerjaan soal dahulu", "info");
->>>>>>> 250c0e2 (revisi sikngronisasi)
         }
       });
     });

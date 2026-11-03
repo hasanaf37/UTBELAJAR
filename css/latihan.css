@@ -3,20 +3,6 @@
    ============================================================================== */
 
 /* ==============================================================================
-<<<<<<< HEAD
-   Breadcrumb / Stepper Navigasi Interaktif & Responsif (Laptop & Handphone)
-   ============================================================================== */
-.latihan-stepper {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 1.75rem;
-  background: var(--surface);
-  padding: 0.65rem 0.95rem;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
-=======
    STEPPER INDIKATOR MODERN & RESPONSIF (LAPTOP & HANDPHONE)
    ============================================================================== */
 .latihan-stepper-wrapper {
@@ -80,7 +66,6 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.35rem;
->>>>>>> 250c0e2 (revisi sikngronisasi)
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -101,26 +86,6 @@
 .step-item {
   display: inline-flex;
   align-items: center;
-<<<<<<< HEAD
-  gap: 0.6rem;
-  padding: 0.5rem 0.95rem;
-  border-radius: 10px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: #F8FAFC;
-  border: 1px solid var(--border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-  flex-shrink: 0;
-  text-decoration: none;
-  cursor: default;
-}
-
-.step-item span {
-  display: inline-block;
-  white-space: nowrap;
-=======
   gap: 0.45rem;
   padding: 0.42rem 0.75rem;
   border-radius: 8px;
@@ -141,7 +106,6 @@
   border-color: #CBD5E1;
   color: var(--primary-blue);
   transform: translateY(-1px);
->>>>>>> 250c0e2 (revisi sikngronisasi)
 }
 
 .step-item:hover .step-number {
@@ -155,20 +119,6 @@
 
 /* Kotak Nomor (Tidak Terlalu Bulat) */
 .step-number {
-<<<<<<< HEAD
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #E2E8F0;
-  color: var(--text-secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 800;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-=======
   width: 22px;
   height: 22px;
   border-radius: 6px;
@@ -195,7 +145,6 @@
   font-weight: 800;
   border: 2px solid var(--primary-blue);
   box-shadow: 0 2px 8px rgba(65, 105, 245, 0.14);
->>>>>>> 250c0e2 (revisi sikngronisasi)
 }
 
 /* Tahap yang telah selesai / terlewati (Completed) */
@@ -220,41 +169,6 @@
   color: #FFFFFF;
 }
 
-<<<<<<< HEAD
-/* Tahap yang sedang aktif (Current) */
-.step-item.is-current {
-  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%) !important;
-  color: #FFFFFF !important;
-  border-color: #1E3A8A !important;
-  font-weight: 800 !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
-}
-
-.step-item.is-current .step-number {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: #FFFFFF !important;
-}
-
-/* Pemisah Antar Tahap (Chevron Arrow) */
-.step-separator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #94A3B8;
-  font-size: 0.85rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  user-select: none;
-  padding: 0 0.15rem;
-}
-
-.step-separator svg {
-  width: 14px;
-  height: 14px;
-  stroke: #94A3B8;
-  stroke-width: 2.5;
-  display: block;
-=======
 /* Tahap yang bukan aktif (Tanpa ceklis, nomor tetap tampil bersih) */
 .step-item.completed {
   background: #F8FAFC;
@@ -281,7 +195,6 @@
   display: inline-flex;
   align-items: center;
   margin: 0 0.1rem;
->>>>>>> 250c0e2 (revisi sikngronisasi)
 }
 
 /* Grid Program Studi & Mata Kuliah */
@@ -771,21 +684,6 @@
     overflow-x: auto;
     flex-wrap: nowrap;
     white-space: nowrap;
-<<<<<<< HEAD
-    padding: 0.5rem 0.65rem;
-    gap: 0.4rem;
-    margin-bottom: 1.25rem;
-    border-radius: 12px;
-    scroll-snap-type: x mandatory;
-  }
-
-  .step-item {
-    padding: 0.42rem 0.75rem;
-    font-size: 0.8rem;
-    gap: 0.45rem;
-    border-radius: 8px;
-    scroll-snap-align: center;
-=======
     padding: 0.35rem 0.25rem;
     gap: 0.4rem;
   }
@@ -794,26 +692,12 @@
     padding: 0.35rem 0.65rem;
     font-size: 0.78rem;
     gap: 0.4rem;
->>>>>>> 250c0e2 (revisi sikngronisasi)
   }
 
   .step-number {
     width: 22px;
     height: 22px;
-<<<<<<< HEAD
-    font-size: 0.74rem;
-  }
-
-  .step-separator {
-    padding: 0;
-  }
-
-  .step-separator svg {
-    width: 12px;
-    height: 12px;
-=======
     font-size: 0.7rem;
->>>>>>> 250c0e2 (revisi sikngronisasi)
   }
 
   .selection-grid {

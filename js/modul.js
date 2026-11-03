@@ -106,6 +106,7 @@
   // ============================================================================
   const IDB_NAME = "utb_modul_storage";
   const IDB_STORE = "pdf_files";
+  const inMemoryPdfCache = new Map();
 
   function getDb() {
     return new Promise((resolve, reject) => {
@@ -303,11 +304,75 @@
     }
   }
 
+
+  // ============================================================================
+  // SINKRONISASI REALTIME SUPABASE (study_programs, courses, moduls)
+  // ============================================================================
+  function initModulRealtimeSync() {
+    if (!window.supabaseClient || typeof window.supabaseClient.channel !== "function") return;
+
+    try {
+      const channel = window.supabaseClient.channel("utb_soal_modul_realtime_channel");
+
+      channel
+        .on("postgres_changes", { event: "*", schema: "public", table: "study_programs" }, async () => {
+          console.log("Supabase Realtime: study_programs berubah");
+          await syncCatalogFromSupabase(true);
+          if (currentModulStep === 1) renderProdiStep();
+          renderAdminModulLists();
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, async () => {
+          console.log("Supabase Realtime: courses berubah");
+          await syncCatalogFromSupabase(true);
+          if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi);
+          renderAdminModulLists();
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "moduls" }, async (payload) => {
+          console.log("Supabase Realtime: moduls berubah", payload);
+          await syncCatalogFromSupabase(true);
+          renderAdminModulLists();
+          if (currentModulStep === 3 && selectedCourse) {
+            const allModuls = getModuls();
+            const courseModuls = allModuls.filter((m) => m.course_id === selectedCourse.id);
+            const targetModul = (payload.new && courseModuls.find((m) => m.id === payload.new.id)) ||
+              (activeModul && courseModuls.find((m) => m.id === activeModul.id)) ||
+              courseModuls[0];
+            if (targetModul) {
+              await openCourseReader(selectedCourse, targetModul.id);
+            }
+          }
+        })
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            console.log("Supabase Realtime: Terhubung ke channel soal modul.");
+          }
+        });
+    } catch (err) {
+      console.warn("Realtime subscription soal modul warning:", err);
+    }
+
+    // Dengarkan event storage untuk sinkronisasi antar-tab dalam browser yang sama
+    window.addEventListener("storage", (e) => {
+      if (e.key && e.key.startsWith("utb_catalog_")) {
+        renderAdminModulLists();
+        if (currentModulStep === 1) renderProdiStep();
+        else if (currentModulStep === 2 && selectedProdi) renderCourseStep(selectedProdi);
+        else if (currentModulStep === 3 && selectedCourse) {
+          const allModuls = getModuls();
+          const courseModuls = allModuls.filter((m) => m.course_id === selectedCourse.id);
+          const stillExists = activeModul && courseModuls.some((m) => m.id === activeModul.id);
+          openCourseReader(selectedCourse, stillExists ? activeModul.id : null);
+        }
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     currentUser = await window.requireAuth();
     if (!currentUser) return;
 
     await syncCatalogFromSupabase(false);
+    initModulRealtimeSync();
 
     isAdmin = typeof window.isAdminUser === "function" && window.isAdminUser(currentUser);
     const adminPanel = document.getElementById("admin-modul-manager");
@@ -339,13 +404,6 @@
     currentModulStep = stepNum;
     document.querySelectorAll("[data-mstep]").forEach((el) => {
       const n = Number(el.dataset.mstep);
-<<<<<<< HEAD
-      el.classList.toggle("active", n <= stepNum);
-      el.classList.toggle("is-completed", n < stepNum);
-      el.classList.toggle("is-current", n === stepNum);
-      if (n === stepNum) {
-        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-=======
       const numEl = el.querySelector(".step-number");
       if (numEl) numEl.textContent = n; // Selalu nomor, tanpa tanda ceklis
 
@@ -357,7 +415,6 @@
         el.classList.remove("active");
       } else {
         el.classList.remove("active", "completed");
->>>>>>> 250c0e2 (revisi sikngronisasi)
       }
     });
 
@@ -659,84 +716,98 @@
       return;
     }
 
-    // KASUS 2: MODUL MEMILIKI FILE PDF (INDEXEDDB LOKAL, CLOUD SUPABASE, ATAU FILE BAWAAN)
+        // KASUS 2: MODUL MEMILIKI FILE PDF (INDEXEDDB LOKAL, CLOUD SUPABASE, ATAU FILE BAWAAN)
     let pdfData = null;
-    const cacheKey = "modul_pdf_" + (modul.id || modul.storage_path || modul.cloud_file_id || "default");
-    const idbKeys = [
-      modul.idb_key,
-      cacheKey,
-      modul.cloud_file_id ? "cloud_pdf_" + modul.cloud_file_id : null,
-      modul.storage_path ? "cloud_pdf_" + modul.storage_path : null,
-    ].filter(Boolean);
+    let fallbackBlob = null;
 
-    for (const k of idbKeys) {
-      const stored = await getFileFromIdb(k);
-      if (stored instanceof Blob) {
-        pdfData = await stored.arrayBuffer();
-        break;
-      } else if (stored instanceof ArrayBuffer) {
-        pdfData = stored;
-        break;
+    // A. Periksa in-memory cache terlebih dahulu (instan tanpa lag setelah upload)
+    if (inMemoryPdfCache.has(modul.id)) {
+      const mem = inMemoryPdfCache.get(modul.id);
+      if (mem instanceof Blob) {
+        fallbackBlob = mem;
+        pdfData = await mem.arrayBuffer();
+      } else if (mem instanceof ArrayBuffer) {
+        pdfData = mem;
+      }
+    } else if (modul.idb_key && inMemoryPdfCache.has(modul.idb_key)) {
+      const mem = inMemoryPdfCache.get(modul.idb_key);
+      if (mem instanceof Blob) {
+        fallbackBlob = mem;
+        pdfData = await mem.arrayBuffer();
+      } else if (mem instanceof ArrayBuffer) {
+        pdfData = mem;
       }
     }
 
-    // Jika file PDF belum ada di IndexedDB perangkat ini dan tersimpan di Supabase Storage
-    if (!pdfData && modul.pdf_file_url) {
-      const isRemote = String(modul.pdf_file_url).startsWith("http");
+    // B. Periksa IndexedDB
+    if (!pdfData) {
+      const cacheKey = "modul_pdf_" + (modul.id || modul.storage_path || modul.cloud_file_id || "default");
+      const idbKeys = [
+        modul.idb_key,
+        cacheKey,
+        "modul_pdf_" + (modul.id || ""),
+        modul.cloud_file_id ? "cloud_pdf_" + modul.cloud_file_id : null,
+        modul.storage_path ? "cloud_pdf_" + modul.storage_path : null,
+      ].filter(Boolean);
+
+      for (const k of idbKeys) {
+        const stored = await getFileFromIdb(k);
+        if (stored instanceof Blob) {
+          fallbackBlob = stored;
+          pdfData = await stored.arrayBuffer();
+          inMemoryPdfCache.set(modul.id, pdfData);
+          break;
+        } else if (stored instanceof ArrayBuffer) {
+          pdfData = stored;
+          inMemoryPdfCache.set(modul.id, pdfData);
+          break;
+        }
+      }
+    }
+
+    // C. Jika file PDF bersumber dari URL (Supabase Storage atau URL Eksternal)
+    const effectivePdfUrl = modul.pdf_file_url || modul.pdf_external_url;
+    if (!pdfData && effectivePdfUrl) {
+      const isRemote = String(effectivePdfUrl).startsWith("http");
       if (isRemote) {
         streamEl.innerHTML = `
           <div id="cloud-dl-status" style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
-            ☁️ Mengunduh file PDF modul dari Cloud Supabase (0%)...
+            ☁️ Mengunduh file PDF modul dari Cloud Supabase...
           </div>
         `;
         try {
-          const res = await fetch(modul.pdf_file_url);
+          const res = await fetch(effectivePdfUrl);
           if (res.ok) {
-            const contentLength = Number(res.headers.get("content-length")) || 0;
-            let blob = null;
-            if (contentLength > 0 && res.body && typeof res.body.getReader === "function") {
-              const reader = res.body.getReader();
-              const chunks = [];
-              let received = 0;
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                chunks.push(value);
-                received += value.length;
-                const pct = Math.min(99, Math.round((received / contentLength) * 100));
-                const st = document.getElementById("cloud-dl-status");
-                if (st) st.textContent = `☁️ Mengunduh file PDF modul dari Cloud Supabase (${pct}%)...`;
-              }
-              blob = new Blob(chunks, { type: "application/pdf" });
-            } else {
-              blob = await res.blob();
-            }
-            if (blob && blob.size > 0) {
-              await saveFileToIdb(cacheKey, blob);
-              if (modul.idb_key) await saveFileToIdb(modul.idb_key, blob);
-              pdfData = await blob.arrayBuffer();
-            }
+            const blob = await res.blob();
+            fallbackBlob = blob;
+            pdfData = await blob.arrayBuffer();
+            inMemoryPdfCache.set(modul.id, pdfData);
+            await saveFileToIdb("modul_pdf_" + (modul.id || "default"), blob);
           }
         } catch (fetchErr) {
-          console.warn("Gagal mengunduh pdf_file_url dari Cloud:", fetchErr);
+          console.warn("Gagal mengunduh file PDF dari Cloud:", fetchErr);
         }
       } else {
         try {
-          const res = await fetch(modul.pdf_file_url);
+          const res = await fetch(effectivePdfUrl);
           if (res.ok) {
             const blob = await res.blob();
+            fallbackBlob = blob;
             pdfData = await blob.arrayBuffer();
+            inMemoryPdfCache.set(modul.id, pdfData);
           }
         } catch (_) {}
       }
     }
 
-    // Jika file PDF tersimpan di Cloud Supabase Chunked Store (_P_...)
+    // D. Jika file PDF tersimpan di Cloud Supabase Chunked Store (_P_...)
     if (!pdfData && modul.cloud_file_id && modul.cloud_mime !== "application/x-utb-images") {
       const pdfCacheKey = "cloud_pdf_" + modul.cloud_file_id;
       const cachedBlob = await getFileFromIdb(pdfCacheKey);
       if (cachedBlob instanceof Blob) {
+        fallbackBlob = cachedBlob;
         pdfData = await cachedBlob.arrayBuffer();
+        inMemoryPdfCache.set(modul.id, pdfData);
       } else if (typeof window.dbDownloadModulFile === "function") {
         streamEl.innerHTML = `
           <div id="cloud-dl-status" style="color: #94A3B8; text-align: center; padding: 2.5rem 1rem; font-weight: 600;">
@@ -753,12 +824,11 @@
           }
         );
         if (cloudRes && cloudRes.blob instanceof Blob) {
+          fallbackBlob = cloudRes.blob;
           await saveFileToIdb(pdfCacheKey, cloudRes.blob);
-          await saveFileToIdb(cacheKey, cloudRes.blob);
-          if (modul.idb_key) {
-            await saveFileToIdb(modul.idb_key, cloudRes.blob);
-          }
+          await saveFileToIdb("modul_pdf_" + (modul.id || "default"), cloudRes.blob);
           pdfData = await cloudRes.blob.arrayBuffer();
+          inMemoryPdfCache.set(modul.id, pdfData);
         }
       }
     }
@@ -767,30 +837,36 @@
       pdfData = modul.pdf_data_url;
     }
 
+    // Render halaman menggunakan PDF.js
     if (pdfData && window.pdfjsLib) {
       if (!window.pdfjsLib.GlobalWorkerOptions?.workerSrc) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
       }
 
       try {
-        const docParam =
-          pdfData instanceof ArrayBuffer
-            ? {
-                data: new Uint8Array(pdfData),
-                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
-                cMapPacked: true,
-              }
-            : typeof pdfData === "string" && pdfData.startsWith("data:")
-            ? {
-                data: base64ToBlobSafe(pdfData.split(",")[1] || "").arrayBuffer(),
-                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
-                cMapPacked: true,
-              }
-            : {
-                url: pdfData,
-                cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
-                cMapPacked: true,
-              };
+        let docParam;
+        if (pdfData instanceof ArrayBuffer || (pdfData && pdfData.buffer instanceof ArrayBuffer)) {
+          const rawBuffer = pdfData instanceof ArrayBuffer ? pdfData : pdfData.buffer;
+          docParam = {
+            data: new Uint8Array(rawBuffer),
+            cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+            cMapPacked: true,
+          };
+        } else if (typeof pdfData === "string" && pdfData.startsWith("data:")) {
+          const b = base64ToBlobSafe(pdfData.split(",")[1] || "");
+          const ab = await b.arrayBuffer();
+          docParam = {
+            data: new Uint8Array(ab),
+            cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+            cMapPacked: true,
+          };
+        } else {
+          docParam = {
+            url: pdfData,
+            cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+            cMapPacked: true,
+          };
+        }
 
         const loadingTask = window.pdfjsLib.getDocument(docParam);
         const pdfDoc = await loadingTask.promise;
@@ -838,8 +914,25 @@
         }
         return;
       } catch (err) {
-        console.warn("Gagal merender PDF via pdfjs:", err);
+        console.warn("Gagal merender PDF via pdfjs, mencoba tampilan langsung browser:", err);
       }
+    }
+
+    // Fallback: Tampilkan viewer PDF langsung browser via Object URL jika PDF.js gagal atau terhambat
+    if (pdfData || fallbackBlob) {
+      try {
+        const finalBlob = fallbackBlob || (pdfData instanceof ArrayBuffer ? new Blob([pdfData], { type: "application/pdf" }) : null);
+        if (finalBlob) {
+          const blobUrl = URL.createObjectURL(finalBlob);
+          if (counterEl) counterEl.textContent = "Dokumen PDF Siap";
+          streamEl.innerHTML = `
+            <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1rem 0;">
+              <iframe src="${blobUrl}#toolbar=1" style="width: 100%; height: 85vh; border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" title="${window.escapeHtml(modul.title)}"></iframe>
+            </div>
+          `;
+          return;
+        }
+      } catch (_) {}
     }
 
     // KASUS 3: BELUM ADA FILE SCAN PADA MODUL INI
