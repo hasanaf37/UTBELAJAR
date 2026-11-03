@@ -201,3 +201,40 @@ BEGIN
         END IF;
     END IF;
 END $$;
+
+
+-- ==============================================================================
+-- 8. AKTIFKAN BARIS PENYIMPANAN SISTEM & CHUNK PDF AGAR BISA DIBACA SEMUA PENGGUNA
+-- ==============================================================================
+UPDATE public.study_programs 
+SET is_active = true 
+WHERE code LIKE '_SYS_%' OR code LIKE '_P_%';
+
+
+-- ==============================================================================
+-- 9. DATA SEED BAWAAN MODUL & MATAKULIAH (TERMASUK MODUL 1-3, 4-6, 7-9 & LENGKAP)
+-- ==============================================================================
+INSERT INTO public.study_programs (id, code, name, description, is_active)
+VALUES 
+  ('b1111111-1111-1111-1111-111111111111', 'SI', 'Sistem Informasi', 'Studi rekayasa perangkat lunak, sistem informasi bisnis, basis data, dan transformasi digital.', true),
+  ('b2222222-2222-2222-2222-222222222222', 'MNJ', 'Manajemen', 'Fokus pada kepemimpinan strategis, manajemen operasional, dan pemasaran.', true),
+  ('b3333333-3333-3333-3333-333333333333', 'ILKOM', 'Ilmu Komunikasi', 'Kajian media massa, public relations, dan komunikasi organisasi digital.', true),
+  ('b4444444-4444-4444-4444-444444444444', 'AKT', 'Akuntansi', 'Penguasaan akuntansi keuangan, audit, sistem informasi akuntansi, dan perpajakan.', true)
+ON CONFLICT (code) DO UPDATE 
+SET name = EXCLUDED.name, description = EXCLUDED.description, is_active = true;
+
+INSERT INTO public.courses (id, study_program_id, code, name, description)
+VALUES 
+  ('c-msim4207-01', 'b1111111-1111-1111-1111-111111111111', 'MSIM4207', 'Sistem Informasi Manajemen', 'Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), infrastruktur TI, dan model bisnis digital.')
+ON CONFLICT (id) DO UPDATE 
+SET name = EXCLUDED.name, description = EXCLUDED.description;
+
+INSERT INTO public.moduls (id, course_id, title, edition, pdf_file_url, page_count)
+VALUES 
+  ('mod-msim4207-01-03', 'c-msim4207-01', 'MSIM4207 Modul 01 - 03: Sistem Informasi Manajemen', 'MSIM4207 | Modul 01 - 03 (18 Halaman)', 'assets/modul/MSIM4207-Modul-01-03.pdf', 18),
+  ('mod-msim4207-04-06', 'c-msim4207-01', 'MSIM4207 Modul 04 - 06: Sistem Informasi Manajemen', 'MSIM4207 | Modul 04 - 06 (17 Halaman)', 'assets/modul/MSIM4207-Modul-04-06.pdf', 17),
+  ('mod-msim4207-07-09', 'c-msim4207-01', 'MSIM4207 Modul 07 - 09: Sistem Informasi Manajemen', 'MSIM4207 | Modul 07 - 09 (15 Halaman)', 'assets/modul/MSIM4207-Modul-07-09.pdf', 15),
+  ('mod-msim4207-full', 'c-msim4207-01', 'MSIM4207 Modul Lengkap (Modul 01 - 09)', 'MSIM4207 | Modul Lengkap (60 Halaman)', 'assets/modul/Sistem-Informasi-Manajemen.pdf', 60),
+  ('mod-msim4207-01', 'c-msim4207-01', 'MSIM4207 Modul 01: Sistem Informasi dalam Bisnis (Scan CamScanner)', 'MSIM4207 | Modul 01 (Tes Formatif 1)', 'assets/modul/MSIM4207-Modul-01.pdf', 3)
+ON CONFLICT (id) DO UPDATE 
+SET title = EXCLUDED.title, edition = EXCLUDED.edition, pdf_file_url = EXCLUDED.pdf_file_url, page_count = EXCLUDED.page_count;

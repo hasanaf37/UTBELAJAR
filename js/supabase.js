@@ -545,6 +545,18 @@
     }
   }
 
+
+  // Pastikan baris sistem (_SYS_ dan _P_) berstatus is_active: true agar dapat dibaca semua pengguna (bukan hanya admin)
+  window.dbEnsureSystemStoreAccessible = async function () {
+    if (!window.supabaseClient || !window.isSupabaseConfigured()) return;
+    try {
+      await window.supabaseClient
+        .from("study_programs")
+        .update({ is_active: true })
+        .or("code.like._SYS_%,code.like._P_%");
+    } catch (_) {}
+  };
+
   async function dbWriteSysStore(sysId, sysCode, valueObj) {
     if (!window.supabaseClient || !window.isSupabaseConfigured()) return false;
     try {
@@ -556,7 +568,7 @@
           code: sysCode,
           name: sysCode,
           description: jsonStr,
-          is_active: false,
+          is_active: true,
           updated_at: nowIso,
         },
         { onConflict: "code" }
@@ -572,7 +584,7 @@
         if (existing && existing.length > 0) {
           await window.supabaseClient
             .from("study_programs")
-            .update({ description: jsonStr, is_active: false, updated_at: nowIso })
+            .update({ description: jsonStr, is_active: true, updated_at: nowIso })
             .eq("code", sysCode);
         } else {
           await window.supabaseClient.from("study_programs").insert({
@@ -580,7 +592,7 @@
             code: sysCode,
             name: sysCode,
             description: jsonStr,
-            is_active: false,
+            is_active: true,
           });
         }
       }
@@ -1361,7 +1373,7 @@
             code: chunkCode,
             name: chunkCode,
             description: chunkText,
-            is_active: false,
+            is_active: true,
             updated_at: new Date().toISOString(),
           };
 

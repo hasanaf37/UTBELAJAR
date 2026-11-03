@@ -43,7 +43,7 @@
       id: "c-msim4207-01",
       study_program_id: "b1111111-1111-1111-1111-111111111111", // Sistem Informasi
       code: "MSIM4207",
-      name: "Sistem Informasi dalam Bisnis",
+      name: "Sistem Informasi Manajemen",
       description: "Membahas konsep sistem informasi, tipe sistem (TPS, DSS, dll.), dan infrastruktur TI dalam organisasi bisnis.",
     },
     {
@@ -83,13 +83,53 @@
     },
   ];
 
-  // 3. DATA MASTER MODUL (Memuat File Scan CamScanner Asli: page-1.jpg, page-2.jpg, page-3.jpg)
+    // 3. DATA MASTER MODUL (Memuat File Scan CamScanner Asli & PDF Modul Terpisah 1-3, 4-6, 7-9, Lengkap)
   const DEFAULT_MODULS = [
+    {
+      id: "mod-msim4207-01-03",
+      course_id: "c-msim4207-01",
+      title: "MSIM4207 Modul 01 - 03: Sistem Informasi Manajemen",
+      edition: "MSIM4207 | Modul 01 - 03 (18 Halaman)",
+      pdf_file_url: "assets/modul/MSIM4207-Modul-01-03.pdf",
+      pdf_data_url: "",
+      images: [],
+      page_count: 18,
+    },
+    {
+      id: "mod-msim4207-04-06",
+      course_id: "c-msim4207-01",
+      title: "MSIM4207 Modul 04 - 06: Sistem Informasi Manajemen",
+      edition: "MSIM4207 | Modul 04 - 06 (17 Halaman)",
+      pdf_file_url: "assets/modul/MSIM4207-Modul-04-06.pdf",
+      pdf_data_url: "",
+      images: [],
+      page_count: 17,
+    },
+    {
+      id: "mod-msim4207-07-09",
+      course_id: "c-msim4207-01",
+      title: "MSIM4207 Modul 07 - 09: Sistem Informasi Manajemen",
+      edition: "MSIM4207 | Modul 07 - 09 (15 Halaman)",
+      pdf_file_url: "assets/modul/MSIM4207-Modul-07-09.pdf",
+      pdf_data_url: "",
+      images: [],
+      page_count: 15,
+    },
+    {
+      id: "mod-msim4207-full",
+      course_id: "c-msim4207-01",
+      title: "MSIM4207 Modul Lengkap (Modul 01 - 09)",
+      edition: "MSIM4207 | Modul Lengkap (60 Halaman)",
+      pdf_file_url: "assets/modul/Sistem-Informasi-Manajemen.pdf",
+      pdf_data_url: "",
+      images: [],
+      page_count: 60,
+    },
     {
       id: "mod-msim4207-01",
       course_id: "c-msim4207-01",
-      title: "MSIM4207 Modul 01: Sistem Informasi dalam Bisnis (Tes Formatif 1)",
-      edition: "MSIM4207 | Modul 01",
+      title: "MSIM4207 Modul 01: Sistem Informasi dalam Bisnis (Scan CamScanner)",
+      edition: "MSIM4207 | Modul 01 (Tes Formatif 1)",
       pdf_file_url: "assets/modul/MSIM4207-Modul-01.pdf",
       pdf_data_url: (typeof window !== "undefined" && window.DEFAULT_CAMSCANNER_PDF_DATA_URL) || "",
       images: [
@@ -201,25 +241,37 @@
     return [...DEFAULT_COURSES];
   }
 
-  function getModuls() {
+    function getModuls() {
     try {
       const raw = localStorage.getItem("utb_catalog_moduls");
       if (raw !== null) {
-        const parsed = JSON.parse(raw);
+        let parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // Jika modul bawaan MSIM4207 masih ada dan belum diganti file baru, pastikan path halaman scan default tetap utuh
-          const msimIdx = parsed.findIndex((m) => m.id === "mod-msim4207-01");
-          if (msimIdx !== -1 && !parsed[msimIdx].idb_key) {
-            const hasImgs = Array.isArray(parsed[msimIdx].images) && parsed[msimIdx].images.length > 0;
-            if (!hasImgs) {
-              parsed[msimIdx] = {
-                ...DEFAULT_MODULS[0],
-                ...parsed[msimIdx],
-                images: DEFAULT_MODULS[0].images,
-                pdf_file_url: parsed[msimIdx].pdf_file_url || DEFAULT_MODULS[0].pdf_file_url,
-              };
-              localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
+          let updated = false;
+          // Pastikan seluruh DEFAULT_MODULS terdaftar jika belum ada
+          DEFAULT_MODULS.forEach((defMod) => {
+            const existingIdx = parsed.findIndex((m) => m && m.id === defMod.id);
+            if (existingIdx === -1) {
+              parsed.push({ ...defMod });
+              updated = true;
+            } else if (!parsed[existingIdx].pdf_file_url && defMod.pdf_file_url) {
+              parsed[existingIdx].pdf_file_url = defMod.pdf_file_url;
+              updated = true;
             }
+          });
+
+          // Urutan modul agar teratur: 01-03, 04-06, 07-09, Lengkap, 01 Scan
+          const sortOrder = {
+            "mod-msim4207-01-03": 1,
+            "mod-msim4207-04-06": 2,
+            "mod-msim4207-07-09": 3,
+            "mod-msim4207-full": 4,
+            "mod-msim4207-01": 5,
+          };
+          parsed.sort((a, b) => (sortOrder[a.id] || 99) - (sortOrder[b.id] || 99));
+
+          if (updated) {
+            localStorage.setItem("utb_catalog_moduls", JSON.stringify(parsed));
           }
           return parsed;
         }
@@ -371,6 +423,7 @@
     currentUser = await window.requireAuth();
     if (!currentUser) return;
 
+    if (typeof window.dbEnsureSystemStoreAccessible === 'function') await window.dbEnsureSystemStoreAccessible();
     await syncCatalogFromSupabase(false);
     initModulRealtimeSync();
 
@@ -577,7 +630,14 @@
     }
 
     const allModuls = getModuls();
-    let courseModuls = allModuls.filter((m) => m.course_id === course.id);
+    let courseModuls = allModuls.filter((m) => {
+      if (!m) return false;
+      if (m.course_id === course.id) return true;
+      if (course.code && m.course_code && m.course_code.toUpperCase() === course.code.toUpperCase()) return true;
+      if (course.code && m.edition && m.edition.toUpperCase().includes(course.code.toUpperCase())) return true;
+      if (course.code && m.title && m.title.toUpperCase().includes(course.code.toUpperCase())) return true;
+      return false;
+    });
 
     // Fallback jika belum ada modul pada mata kuliah ini
     if (courseModuls.length === 0) {
@@ -785,7 +845,24 @@
             await saveFileToIdb("modul_pdf_" + (modul.id || "default"), blob);
           }
         } catch (fetchErr) {
-          console.warn("Gagal mengunduh file PDF dari Cloud:", fetchErr);
+          console.warn("Fetch langsung URL PDF gagal, mencoba Supabase Storage SDK:", fetchErr);
+        }
+
+        // Fallback SDK: Unduh langsung lewat Supabase Storage jika fetch publik ditolak / bucket ber-RLS
+        if (!pdfData && modul.storage_path && window.supabaseClient && window.supabaseClient.storage) {
+          try {
+            const { data: sdkBlob, error: sdkErr } = await window.supabaseClient.storage
+              .from("modul-pdfs")
+              .download(modul.storage_path);
+            if (!sdkErr && sdkBlob) {
+              fallbackBlob = sdkBlob;
+              pdfData = await sdkBlob.arrayBuffer();
+              inMemoryPdfCache.set(modul.id, pdfData);
+              await saveFileToIdb("modul_pdf_" + (modul.id || "default"), sdkBlob);
+            }
+          } catch (sdkErr) {
+            console.warn("Supabase Storage SDK download error:", sdkErr);
+          }
         }
       } else {
         try {
@@ -835,6 +912,9 @@
 
     if (!pdfData && modul.pdf_data_url) {
       pdfData = modul.pdf_data_url;
+    }
+    if (!pdfData && effectivePdfUrl) {
+      pdfData = effectivePdfUrl;
     }
 
     // Render halaman menggunakan PDF.js
